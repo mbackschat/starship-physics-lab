@@ -64,6 +64,12 @@ SHOTS = (
         height=1450,
     ),
     Shot(
+        name="payload-question",
+        page_label="The payload question",
+        description="the contested dry mass, and the payload it implies",
+        height=1250,
+    ),
+    Shot(
         name="stages",
         page_label="Stages",
         description="the staging split, worth a factor of two in payload",

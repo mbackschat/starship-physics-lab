@@ -592,6 +592,16 @@ Guard `i ≥ φ`; below that the orbit is unreachable without a plane change, wh
 
 Compare vehicles on `β`. Optionally integrate a ballistic entry to show peak deceleration and peak heat flux `q̇ ∝ sqrt(ρ) · v³`.
 
+### Implementation note: charge landing propellant once
+
+The article budgets Starship a flat 40 t of header-tank propellant. The library instead records it as recovery *burns*, 350 m/s of landing at Isp 300 and 140 m/s of deorbit at Isp 350, which come to 38 t on a 220 t ship.
+
+The two agree, but the burn form is better for an interactive model because it **scales with the ship's mass the way real propellant does**. A heavier ship needs more propellant to land, so every tonne added to the vehicle costs slightly more than a tonne of payload. A flat allowance hides that.
+
+Recording it both ways at once is a bug, and was one: the first version of the library carried the 40 t residual *and* the landing burns, charging the same propellant twice and understating payload by about 30 t. The `Stage` validator catches the general case where reserves exceed the tanks, but not double-counting inside them, which is why the case-study tests check the payload against the article's independent figure.
+
+With the correction the app reproduces the article: **37.7 t of payload at 220 t dry** against its 40 t, and **109 t at 160 t dry** against its 100 t.
+
 ### M9: Dry-mass scaling law
 
 Stage inert mass as a function of propellant load, with a tunable exponent:

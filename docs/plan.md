@@ -245,7 +245,7 @@ Streamlit multipage app, shared components, the formula renderer, the three-colo
 `staging.py` sweep and optimum, `reuse.py` surfaced in the UI.
 **Done:** the sweep reproduces physics-reference section 3.7 with the optimum at 11 480 km/h, and `rocketry.vehicle.with_stage` gives both chapters a tested seam for asking what if this stage were different, which chapter 7 will reuse for the contested dry mass.
 
-### M6: The case study, chapters 6, 7 and 7b
+### M6: The case study, chapters 6, 7 and 7b — DONE
 The weighing reconstruction, the payload question and the V4 scaling chapter, with contested inputs visibly marked.
 **Done when:** a user can set ship dry mass to 160 t, see 100 t of payload appear, read why that number is disputed in both directions, and separately drive the V4 payload from 12 t to 108 t with the scaling-exponent slider. All three must reproduce physics-reference sections 3.8, 4/C15 and 7.
 
