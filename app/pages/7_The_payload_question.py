@@ -128,6 +128,7 @@ st.plotly_chart(
             )
             for estimate in ESTIMATES
         ],
+        at_t=float(chosen),
         formatter=formatter,
         mode=chart_mode,
         title="The same rocket, under every published belief about its weight",

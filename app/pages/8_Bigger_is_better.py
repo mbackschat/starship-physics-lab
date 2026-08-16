@@ -112,6 +112,7 @@ st.plotly_chart(
             ("mass grows in proportion", curve[-1][0], curve[-1][1]),
             ("mass does not grow at all", curve[0][0], curve[0][1]),
         ],
+        at_t=ship_dry,
         formatter=formatter,
         mode=chart_mode,
         title="Starship V4, under every assumption about how weight scales",

@@ -5,11 +5,20 @@ on: the same thing is the same colour everywhere, the surface matches the theme,
 and nothing is left to be spotted by eye in a screenshot.
 """
 
+from typing import ClassVar
+
 import pytest
 
 from labbook.breakdown import as_series, mass_components
-from labbook.charts import loss_waterfall, mass_breakdown, staging_sweep, trajectory
-from labbook.palette import SURFACE, Mode, Series, all_colours, colour
+from labbook.charts import (
+    LEGEND_HINT,
+    loss_waterfall,
+    mass_breakdown,
+    payload_against_dry_mass,
+    staging_sweep,
+    trajectory,
+)
+from labbook.palette import AXIS, INK_MUTED, INK_PRIMARY, SURFACE, Mode, Series, all_colours, colour
 from labbook.units import METRIC, US, from_kmh
 from rocketry.ascent import simulate
 from rocketry.library import load
@@ -73,6 +82,156 @@ class TestLegends:
         """A fraction of plot height moves with chart size and lands on the axis title."""
         figure = mass_breakdown([r.label for r in rows], as_series(rows))
         assert figure.layout.legend.yref == "container"
+
+    def test_every_chart_that_shows_a_legend_says_it_can_be_clicked(self, rows, flight):
+        """The gap was in every chapter at once, so the fix has to be as well.
+
+        Said in `base_layout` rather than chart by chart, because the behaviour
+        belongs to Plotly and not to any one figure. A builder that grew its
+        own layout would slip out of this silently, which is what this catches.
+        """
+        built = (
+            mass_breakdown([r.label for r in rows], as_series(rows)),
+            trajectory(flight.samples),
+            loss_waterfall(flight.breakdown),
+            payload_against_dry_mass([(80.0, 220.0), (260.0, 40.0)]),
+        )
+        for figure in built:
+            if figure.layout.showlegend is not False:
+                assert figure.layout.legend.title.text == LEGEND_HINT
+
+    def test_the_legend_says_it_can_be_clicked(self, rows):
+        """Plotly hides a series when its name is clicked, and shows no sign of it.
+
+        Four squares in a row look like a key, not like controls, so the one
+        genuinely useful interaction on a stacked chart went unfound. The hint
+        belongs on every legend rather than in a caption under one chart,
+        because the behaviour is Plotly's and applies to all of them.
+        """
+        figure = mass_breakdown([r.label for r in rows], as_series(rows))
+        assert figure.layout.legend.title.text == LEGEND_HINT
+
+    @pytest.mark.parametrize("mode", list(Mode))
+    def test_the_hint_stays_quieter_than_the_series_it_labels(self, rows, mode):
+        figure = mass_breakdown([r.label for r in rows], as_series(rows), mode=mode)
+        assert figure.layout.legend.title.font.color == INK_MUTED[mode]
+        assert figure.layout.legend.title.font.size < figure.layout.font.size
+
+    @pytest.mark.parametrize("mode", list(Mode))
+    def test_the_legend_never_paints_its_own_panel(self, rows, mode):
+        """Plotly's default legend background is near-white.
+
+        Invisible on the light theme and a glaring slab across the dark one,
+        which is how it shipped: a colour nothing set explicitly, so nothing
+        checked it in the theme it was wrong in.
+        """
+        figure = mass_breakdown([r.label for r in rows], as_series(rows), mode=mode)
+        assert figure.layout.legend.bgcolor == "rgba(0,0,0,0)"
+        assert figure.layout.legend.bordercolor == "rgba(0,0,0,0)"
+
+
+@pytest.mark.parametrize("mode", list(Mode))
+class TestNothingIsLeftForPlotlyToColour:
+    """Every panel Plotly draws for itself defaults to near-white.
+
+    Two shipped that way and both were invisible to anyone reading in light
+    mode: the legend painted a slab across the dark surface, and the hover
+    tooltip put the theme's white text on its own white panel, which made the
+    numbers unreadable exactly when a reader went looking for them. They are
+    the same defect twice, so they are tested the same way, in both themes.
+    """
+
+    def test_the_hover_panel_matches_the_surface(self, rows, mode):
+        figure = mass_breakdown([r.label for r in rows], as_series(rows), mode=mode)
+        assert figure.layout.hoverlabel.bgcolor == SURFACE[mode]
+
+    def test_the_hover_text_is_readable_against_it(self, rows, mode):
+        figure = mass_breakdown([r.label for r in rows], as_series(rows), mode=mode)
+        assert figure.layout.hoverlabel.font.color == INK_PRIMARY[mode]
+        assert figure.layout.hoverlabel.font.color != figure.layout.hoverlabel.bgcolor
+
+    def test_the_panel_is_separated_from_the_chart_behind_it(self, rows, mode):
+        """Same colour as the surface, so without a border it has no edges."""
+        figure = mass_breakdown([r.label for r in rows], as_series(rows), mode=mode)
+        assert figure.layout.hoverlabel.bordercolor == AXIS[mode]
+
+
+class TestASweepSaysWhereTheReaderIs:
+    """A chart sweeping a value the reader sets has to mark their own setting.
+
+    Chapters 7 and 8 both put a slider above a curve swept across exactly what
+    that slider changes, and neither marked the reader's position. The numbers
+    above the chart moved, the chart did not, and the two stopped looking like
+    they were about the same thing.
+    """
+
+    POINTS: ClassVar[list[tuple[float, float]]] = [(m, 300.0 - m) for m in range(80, 261, 5)]
+    ARRIVING: ClassVar[list[tuple[float, float]]] = [(m, 300.0) for m in range(80, 261, 5)]
+
+    def test_it_marks_nothing_when_nobody_is_reading(self):
+        """A study sweeping the same range for a report has no reader."""
+        plain = payload_against_dry_mass(self.POINTS, arriving=self.ARRIVING)
+        assert not [trace for trace in plain.data if "yours" in "".join(trace.text or [])]
+        assert _verticals(plain) == []
+
+    def test_a_line_ties_the_two_dots_to_one_reading(self):
+        marked = payload_against_dry_mass(self.POINTS, arriving=self.ARRIVING, at_t=150.0)
+        assert _verticals(marked) == [150.0]
+
+    def test_it_marks_both_curves_at_the_readers_value(self):
+        marked = payload_against_dry_mass(self.POINTS, arriving=self.ARRIVING, at_t=150.0)
+        dots = [trace for trace in marked.data if trace.mode and "markers" in trace.mode]
+        placed = [(trace.x[0], trace.y[0]) for trace in dots]
+        assert (150.0, 150.0) in placed, "the payload curve is not marked"
+        assert (150.0, 300.0) in placed, "the arriving curve is not marked"
+
+    def test_the_dot_wears_the_colour_of_the_curve_it_sits_on(self):
+        """Two dots on two curves are two answers, not a new series."""
+        marked = payload_against_dry_mass(self.POINTS, arriving=self.ARRIVING, at_t=150.0)
+        by_place = {
+            trace.y[0]: trace.marker.color
+            for trace in marked.data
+            if trace.mode and "markers" in trace.mode
+        }
+        assert by_place[150.0] == colour(Series.PAYLOAD, Mode.LIGHT)
+        assert by_place[300.0] == colour(Series.OTHER, Mode.LIGHT)
+
+    def test_it_follows_the_reader_rather_than_sitting_still(self):
+        low = payload_against_dry_mass(self.POINTS, at_t=100.0)
+        high = payload_against_dry_mass(self.POINTS, at_t=240.0)
+        assert _marked(low) != _marked(high)
+
+    def test_it_converts_like_everything_else(self):
+        imperial = payload_against_dry_mass(self.POINTS, at_t=150.0, formatter=US)
+        assert _marked(imperial)[0] == pytest.approx(150.0 * 2204.62, rel=1e-3)
+
+
+def _verticals(figure) -> list[float]:
+    """Where the chart draws a vertical line.
+
+    The zero rule is a horizontal line and is always there, so a shape counts
+    only when both its ends share an x.
+
+    Args:
+        figure: Any chart.
+
+    Returns:
+        The x of each vertical line, in draw order.
+    """
+    return [shape.x0 for shape in figure.layout.shapes if shape.x0 == shape.x1]
+
+
+def _marked(figure) -> tuple[float, float]:
+    """Where a swept chart says the reader is.
+
+    Args:
+        figure: A chart built with `at_t`.
+
+    Returns:
+        The marked point, in whatever units the chart was drawn in.
+    """
+    dot = next(trace for trace in figure.data if trace.mode and "text" in trace.mode)
+    return (dot.x[0], dot.y[0])
 
 
 @pytest.fixture(scope="module")

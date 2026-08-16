@@ -26,6 +26,53 @@ from labbook.palette import (
 from labbook.units import METRIC, Formatter, Quantity
 from rocketry.ascent import AscentSample
 
+LEGEND_HINT = "Click a name to hide it"
+"""Said on every legend, because clicking one is invisible until you try it."""
+
+
+def _reader_marker(
+    point: tuple[float, float],
+    *,
+    series: Series,
+    mode: Mode,
+    formatter: Formatter,
+    label: str = "",
+) -> go.Scatter:
+    """A dot showing where the reader's own setting lands on a swept curve.
+
+    A chart that sweeps a value the reader controls has to say where they are
+    on it, or the numbers above it appear to come from nowhere. It wears the
+    colour of the curve it sits on, so two of them on two curves read as two
+    answers to the same question rather than as a new series.
+
+    Args:
+        point: The place to mark, as (x, y) in tonnes.
+        series: The curve it sits on, whose colour it takes.
+        mode: Light or dark surface.
+        formatter: Unit system to display in.
+        label: Text beside the dot, if it needs one.
+
+    Returns:
+        The trace.
+    """
+    return go.Scatter(
+        x=[formatter.value(point[0], Quantity.MASS)],
+        y=[formatter.value(point[1], Quantity.MASS)],
+        mode="markers+text" if label else "markers",
+        marker={
+            "color": colour(series, mode),
+            "size": 13,
+            "line": {"color": SURFACE[mode], "width": 3},
+        },
+        text=[f"{label}  "],
+        # Labelled to the left, because the published estimates label to the
+        # right and the reader's dot sits on top of one of them by default.
+        textposition="middle left",
+        textfont={"color": INK_PRIMARY[mode], "size": 12},
+        showlegend=False,
+        hoverinfo="skip",
+    )
+
 
 def base_layout(
     figure: go.Figure,
@@ -72,8 +119,31 @@ def base_layout(
             "yref": "container",
             "x": 0.0,
             "xref": "container",
+            # Plotly hides a series when its name is clicked, which is genuinely
+            # useful on a chart whose whole point is one line against another,
+            # and which nothing on screen suggests is possible. Said once, in
+            # the only place a reader is already looking when they wonder.
+            "title": {
+                "text": LEGEND_HINT,
+                "font": {"color": INK_MUTED[mode], "size": 11},
+                "side": "left",
+            },
+            # Transparent, not the surface colour: Plotly's own default is a
+            # near-white panel, which is invisible on a light theme and a glaring
+            # slab on a dark one. Every colour here is chosen for both themes or
+            # it is a bug waiting for whoever reads in the other one.
+            "bgcolor": "rgba(0,0,0,0)",
+            "bordercolor": "rgba(0,0,0,0)",
         },
         hovermode="x unified",
+        # The other colour Plotly would otherwise pick for itself. Its default
+        # hover panel is near-white while the text follows the theme, so in dark
+        # mode the reader gets white on white and the tooltip is unreadable.
+        hoverlabel={
+            "bgcolor": SURFACE[mode],
+            "bordercolor": AXIS[mode],
+            "font": {"color": INK_PRIMARY[mode], "size": 12},
+        },
     )
     axis_style = {
         "gridcolor": GRIDLINE[mode],
@@ -597,6 +667,7 @@ def payload_against_dry_mass(
     mode: Mode = Mode.LIGHT,
     title: str = "Payload against how heavy the ship is",
     subtitle: str = "",
+    at_t: float | None = None,
 ) -> go.Figure:
     """Payload as a function of an assumed dry mass, with the total that arrives.
 
@@ -612,6 +683,10 @@ def payload_against_dry_mass(
         mode: Light or dark surface.
         title: Chart title.
         subtitle: Optional second line under the title.
+        at_t: Mark where the reader's own assumed dry mass lands, tonnes. Every
+            page that sweeps a value one of its own controls sets passes this;
+            a script sweeping the same range for a report has no reader and
+            leaves it out.
 
     Returns:
         The figure.
@@ -655,6 +730,29 @@ def payload_against_dry_mass(
                 textfont={"color": INK_SECONDARY[mode], "size": 11},
                 showlegend=False,
                 hoverinfo="skip",
+            )
+        )
+    if at_t is not None and points:
+        figure.add_vline(
+            x=formatter.value(at_t, Quantity.MASS),
+            line={"color": INK_MUTED[mode], "width": 1, "dash": "dot"},
+        )
+        if arriving:
+            figure.add_trace(
+                _reader_marker(
+                    min(arriving, key=lambda point: abs(point[0] - at_t)),
+                    series=Series.OTHER,
+                    mode=mode,
+                    formatter=formatter,
+                )
+            )
+        figure.add_trace(
+            _reader_marker(
+                min(points, key=lambda point: abs(point[0] - at_t)),
+                series=Series.PAYLOAD,
+                mode=mode,
+                formatter=formatter,
+                label="yours",
             )
         )
     figure.add_hline(y=0, line={"color": AXIS[mode], "width": 1})
