@@ -46,6 +46,28 @@ CI ([.github/workflows/pages.yml](.github/workflows/pages.yml)) runs `ruff`, `my
 1. **`src/rocketry/` never imports Streamlit, Plotly, pandas or `labbook`.** The dependency arrow points one way only: `app/` → `labbook/` → `rocketry/`. Breaking this makes the physics untestable without a browser and breaks the scripted-analysis consumer.
 2. **`src/rocketry/` is SI throughout** (tonnes, m/s, seconds, tonnes-force). Units convert exactly once, at the presentation edge, in `labbook.units`. A unit bug can then change a label but never a result. Specific impulse stays in seconds in both systems and is deliberately never converted.
 
+## Scope and audience
+
+Written for enthusiasts with no physics background. Assume they know that a rocket is and that orbit means going fast sideways. Assume they do **not** know what a logarithm, a mass ratio, a specific impulse or a delta-v is, and that they will not read a wall of text before touching something.
+
+The precision target is **a few percent, not a fraction of a percent**. This is a teaching workbench, not a design tool for professionals.
+
+Deliberately out of scope, and worth pushing back on rather than quietly adding: orbital mechanics beyond circular orbits, inclination and a transfer budget (no n-body, no trajectory optimisation, no rendezvous); 3D of any kind, because well-designed 2D communicates more per pixel here; accounts or persistence beyond a shareable URL.
+
+**The honesty test.** A reader must be able to reach a conclusion the source article would dislike, if their own assumptions support it. Anything that makes that harder is a bug, however well-intentioned.
+
+## Writing a chapter
+
+Each chapter answers one question, has one primary interaction, and ends with one takeaway a reader could restate. The rules below are what make that work, and most already have a helper in `components/shell.py`:
+
+1. **One sentence at the top** saying what the page teaches. No preamble. That is the `teaser` argument to `page()`.
+2. **Formulas twice**, once symbolically and once with the reader's own numbers substituted in. This is the single device that stops symbols being frightening. Use `formula_block()`.
+3. **Every number carries its unit**, through a `Formatter`, never hand-formatted.
+4. **Progressive disclosure.** Prose and one control on the surface; reasoning inside `why()`; maths below that.
+5. **No dead ends.** An impossible configuration explains *why* and points at the fix. Never a stack trace, never a silent zero.
+6. **Presets before parameters.** Every page opens on a real vehicle with sensible values, via `vehicle_picker()`.
+7. **Nudges, not instructions.** `try_this()` beats a paragraph explaining what would have happened.
+
 ## Architecture
 
 **`src/rocketry/`** is the physics core. `tsiolkovsky.py` holds the rocket equation and its inverses; everything else builds on it (`staging`, `reuse`, `scaling`, `ascent`, `orbit`, `payload`, `reentry`, `dynamics`, `atmosphere`). `models.py` defines frozen, `extra="forbid"` Pydantic models; `library.py` loads and cross-validates them from YAML.
@@ -67,11 +89,23 @@ Cross-references between chapters are links, not prose. A reference to a chapter
 
 **`data/`** is the rocket library as editable YAML. **Adding or changing a rocket is a data change, never a code change.** `Library._check_references()` fails at load time if a stage names an unknown engine or a vehicle names an unknown stage.
 
+That extends to observations. `data/flights.yaml` holds what was measured, the model holds what was predicted, and the app plots one against the other. A flight that has not happened yet sits there as a row of nulls so its absence is visible rather than silently omitted. When a new flight lands, recording it must mean editing one YAML row: **if it means editing Python, the abstraction is wrong and that is the thing to fix.**
+
+### Two modelling limits worth knowing
+
+**Parallel burns are not modelled.** Representing strap-on boosters as a sequence of stages always *flatters* the vehicle, because it lets the core burn propellant at the low mass it only reaches once the boosters are gone. Splitting the core's propellant across both phases recovers most of it. This is why Ariane 64 and the Shuttle sit on the excused list in `tests/test_library_calibration.py`, which fails if a vehicle is quietly left out of both lists or if an excuse stops being needed.
+
+**A smaller stage has to be allowed to be a lighter one.** Shrinking a stage while holding its dry mass fixed makes the rocket worse, so the obvious advice, "cut the upper stage in half", teaches the opposite of the truth. The sandbox scales dry mass with propellant by default and offers a checkbox to turn that off, which turns the trap into the lesson. Two tests hold both directions.
+
 ### Provenance is load-bearing
 
 Every library entry carries a `Provenance`: `PUBLISHED`, `ESTIMATED`, `CONTESTED`, `DERIVED`, `ANNOUNCED`. This is not decoration. The project's central argument rests on one number SpaceX has not published, and a model that could not tell a measurement from a guess would hide exactly the thing that matters. Never present a contested estimate as a measurement; route it through `shell.provenance_badge()`.
 
-The project's stance is physics first, verdict last. Chapters 1 to 5 teach mechanics with no agenda; the case study shows its uncertainty and hands the reader a slider rather than a conclusion. Preserve that when editing copy.
+The project's stance is physics first, verdict last. Chapters 1 to 5 teach mechanics with no agenda; the case study shows its uncertainty and hands the reader a slider rather than a conclusion. Preserve that when editing copy, which has three concrete consequences beyond tone:
+
+- A payload result is shown as a **range across the plausible dry-mass span**, never as a single number, with both the article's estimate and the operator's claim marked on it.
+- The fact-check chapter reports the article's **errors as well as its confirmations**, by name.
+- **No loaded language in any string.** "Starship's dry mass is disputed" ships; "Starship is objectively bad" does not.
 
 ### Two Streamlit traps that unit tests cannot see
 

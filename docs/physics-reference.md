@@ -4,7 +4,7 @@ Verified physics, data and models behind the German article ["SpaceX: Wie das St
 
 **This document was verified on 16 August 2026, two days after publication.** The article is current, but the situation is moving fast: Flight 14 is expected before the end of August 2026 and will be the first orbital attempt and the first ship tower-catch attempt. See [Live context](#9-live-context-as-of-16-august-2026), which is the section to re-check before every work session.
 
-This is not a translation. It is a rewrite in my own words, with every number recomputed independently, every factual claim checked against sources, and every model written down in the form the visualisation app needs. The companion build plan is [plan.md](plan.md).
+This is not a translation. It is a rewrite in my own words, with every number recomputed independently, every factual claim checked against sources, and every model written down in the form the visualisation app needs. How the app is built, and the decisions behind it, are in [CLAUDE.md](../CLAUDE.md).
 
 **Status of the article after verification: the physics is sound and the arithmetic is almost entirely correct.** I reproduced 61 of 64 checkable numbers to within 2 %. Three numbers are wrong or misleading (see [Corrections](#4-corrections-and-caveats)), none of which changes the article's conclusions. The real uncertainty is not in the maths, it is in one input: Starship's dry mass, which SpaceX has not published since 2019.
 
