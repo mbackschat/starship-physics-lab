@@ -121,6 +121,7 @@ st.plotly_chart(
         result.breakdown,
         formatter=formatter,
         mode=chart_mode,
+        title="",
         subtitle=(
             f"The engines produced {formatter.velocity(result.ideal_delta_v, digits=0)}. "
             f"Only {formatter.velocity(result.final_speed, digits=0)} of it became speed."
