@@ -171,7 +171,32 @@ def test_payload_page_survives_a_hand_edited_url():
         assert not app.exception, f"query dry={junk!r} broke the page"
 
 
+def _param(app: AppTest, key: str) -> str:
+    """Read one query parameter.
+
+    AppTest hands them back as lists where the live app gives strings, so both
+    shapes are accepted here rather than in the code under test.
+
+    Args:
+        app: The running app.
+        key: Parameter name.
+
+    Returns:
+        The value.
+    """
+    value = app.query_params[key]
+    return value[0] if isinstance(value, list) else value
+
+
 def test_moving_the_slider_updates_the_shareable_url():
     app = run(APP / "pages" / "7_The_payload_question.py")
     app.slider[0].set_value(160).run()
-    assert app.query_params["dry"] == "160"
+    assert _param(app, "dry") == "160"
+
+
+def test_the_url_and_the_slider_never_disagree():
+    app = run(APP / "pages" / "7_The_payload_question.py")
+    for value in (100, 165, 240):
+        app.slider[0].set_value(value).run()
+        assert _param(app, "dry") == str(value)
+        assert app.metric[1].value.startswith(str(value))

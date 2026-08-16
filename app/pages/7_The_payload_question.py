@@ -47,21 +47,31 @@ def curve(low: float, high: float) -> list[PayloadPoint]:
 
 points = curve(80.0, 260.0)
 
-LOW, HIGH, DEFAULT = 80, 260, 220
-shared = read_number(
-    st.query_params, "dry", default=float(DEFAULT), low=float(LOW), high=float(HIGH)
-)
+LOW, HIGH, DEFAULT, STEP = 80, 260, 220, 5
+
+# Seed the control from the URL once, then let the reader own it. Passing a
+# changing `value=` instead would make Streamlit treat this as a new widget
+# every time the URL moved, silently throwing away what they just set.
+if "dry_mass" not in st.session_state:
+    shared = read_number(
+        st.query_params, "dry", default=float(DEFAULT), low=float(LOW), high=float(HIGH)
+    )
+    st.session_state["dry_mass"] = int(round(shared / STEP) * STEP)
 
 chosen = st.slider(
     "How much does Starship weigh empty?",
     min_value=LOW,
     max_value=HIGH,
-    value=int(round(shared / 5) * 5),
-    step=5,
+    step=STEP,
     format="%d t",
+    key="dry_mass",
     help="Nobody outside SpaceX knows. Published views span this whole range.",
 )
-st.query_params.update(write_state({"dry": float(chosen)}))
+# Only write when it actually changed. Rewriting the URL on every run churns
+# the address bar and, in Streamlit, can leave it a step behind the control.
+_shared = write_state({"dry": float(chosen)})
+if st.query_params.get("dry") != _shared["dry"]:
+    st.query_params.update(_shared)
 # Solve the reader's exact value rather than snapping to the nearest sampled
 # point, or the metrics disagree with the slider they were just dragged from.
 nearest = payload_curve(library(), "starship_v3", [float(chosen)])[0]
