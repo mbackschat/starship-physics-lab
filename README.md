@@ -22,7 +22,7 @@ No install, no sign-up, no server. The whole thing runs in your browser.
 
 [![The launch simulator](docs/images/launch.png)](https://mbackschat.github.io/starship-physics-lab/)
 
-*The launch simulator. Pick a rocket, choose how hard to pitch it over, and watch where its velocity actually goes: a Falcon 9's engines produce 9,386 m/s, but only 7,579 m/s of that ever becomes speed. Gravity takes 17 %, steering 2 %, air 0.2 %. Fly it badly and it crashes, and the page tells you why.*
+*The launch simulator. Pick a rocket, choose how hard to pitch it over, and watch where its velocity actually goes: a Falcon 9's engines produce 9,669 m/s, but only 7,832 m/s of that ever becomes speed. Gravity takes 16 %, steering 3 %, air 0.2 %. Fly it badly and it crashes, and the page tells you why.*
 
 [![The staging split](docs/images/stages.png)](https://mbackschat.github.io/starship-physics-lab/)
 

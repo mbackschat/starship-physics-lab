@@ -162,3 +162,109 @@ class TestItRefusesWhatCannotLeaveThePad:
 
     def test_the_real_thing_still_flies(self, falcon9):
         assert not falcon9.crashed
+
+
+class TestItDoesNotFlyBackDownWhileStillBurning:
+    """No launch descends for the last third of its ascent. This model did.
+
+    `_pitch_rad` prescribed the thrust direction from speed alone, with no
+    feedback from altitude or rate of climb, so once the program reached the
+    horizon nothing held the vehicle up. Every vehicle in the library coasted to
+    an apogee above 200 km and then fell: Falcon 9 finished its second stage burn
+    descending through 101 km, and Saturn V, Ariane 64 and New Glenn reached the
+    ground before their engines stopped.
+
+    Real vehicles fly open loop through the atmosphere, where the pitch program
+    must not fight the airflow, and switch to closed-loop guidance above it. That
+    is the distinction the fix restores, so the reader can still fly it into the
+    ground low down while a vehicle in vacuum stops falling.
+    """
+
+    def test_falcon9_is_still_climbing_when_its_engines_stop(self, falcon9):
+        assert falcon9.samples[-1].vertical_speed_ms > -10.0
+
+    def test_it_does_not_arc_far_over_its_cutoff_altitude(self, falcon9):
+        apogee = max(sample.altitude_m for sample in falcon9.samples)
+        assert apogee - falcon9.final_altitude_m < 20_000
+
+    def test_staging_happens_in_the_upper_atmosphere_not_in_space(self, falcon9):
+        """Falcon 9 stages around 65 to 85 km, not on the way down from 200."""
+        assert 50_000 < falcon9.events[0].altitude_m < 100_000
+
+    @pytest.mark.parametrize(
+        "key", [key for key, v in load().vehicles.items() if v.payload_leo_t is not None]
+    )
+    def test_no_vehicle_in_the_library_flies_into_the_ground(self, lib, key):
+        """The guard that was missing. Every check above named Falcon 9 only."""
+        result = simulate(analyse(lib, key))
+        assert not result.crashed, f"{key} hit the ground under default settings"
+
+    @pytest.mark.parametrize(
+        "key", [key for key, v in load().vehicles.items() if v.payload_leo_t is not None]
+    )
+    def test_every_vehicle_reaches_space(self, lib, key):
+        result = simulate(analyse(lib, key))
+        assert result.reached_space, f"{key} never got above 100 km"
+
+
+class TestTheClosedLoop:
+    """The half of ascent guidance the model was missing.
+
+    Real vehicles fly an open-loop pitch program through the atmosphere, where
+    they must not fight the airflow, and hand over to closed-loop guidance above
+    it. Only the first half was modelled, so nothing ever aimed at an orbit.
+    """
+
+    def test_it_arrives_where_it_was_aiming(self, lib):
+        settings = AscentSettings()
+        result = simulate(analyse(lib, "falcon9_droneship"), settings)
+        assert result.final_altitude_m == pytest.approx(settings.insertion_altitude, abs=5_000)
+
+    def test_a_lower_target_is_reached_instead(self, lib):
+        result = simulate(
+            analyse(lib, "falcon9_droneship"), AscentSettings(insertion_altitude=150_000.0)
+        )
+        assert result.final_altitude_m == pytest.approx(150_000.0, abs=5_000)
+
+    def test_aiming_lower_buys_speed(self, lib):
+        """Less climbing leaves more of the budget for going sideways."""
+        vehicle = analyse(lib, "falcon9_droneship")
+        low = simulate(vehicle, AscentSettings(insertion_altitude=150_000.0))
+        high = simulate(vehicle, AscentSettings(insertion_altitude=300_000.0))
+        assert low.final_speed > high.final_speed
+        assert low.gravity_loss < high.gravity_loss
+
+    def test_it_never_demands_a_steeper_angle_than_thrust_can_pay_for(self, lib):
+        """The cap, tested at the one place it bites.
+
+        Asked for more vertical acceleration than the engines can produce, the
+        law would otherwise saturate pointing straight up and stay there. Saturn
+        V's third stage did exactly that and gained 4 m/s across its whole burn,
+        because a stage that cannot hold itself up must get fast instead: speed
+        is what holds you up.
+        """
+        from rocketry.ascent import MAX_GUIDED_PITCH_RAD, _Burn, _guided_pitch_rad
+
+        result = analyse(lib, "saturn_v")
+        last = result.stages[-1]
+        burn = _Burn(
+            index=2,
+            stage=last.stage,
+            engine=lib.engines[last.stage.engine],
+            burnout_mass_t=last.burnout_mass_t,
+            jettison_t=0.0,
+            area_m2=1.0,
+            settings=AscentSettings(),
+        )
+        # Far below orbital speed, far below the target: an impossible demand.
+        state = [0.0, 100_000.0, 3000.0, 0.0, last.ignition_mass_t, 0.0, 0.0, 0.0, 0.0]
+        pitch = _guided_pitch_rad(state, burn, thrust_n=1.0e6, flow_t_s=0.25)
+        assert pitch == pytest.approx(MAX_GUIDED_PITCH_RAD)
+
+    def test_the_first_stage_is_never_guided(self, lib):
+        """Otherwise a reader could not fly it into the ground, which is a lesson."""
+        result = simulate(
+            analyse(lib, "falcon9_droneship"),
+            AscentSettings(turn_start_speed=1.0, turn_shape=6.0),
+        )
+        assert result.crashed

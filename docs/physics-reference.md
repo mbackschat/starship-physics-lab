@@ -571,12 +571,25 @@ g(h)     = g0 · (R_e / (R_e + h))²
 F(h)     = F_vac − A_e · p(h)
 D        = ½ · ρ(h) · v² · C_d · A
 ṁ        = F_vac / (Isp_vac · g0)     [constant while throttle is constant]
-pitch    = gravity turn: vertical to a kick altitude, then hold thrust along velocity
 ```
 
 Track cumulative losses separately by integrating each term, so the app can show a live stacked "where did my Δv go" chart. This is the single most illuminating visual for a beginner.
 
-Library note: `ambiance` provides ISA up to 80 km directly and avoids hand-rolling the atmosphere.
+**Steering is two laws, not one, and modelling only the first produces a ballistic arc.** Real vehicles fly an open-loop pitch program inside the atmosphere, where they must hold close to zero angle of attack, and hand over to closed-loop guidance above it. Sources in [raw/2026-08-16-ascent-guidance-open-and-closed-loop.md](../raw/2026-08-16-ascent-guidance-open-and-closed-loop.md).
+
+```
+below handover, or first stage:
+    pitch = 90° · (1 − (v − v_start)/(v_complete − v_start))^shape
+
+above handover, second stage onwards:
+    T_left = burn time remaining to final cutoff
+    a_want = 6·(h_target − h)/T_left² − 4·v_y/T_left     [arrive at h_target with v_y = 0]
+    sin(pitch) = m·(g(h) − v_x²/(R_e + h) + a_want) / F,  |pitch| ≤ 45°
+```
+
+The centrifugal term is why the demanded angle falls to nothing near orbital speed: going sideways fast pays part of the weight already. The 45° cap matters more than it looks. Past 45° more thrust is holding the rocket up than accelerating it, and a stage that cannot hold itself up even there must get fast instead. Without the cap the law saturates pointing straight up and stays there; Saturn V's S-IVB hovered through its entire burn and gained 4 m/s.
+
+Handover only above the first stage, so a badly flown first stage still reaches the ground. That is a lesson, not a defect.
 
 ### M7: Inclination and launch site
 

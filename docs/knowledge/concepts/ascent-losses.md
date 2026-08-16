@@ -9,6 +9,10 @@ sources:
     resource: ../../physics-reference.md
     title: Rocket Physics Reference, sections 2.4 and 2.5
     last_modified: 2026-08-16
+  - id: guidance
+    resource: ../../../raw/2026-08-16-ascent-guidance-open-and-closed-loop.md
+    title: Ascent guidance, open loop and closed loop
+    last_modified: 2026-08-16
 
 generated: { by: claude-opus-5, at: 2026-08-16T00:00:00Z }
 
@@ -22,14 +26,14 @@ provenance: derived
 
 [The rocket equation](the-rocket-equation.md) describes a burn in empty space. A real launch is fought against gravity and air the whole way up, and the gap is not small.
 
-For a Falcon 9 as simulated here, the engines produce **9,386 m/s** and only **7,579 m/s** becomes speed.
+For a Falcon 9 as simulated here, the engines produce **9,669 m/s** and only **7,832 m/s** becomes speed.
 
 | Where it went | Share |
 |---|---:|
-| Speed gained | ~81 % |
-| Gravity | ~17 % |
-| Steering | ~2 % |
-| Air | ~0.2 % |
+| Speed gained | 81 % |
+| Gravity | 16 % |
+| Steering | 3 % |
+| Air | 0.2 % |
 
 ## Gravity takes far more than air, which surprises people
 
@@ -64,3 +68,11 @@ That is why polar and sun-synchronous launches carry noticeably less, and it is 
 `src/rocketry/ascent.py`, a 2D numerical integration with the losses decomposed by an exact identity rather than estimated. A hand-written RK4 integrator and a forty-line standard atmosphere, both written out rather than imported, which kept about 15 MB of `scipy` out of the browser bundle.
 
 Model limits worth knowing: one drag coefficient for the whole stack, a prescribed pitch program rather than a free gravity turn, and a non-rotating Earth. Good enough to be right about the size and ordering of the losses, not a trajectory design tool.
+
+## Which losses you pay depends on how it is steered
+
+A launch vehicle is not steered the same way for the whole flight. Inside the atmosphere it has to fly close to zero angle of attack or the structural loads become unsurvivable, so its attitude comes from a **stored pitch program** that cannot chase a target. Above the atmosphere that constraint lifts and **closed-loop guidance** takes over, steering at whatever attitude the target orbit demands. See [the captured source](../../../raw/2026-08-16-ascent-guidance-open-and-closed-loop.md).
+
+Both halves matter to the accounting here, and modelling only the first is what a naive simulation does. The open-loop program can put a vehicle on a ballistic arc that peaks above 200 km and then falls back while the engines are still running, which no real launch does. Nothing in the loss decomposition looks wrong when that happens: gravity, drag and steering still add up exactly. The trajectory is simply not one anybody would fly.
+
+The closed loop aims at an altitude *and* at zero climb rate, arriving at both when the propellant runs out, because an orbit is a position and a velocity together. As the vehicle approaches orbital speed the thrust it needs to hold itself up falls away to nothing, which is the same statement as **orbit is sideways speed** written as a control law.
