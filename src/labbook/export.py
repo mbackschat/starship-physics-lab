@@ -4,6 +4,12 @@ A study's output goes in an ``out/`` directory beside its own ``run.py``, which
 is what :func:`beside` returns. Figures are written as both PNG and interactive
 HTML: the PNG so it can be read back and looked at, embedded in a document or
 pasted into a conversation, the HTML so the numbers behind it stay inspectable.
+
+**`out_dir` is required.** There used to be a module-level fallback pointing at a
+shared ``studies/out``, which nothing ever used and which quietly offered a way
+to write outside the folder that holds the script and its finding. Requiring the
+argument makes the convention something the type checker enforces rather than
+something everyone has to remember.
 """
 
 import csv
@@ -12,14 +18,6 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:  # pragma: no cover
     from plotly.graph_objects import Figure
-
-OUT_DIR = Path(__file__).resolve().parents[2] / "studies" / "out"
-"""Fallback output directory, used when a caller does not say where to write.
-
-Prefer :func:`beside`, so each study's output lands next to the script that
-produced it.
-"""
-
 
 def beside(script: str) -> Path:
     """Output directory for a study, next to the script that produces it.
@@ -40,7 +38,7 @@ def save_figure(
     figure: "Figure",
     name: str,
     *,
-    out_dir: Path | None = None,
+    out_dir: Path,
     width: int = 1000,
     height: int = 600,
     scale: int = 2,
@@ -50,7 +48,7 @@ def save_figure(
     Args:
         figure: The plotly figure.
         name: Base filename without extension, for example ``staging-sweep``.
-        out_dir: Destination directory. Pass ``beside(__file__)``.
+        out_dir: Destination directory, normally ``beside(__file__)``.
         width: PNG width in pixels.
         height: PNG height in pixels.
         scale: PNG resolution multiplier. 2 gives a crisp image on a retina
@@ -67,13 +65,13 @@ def save_figure(
     return [png, html]
 
 
-def save_table(markdown: str, name: str, *, out_dir: Path | None = None) -> Path:
+def save_table(markdown: str, name: str, *, out_dir: Path) -> Path:
     """Write a markdown table to disk.
 
     Args:
         markdown: Rendered markdown, typically from :func:`labbook.tables.table`.
         name: Base filename without extension.
-        out_dir: Destination directory. Pass ``beside(__file__)``.
+        out_dir: Destination directory, normally ``beside(__file__)``.
 
     Returns:
         The path written.
@@ -84,13 +82,13 @@ def save_table(markdown: str, name: str, *, out_dir: Path | None = None) -> Path
     return path
 
 
-def save_data(rows: list[dict[str, Any]], name: str, *, out_dir: Path | None = None) -> Path:
+def save_data(rows: list[dict[str, Any]], name: str, *, out_dir: Path) -> Path:
     """Write raw results as CSV, so a result can be re-examined without re-running.
 
     Args:
         rows: Records to write. Keys of the first row define the columns.
         name: Base filename without extension.
-        out_dir: Destination directory. Pass ``beside(__file__)``.
+        out_dir: Destination directory, normally ``beside(__file__)``.
 
     Returns:
         The path written.
@@ -109,15 +107,14 @@ def save_data(rows: list[dict[str, Any]], name: str, *, out_dir: Path | None = N
     return path
 
 
-def _prepare(out_dir: Path | None) -> Path:
-    """Resolve and create the output directory.
+def _prepare(out_dir: Path) -> Path:
+    """Create the output directory if it is not there yet.
 
     Args:
-        out_dir: Requested directory, or None for the default.
+        out_dir: Destination directory.
 
     Returns:
-        The directory, guaranteed to exist.
+        The same directory, guaranteed to exist.
     """
-    target = out_dir or OUT_DIR
-    target.mkdir(parents=True, exist_ok=True)
-    return target
+    out_dir.mkdir(parents=True, exist_ok=True)
+    return out_dir

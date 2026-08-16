@@ -11,7 +11,6 @@ deploy/site/
 
 # Generated study output. Regenerate with: uv run python studies/<name>/run.py
 studies/*/out/
-studies/out/
 
 # The source article is copyrighted and is deliberately NOT part of this repo.
 # It is cited by URL in docs/physics-reference.md.
