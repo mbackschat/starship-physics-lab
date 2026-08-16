@@ -257,9 +257,20 @@ Free-form builder with validation, scoring and comparison against the library.
 
 Building it caught a teaching bug worth recording. Shrinking a stage while holding its dry mass fixed makes the rocket *worse*, so the obvious instruction, "cut the upper stage in half", taught the opposite of the truth. A smaller stage is genuinely a lighter one, so the sandbox scales dry mass with propellant by default and offers a checkbox to turn that off, which turns the trap into the lesson. Two tests hold both directions in place.
 
-### M8: Polish
+### M8: Polish — DONE
 Fact-check page, glossary complete, guided tour, shareable URL state, responsive layout, light and dark themes, accessibility pass on the palette.
-**Done when:** an untrained reader can complete the guided tour without asking a question.
+**Done:** eleven chapters with a guided tour on the landing page, a searchable glossary whose definitions never use the word being defined, a fact-check chapter that recomputes the article's numbers live rather than quoting them, shareable links, and chart invariants tested in both light and dark rather than checked by eye.
+
+Two defects surfaced here that would not have shown up any other way. Writing the URL on every run left the address bar a step behind the control; and the slider had no stable key, so Streamlit rebuilt it whenever the URL-derived default moved and silently discarded what the reader had just set.
+
+### Beyond the plan
+
+The plan is finished. Sensible next directions, in rough order of value:
+
+1. **Flight 14.** Expected within weeks. Fill in `data/flights.yaml` and the case study gains its first real measurement. No code change should be needed; if one is, the abstraction is wrong.
+2. **More rockets.** Electron, Vulcan, SLS, Soyuz, Falcon Heavy. Pure data entry against the calibration test.
+3. **A proper parallel-staging model**, which would let Ariane 64 and the Space Shuttle come off the excused list.
+4. **Translate to German**, which the content module was structured for from the start.
 
 Milestones M0 to M2 are prerequisites for everything. M3 to M5 are the core product. M6 to M8 can be reordered or trimmed if scope pressure appears; the physics core cannot.
 

@@ -71,6 +71,8 @@ Each investigation lives in [`studies/`](studies/), one folder holding the scrip
 
 ## Status
 
+Every milestone in [docs/plan.md](docs/plan.md) is complete.
+
 | | |
 |---|---|
 | done | **M0-M2** Scaffold, physics core, rocket library |
@@ -82,7 +84,7 @@ Each investigation lives in [`studies/`](studies/), one folder holding the scrip
 | done | **M8a** Fact check and glossary chapters |
 | done | **M8b** Guided tour, shareable links, dark mode locked by tests |
 
-249 tests, `ruff` and `mypy --strict` clean, all green in CI before anything deploys. Full plan in [docs/plan.md](docs/plan.md).
+250 tests, `ruff` and `mypy --strict` clean, all green in CI before anything deploys. Full plan in [docs/plan.md](docs/plan.md).
 
 ## How it runs in a browser
 
@@ -110,7 +112,7 @@ Two rules that do not bend:
 
 ```sh
 uv sync                                          # install
-uv run pytest                                    # 249 tests
+uv run pytest                                    # 250 tests
 uv run ruff check . && uv run mypy               # lint and types
 uv run streamlit run app/Home.py                 # the app, locally
 
