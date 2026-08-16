@@ -210,3 +210,34 @@ class TestTheCentralInsight:
         result = two_stage_payload(booster_propellant=booster, ship_propellant=ship)
         assert result.booster_delta_v + result.ship_delta_v == pytest.approx(9404.0, rel=1e-6)
         assert math.isfinite(result.payload)
+
+
+class TestRecoveryBurnsAreRealManoeuvres:
+    """A burn that creates propellant is not a burn.
+
+    `Burn` was a plain dataclass with no domain validation, so a negative
+    delta-v produced a negative reserve and a stage carrying 10 t could report
+    13 t available for ascent. `Stage` already refuses to promise away more
+    propellant than it holds; this closes the same hole one layer down.
+    """
+
+    def test_a_burn_cannot_take_the_vehicle_backwards(self):
+        with pytest.raises(ValueError, match="delta_v"):
+            Burn(delta_v=-100.0, isp=300.0)
+
+    @pytest.mark.parametrize("isp", [0.0, -1.0])
+    def test_a_burn_needs_a_real_engine(self, isp: float):
+        with pytest.raises(ValueError, match="isp"):
+            Burn(delta_v=100.0, isp=isp)
+
+    def test_an_ordinary_burn_is_still_accepted(self):
+        assert Burn(delta_v=350.0, isp=300.0, label="landing burn").delta_v == 350.0
+        assert Burn(delta_v=0.0, isp=300.0).delta_v == 0.0
+
+    @given(
+        dry=st.floats(min_value=1.0, max_value=1000.0),
+        delta_v=st.floats(min_value=0.0, max_value=4000.0),
+        isp=st.floats(min_value=50.0, max_value=500.0),
+    )
+    def test_recovery_propellant_is_never_negative(self, dry, delta_v, isp):
+        assert recovery_propellant(dry, [Burn(delta_v=delta_v, isp=isp)]) >= 0.0

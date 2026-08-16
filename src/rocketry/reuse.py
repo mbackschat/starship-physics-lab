@@ -31,6 +31,27 @@ class Burn:
     isp: float
     label: str = ""
 
+    def __post_init__(self) -> None:
+        """Reject a manoeuvre that is not one.
+
+        Recovery burns are read from YAML, where a sign slip is easy and its
+        consequence is not obvious: a negative delta-v gives a negative reserve,
+        so a stage reports more propellant available for ascent than it carries.
+        `Stage` already refuses to promise away propellant it does not have, and
+        this closes the same hole one layer down.
+
+        Raises:
+            ValueError: If the burn would create propellant or run an impossible
+                engine.
+        """
+        if self.delta_v < 0:
+            raise ValueError(
+                f"a burn cannot have negative delta_v, got {self.delta_v}. A recovery "
+                "burn slows the stage down; it is still a positive velocity change."
+            )
+        if self.isp <= 0:
+            raise ValueError(f"a burn needs a positive isp, got {self.isp}")
+
 
 def recovery_propellant(dry_mass: float, burns: Sequence[Burn]) -> float:
     """Propellant a stage must hold back to perform a sequence of burns.
