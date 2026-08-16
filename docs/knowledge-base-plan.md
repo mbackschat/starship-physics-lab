@@ -16,12 +16,15 @@ Pages worth writing are listed in [docs/knowledge/index.md](knowledge/index.md) 
 
 ## Phase 4: close the loop on Flight 14
 
-Blocked until the flight happens.
+Blocked until the flight happens. **The preparation is done**: the prediction is pre-registered, and `tests/test_flight_record.py` proves a flown Flight 14 needs only the YAML by filling the waiting row in a temporary copy and loading it. That test also fails the day the row is filled in for real, which is the reminder to do the rest of this.
+
+Worth remembering when it happens: a *low* payload proves nothing, because nobody flies a maximum load on a first orbital attempt. Only a high one discriminates. The thresholds are in the pre-registration.
 
 - [ ] Capture sources, compile `flights/flight-14.md`.
-- [ ] Fill the existing Flight 14 row in `data/flights.yaml`. One row. If code has to change, the abstraction is wrong and fixing that comes first.
+- [ ] Fill the existing Flight 14 row in `data/flights.yaml`. One row.
+- [ ] Retire `tests/test_flight_record.py`, whose job is finished once the row is real.
 - [ ] Run the calibration and golden tests, and record what reality said.
-- [ ] **Study: predicted against observed.** Cite the pre-registration from Phase 0.
+- [ ] **Study: predicted against observed.** Cite the pre-registration.
 - [ ] If the measurement contradicts chapter 7, revise the chapter and say so plainly.
 
 ---
