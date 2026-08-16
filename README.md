@@ -6,6 +6,12 @@
 
 **Rocket science, minus the reputation.** Almost everything that matters follows from one equation written down in 1903, and one uncomfortable fact: the propellant you need grows *exponentially* with the speed you want.
 
+## Why this exists
+
+I read [an article on Golem.de](https://www.golem.de/news/spacex-wie-das-starship-den-kampf-gegen-die-physik-verliert-2608-211916.html) arguing that Starship carries far less payload than SpaceX claims. It is genuinely informative and its physics looks sound, but looking sound is not the same as being checked. I wanted to recompute every number in it myself and find out.
+
+Doing that needs a model. And once the model existed, leaving it as a pile of one-off scripts seemed a waste, because the interesting part is not any single answer: it is watching an answer move when you change an assumption. So it became a lab to play around in.
+
 This is not a lecture with sliders bolted on. Every number on every page runs through a real, tested physics engine. Move one and watch it propagate.
 
 ## → [**Open the app**](https://mbackschat.github.io/starship-physics-lab/) ←
@@ -42,7 +48,7 @@ Units switch between metric and US customary anywhere, in the app and in generat
 
 ## Where the numbers come from
 
-The starting point is a German article arguing that Starship carries far less payload than claimed. Every number in it is recomputed here independently: **61 of 64 checkable numbers reproduce within 2 %**, and the three that do not are recorded as corrections rather than quietly fixed.
+Every number in the article is recomputed here independently: **61 of 64 checkable numbers reproduce within 2 %**, and the three that do not are recorded as corrections rather than quietly fixed.
 
 Its central claim is rebuilt from scratch rather than taken on trust. Sweeping the staging speed on the same 5,850 t rocket puts the payload optimum near 11,500 km/h against the 6,000 km/h Starship actually flies, **worth roughly 2.2x the payload**.
 
