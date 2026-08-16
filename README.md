@@ -78,6 +78,14 @@ print(table(rows, [
 
 Each investigation lives in [`studies/`](studies/), one folder holding the script, the written finding and its figures, so understanding accumulates in the repository instead of evaporating in a chat log.
 
+## The sources are kept, and they are held to
+
+`studies/` is what the project **worked out**. [`docs/knowledge/`](docs/knowledge/) is what it **looked up**: compiled pages on the vehicles, engines, flights and concepts, each citing dated captures in [`raw/`](raw/) that are never edited, so recapturing a source later shows exactly which numbers moved.
+
+The part that makes this worth keeping rather than bookmarking: a page states the values it stands behind, and **the test suite fails if the rocket library disagrees with them**, naming the field and both numbers. If an operator restates a figure and only one of the two places is updated, the build goes red. Every page also carries an expiry date, and a weekly job files a single GitHub issue listing whatever is due a recheck, closing it again when nothing is.
+
+The schema is [Open Knowledge Format](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) with two extensions; the design and the reasoning are in [docs/knowledge-base.md](docs/knowledge-base.md).
+
 ## How it runs in a browser
 
 GitHub Pages serves static files, and browsers only execute JavaScript and WebAssembly. Python works because **[Pyodide](https://pyodide.org) is CPython itself compiled to WebAssembly**, and [stlite](https://github.com/whitphx/stlite) packages Streamlit for it. Your browser downloads the interpreter once, then runs the very same `.py` files that run locally. Nothing is sent anywhere.
@@ -95,6 +103,8 @@ app/            Streamlit front end, thin glue over the two above
 data/           the rocket library as editable YAML, every entry sourced
 assets/         the mark, as a plain SVG file
 studies/        one folder per question: script, finding, figures
+raw/            captured sources, text only, dated, never edited
+docs/knowledge/ compiled reference pages that cite them
 deploy/         static site build, browser acceptance checks, screenshots
 ```
 

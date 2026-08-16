@@ -8,6 +8,7 @@ a skill put it one directory deeper and every relative link broke silently.
 
 import re
 from pathlib import Path
+from typing import ClassVar
 
 import pytest
 import yaml
@@ -63,3 +64,61 @@ def test_the_agent_aliases_are_symlinks_rather_than_copies():
         assert path.is_symlink(), f"{alias} should be a symlink to {target}"
         assert path.readlink().as_posix() == target, f"{alias} points somewhere unexpected"
         assert path.exists(), f"{alias} is a symlink to nothing"
+
+
+class TestTheReadmeDescribesTheRepositoryThatExists:
+    """A hand-written directory listing goes stale the first time one is added.
+
+    The knowledge base was built, and the README went on describing a repository
+    without one: `raw/` and `docs/knowledge/` were missing from its layout block
+    while `studies/` and `assets/` were listed. Nothing failed, because prose
+    does not fail.
+    """
+
+    ROOT = Path(__file__).resolve().parents[1]
+
+    IGNORED: ClassVar[set[str]] = {"docs", "src", "tests"}
+    """Directories the layout block deliberately does not name at the top level.
+
+    `docs/` and `src/` appear through their subdirectories instead, which the
+    block names individually because that is where the meaning is. Tests need no
+    tour.
+
+    Everything beginning with a dot is skipped as well, without listing it:
+    tooling, caches and agent configuration all live there, and enumerating them
+    would rot every time a tool changed its cache directory.
+    """
+
+    def _layout(self) -> str:
+        readme = (self.ROOT / "README.md").read_text()
+        start = readme.index("## Layout")
+        return readme[start : readme.index("```", readme.index("```", start) + 3)]
+
+    def test_every_top_level_directory_is_described(self):
+        missing = [
+            path.name
+            for path in sorted(self.ROOT.iterdir())
+            if path.is_dir()
+            and not path.name.startswith(".")
+            and path.name not in self.IGNORED
+            and f"{path.name}/" not in self._layout()
+        ]
+        assert missing == [], f"README's layout block does not mention {missing}"
+
+    def test_the_knowledge_base_is_described_where_a_reader_would_look(self):
+        readme = (self.ROOT / "README.md").read_text()
+        assert "docs/knowledge/" in readme
+        assert "raw/" in readme
+        assert "docs/knowledge-base.md" in readme, "link to the design, not just the pages"
+
+    def test_it_does_not_describe_directories_that_are_gone(self):
+        layout = self._layout()
+        named = [
+            line.split("/")[0].strip()
+            for line in layout.splitlines()
+            if "/" in line and not line.startswith("#") and not line.startswith("`")
+        ]
+        for name in named:
+            if not name or name.startswith("("):
+                continue
+            assert (self.ROOT / name).exists(), f"README names {name}, which is not here"
