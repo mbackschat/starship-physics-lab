@@ -75,7 +75,9 @@ with controls:
         format="%.0f m/s",
         help="Reported as 500 km/h, which is 139 m/s.",
     )
-    reset_button("c6.seconds", "c6.thrust", "c6.slowdown", "c6.residual")
+    # Drawn here, filled in once the residual slider below exists: a reset
+    # button can only restore a control it has already seen.
+    reset_slot = st.container()
     engine_isp = 327.0
     vacuum_isp = 350.0
     propellant = thrust / engine_isp * seconds
@@ -115,6 +117,9 @@ residual = st.slider(
     help="For the landing burn and manoeuvring. Nobody outside SpaceX knows this number.",
 )
 st.metric("Implied empty weight", formatter.mass(weighing.dry_mass_t(residual), digits=0))
+
+with reset_slot:
+    reset_button("c6.seconds", "c6.thrust", "c6.slowdown", "c6.residual")
 
 st.divider()
 st.subheader("Three ways of measuring, and where they land")

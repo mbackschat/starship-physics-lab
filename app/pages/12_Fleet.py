@@ -106,7 +106,9 @@ with by_group:
         options=[group.name for group in GROUPS],
         help="The same grouping the vehicle pickers use. None ticked means all of them.",
     )
-    reset_button("c12.filter", "c12.columns", "c12.groups", "c12.vehicle")
+    # Drawn here, filled in once the vehicle picker further down exists: a
+    # reset button can only restore a control it has already seen.
+    reset_slot = st.container()
     for group in GROUPS:
         if group.name in chosen and group.hint:
             st.caption(group.hint)
@@ -250,6 +252,9 @@ if shown:
             ),
             unsafe_allow_html=True,
         )
+
+with reset_slot:
+    reset_button("c12.filter", "c12.columns", "c12.groups", "c12.vehicle")
 
 st.divider()
 

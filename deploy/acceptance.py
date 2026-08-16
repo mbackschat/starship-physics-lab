@@ -334,6 +334,90 @@ def check_drawings(page: Page, base: str, failures: list[str]) -> None:
         print("   ok       play runs the burn")
 
 
+def _thumb(page: Page) -> str:
+    """What the first slider's handle currently reads.
+
+    Args:
+        page: The browser page.
+
+    Returns:
+        The value shown above the handle.
+    """
+    return page.get_by_test_id("stSliderThumbValue").first.inner_text()
+
+
+def _nudge(page: Page, which: int, times: int = 1) -> None:
+    """Move a slider the way a reader would, from the keyboard.
+
+    The handle is BaseWeb's ``role="slider"`` element rather than a range
+    input. The two are not interchangeable: the development server and the
+    interpreter the built site downloads ship different Streamlit frontends,
+    and only the built one is what a reader meets.
+
+    Args:
+        page: The browser page.
+        which: Which slider on the page, in draw order.
+        times: How many steps to move it.
+    """
+    handle = page.get_by_test_id("stSlider").nth(which).locator('[role="slider"]')
+    handle.focus()
+    for _ in range(times):
+        handle.press("ArrowRight")
+    page.wait_for_timeout(SETTLE_MS)
+
+
+def check_reset(page: Page, base: str, failures: list[str]) -> None:
+    """Reset must move the control the reader is looking at, not only the value.
+
+    Streamlit pushes a value down to the browser when session state is
+    *assigned* to, and not when a key is deleted. A reset written the obvious
+    way therefore leaves the slider sitting exactly where it was dragged while
+    the numbers beside it jump back to their defaults, and the next rerun sends
+    the stale value back up and undoes the reset completely.
+
+    Every unit test passes throughout, because on the Python side the value
+    really did return to its default. Only a browser can see the handle, which
+    is why this check is here and not in `tests/test_app.py`.
+
+    Args:
+        page: The browser page.
+        base: Site root.
+        failures: Collects what went wrong.
+    """
+    print("6. reset moves the controls, not only the numbers beside them")
+    boot(page, base + "Rocket_equation")
+    if not page.get_by_test_id("stSliderThumbValue").count():
+        failures.append("chapter 1 drew no slider, so reset could not be checked")
+        print("   MISSING  the sliders")
+        return
+
+    started = _thumb(page)
+    _nudge(page, 0, times=20)
+    moved = _thumb(page)
+    if moved == started:
+        failures.append(f"the slider would not move off {started}, leaving reset unchecked")
+        print("   ERROR    the slider did not move")
+        return
+    print(f"   moved    {started} -> {moved}")
+
+    page.get_by_role("button", name="Reset the controls").click()
+    page.wait_for_timeout(SETTLE_MS)
+    if (back := _thumb(page)) != started:
+        failures.append(f"reset left the slider reading {back}, not {started}")
+        print(f"   ERROR    reset left it at {back}")
+        return
+    print(f"   ok       back to {started}")
+
+    # A browser that was never told still holds the old value and hands it back
+    # on the next rerun, so touching another control is part of the check.
+    _nudge(page, 2)
+    if (after := _thumb(page)) != started:
+        failures.append(f"the reset slider sprang back to {after} at the next touch")
+        print(f"   ERROR    it sprang back to {after}")
+    else:
+        print(f"   ok       still {started} after another control moves")
+
+
 def main() -> int:
     """Run every check against a local build or the deployed site.
 
@@ -365,6 +449,7 @@ def main() -> int:
                 check_reload,
                 check_hostile_urls,
                 check_drawings,
+                check_reset,
             ):
                 check(page, base, failures)
                 print()

@@ -29,6 +29,15 @@ from rocketry.models import Provenance, Vehicle
 TITLE = "Starship Physics Lab"
 SLOGAN = "Understand Starship. Then build a better one."
 
+# Where `reset_button` remembers what each control was showing the first time it
+# drew the page. Namespaced away from the chapter keys so that no reset can
+# match it by prefix and try to restore the record of the starting values.
+_STARTING_VALUES = "_shell.starting_values"
+
+# The reset button's own key. One per page, so a fixed name is enough, and it
+# gives the tests something exact to click.
+RESET_KEY = "_shell.reset"
+
 
 def page(title: str, teaser: str, *, icon: str = "🚀") -> None:
     """Start a chapter: page config, title and the one-line promise.
@@ -107,29 +116,68 @@ def reset_button(*keys: str, label: str = "Reset the controls") -> None:
     short of reloading, which also throws away the chapter they were on. That
     makes people cautious with the controls, which is the opposite of the point.
 
-    Streamlit gives a widget its declared default again as soon as its key
-    leaves session state, so clearing the keys is the whole mechanism.
+    **Restoring means assigning, never deleting**, and the difference is
+    invisible to every test that does not open a browser. Clearing a key does
+    give the widget its declared default again on the Python side, but
+    Streamlit only pushes a value down to the browser when session state was
+    *assigned* to. After a delete the slider in front of the reader keeps its
+    old position and hands that stale value straight back on the next rerun:
+    the page contradicts itself for one run, and then the reset is undone.
+
+    Assigning needs a value, and the starting value cannot be declared here
+    because it is not always a constant. A sandbox slider starts at whatever
+    the chosen vehicle happens to weigh. So it is remembered the first time
+    this function sees the control, which is why **a reset button must be drawn
+    after every control it names**. Where the button belongs higher up the
+    page, reserve its place with ``st.container()`` and fill it in once the
+    controls below exist. ``tests/test_app.py`` holds every page to this.
 
     Args:
-        *keys: The ``key=`` of every control to clear. A widget with no key
+        *keys: The ``key=`` of every control to restore. A widget with no key
             cannot be reset, which is why they all have one. Each is also
             treated as a prefix, so a control whose key varies with another
-            control still gets cleared.
+            control is covered too.
         label: Button text.
     """
+    started: dict[str, object] = st.session_state.setdefault(_STARTING_VALUES, {})
+    for name in _controls(keys):
+        started.setdefault(name, st.session_state[name])
 
-    def clear() -> None:
-        for name in list(st.session_state):
-            if any(name == key or name.startswith(f"{key}_") for key in keys):
+    def restore() -> None:
+        for name in _controls(keys):
+            if name in started:
+                st.session_state[name] = started[name]
+            else:
+                # A control whose key varies with another control, met for the
+                # first time after this button was drawn. It leaves the page
+                # entirely once the control above it is restored, so the
+                # browser drops it rather than holding a stale value.
                 del st.session_state[name]
 
     st.button(
         label,
-        on_click=clear,
+        on_click=restore,
+        key=RESET_KEY,
         type="tertiary",
         icon=":material/restart_alt:",
         help="Put every control on this page back to the value it started at.",
     )
+
+
+def _controls(keys: tuple[str, ...]) -> list[str]:
+    """Every control a reset covers: the keys named, and any derived from one.
+
+    Args:
+        keys: The keys the reset button was given.
+
+    Returns:
+        Matching names currently in session state.
+    """
+    return [
+        name
+        for name in st.session_state
+        if any(name == key or name.startswith(f"{key}_") for key in keys)
+    ]
 
 
 def _chapter_nav() -> None:

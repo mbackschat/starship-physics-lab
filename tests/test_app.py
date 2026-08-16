@@ -12,6 +12,7 @@ booting properly removes it while also covering the links themselves.
 """
 
 import ast
+import sys
 from pathlib import Path
 
 import pytest
@@ -22,6 +23,14 @@ from rocketry.library import load
 from rocketry.reuse import RecoveryProfile
 
 APP = Path(__file__).resolve().parents[1] / "app"
+
+# The pages reach their shared components the same way, and the reset button's
+# key has to come from the one place that sets it: a copy here would go stale
+# silently, leaving these tests clicking a button that no longer exists.
+sys.path.insert(0, str(APP))
+
+from components.shell import RESET_KEY  # noqa: E402
+
 ENTRYPOINT = APP / "Home.py"
 PAGES = sorted(APP.glob("pages/*.py"))
 
@@ -287,28 +296,11 @@ def test_the_url_and_the_slider_never_disagree():
         assert app.metric[1].value.startswith(str(value))
 
 
-def test_reset_puts_a_moved_control_back():
-    """A reader who has moved four sliders had no way back except reloading.
-
-    Reloading also loses the chapter, so people were cautious with the controls,
-    which is the opposite of what this app is for.
-    """
-    app = run(APP / "pages" / "1_Rocket_equation.py")
-    before = app.slider[0].value
-    app.slider[0].set_value(before + 20.0).run()
-    assert app.slider[0].value != before
-
-    reset = [b for b in app.button if "Reset" in b.label]
-    assert reset, "every page with controls needs a reset"
-    reset[0].click().run()
-    assert app.slider[0].value == before
-
-
 def test_reset_leaves_the_unit_choice_alone():
     """It resets the page's controls, not the reader's settings."""
     app = run(APP / "pages" / "1_Rocket_equation.py")
     app.radio[0].set_value(UnitSystem.US).run()
-    next(b for b in app.button if "Reset" in b.label).click().run()
+    app.button(key=RESET_KEY).click().run()
     assert app.radio[0].value is UnitSystem.US
 
 
@@ -322,9 +314,125 @@ worded for what it actually does.
 """
 
 
-@pytest.mark.parametrize("path", [p for p in PAGES if p.stem not in NO_RESET], ids=lambda p: p.stem)
+RESETTABLE = [p for p in PAGES if p.stem not in NO_RESET]
+
+
+@pytest.mark.parametrize("path", RESETTABLE, ids=lambda p: p.stem)
 def test_every_page_with_controls_offers_a_reset(path: Path):
     assert "reset_button(" in path.read_text(), f"{path.stem} has controls but no way back"
+
+
+# The unit system is a reader setting rather than one of the page's controls,
+# and a reset deliberately leaves it alone. `test_reset_leaves_the_unit_choice_alone`
+# is what holds that. The radio is excluded here for a second reason too: its
+# options arrive formatted for display, so nothing generic can name another one
+# to select. Chapter 5's is moved by hand in the tests above.
+SETTINGS = {"unit_system"}
+
+
+def movable(app: AppTest) -> list:
+    """Every control on the page a reader can move.
+
+    Args:
+        app: A rendered page.
+
+    Returns:
+        The widgets, in the order the page draws them. Disabled ones are left
+        out: the sandbox greys out the ship's empty weight while it is being
+        scaled automatically, and a control the reader cannot move is not one
+        a reset has to put back.
+    """
+    everything = [
+        *app.slider,
+        *app.selectbox,
+        *app.checkbox,
+        *app.toggle,
+        *app.multiselect,
+        *app.text_input,
+    ]
+    return [
+        widget
+        for widget in everything
+        if widget.key and widget.key not in SETTINGS and not widget.disabled
+    ]
+
+
+def move(widget) -> None:
+    """Put one control somewhere other than where it is sitting.
+
+    Args:
+        widget: The control to move.
+    """
+    match widget.type:
+        case "slider":
+            widget.set_value(widget.min if widget.value == widget.max else widget.max)
+        case "selectbox":
+            widget.select_index((widget.index + 1) % len(widget.options))
+        case "checkbox" | "toggle":
+            widget.set_value(not widget.value)
+        case "multiselect":
+            # Sound only because this app's multiselect options are plain
+            # strings: the harness reports options already formatted for
+            # display, and selecting needs the underlying value.
+            widget.set_value([] if widget.value else [widget.options[0]])
+        case "text_input":
+            widget.set_value("" if widget.value else "a")
+        case _:
+            raise AssertionError(f"no way to move a {widget.type} is defined")
+
+
+def positions(app: AppTest) -> dict[str, object]:
+    """Where every control on the page currently sits.
+
+    Args:
+        app: A rendered page.
+
+    Returns:
+        Control key to current value.
+    """
+    return {widget.key: widget.value for widget in movable(app)}
+
+
+@pytest.mark.parametrize("path", RESETTABLE, ids=lambda p: p.stem)
+def test_reset_puts_every_moved_control_back(path: Path):
+    """A reader who has moved four sliders had no way back except reloading.
+
+    Reloading also loses the chapter, so people were cautious with the controls,
+    which is the opposite of what this app is for.
+
+    Every control is moved in turn rather than only the first, because the
+    failure this catches is a reset button drawn *above* one of the controls it
+    names. It cannot remember a starting value for a control it has not met
+    yet, so what it eventually records is the reader's value rather than the
+    page's, and that one control then resets to wherever the reader first put
+    it. Checking a single control would leave the rest of the page unguarded.
+
+    One at a time and **on a freshly loaded page each time**, which is what
+    makes this catch anything. Moving the controls in sequence on one page lets
+    an earlier move warm the record up with the right starting values, and the
+    page then passes while still being broken for the reader whose *first*
+    action is the control drawn below the button. So each control is treated as
+    the first thing this reader touched. One at a time also keeps the states
+    reachable: filtering the fleet down to one rocket while selecting a
+    different rocket is not something a reader can do.
+
+    The other half of this feature is beyond any harness that does not open a
+    browser, and is checked in `deploy/acceptance.py`. Restoring the value
+    Python holds does not by itself move the slider the reader is looking at.
+    """
+    started = positions(run(path))
+    assert started, f"{path.stem} offers a reset but has no control to check it with"
+
+    for key in started:
+        app = run(path)
+        move(next(widget for widget in movable(app) if widget.key == key))
+        app.run()
+        assert not app.exception, f"{path.stem} raised on moving {key}: {app.exception}"
+        assert positions(app) != started, f"{key} did not move"
+
+        app.button(key=RESET_KEY).click().run()
+        assert not app.exception, f"{path.stem} raised on reset: {app.exception}"
+        assert positions(app) == started, f"{key} did not come back"
 
 
 @pytest.mark.parametrize("path", PAGES, ids=lambda p: p.stem)
