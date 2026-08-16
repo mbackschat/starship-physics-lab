@@ -10,9 +10,15 @@ Phase numbers are stable identifiers, not positions. A completed phase is remove
 
 ---
 
+## Maintenance, which nothing currently drives
+
+Every page carries a `stale_after` date and `uv run pytest -m freshness` reports the ones past it, but that check is deselected from the default run on purpose and **nothing runs it automatically**. Left as it is, the corpus rots quietly.
+
+- [ ] **Decide what drives the recheck.** A scheduled agent is the obvious fit and the repository already has the tooling for one. The alternative is a habit, which is not a mechanism.
+
 ## Corpus backlog
 
-Pages worth writing, kept in [docs/knowledge/index.md](knowledge/index.md) under "Not yet covered" so the gap list sits beside the pages themselves rather than here. Super Heavy V3 and Falcon 9 are the two that would most improve the app, the first to pair with the ship page and the second because it is the calibration reference the whole model is checked against.
+Pages worth writing are listed in [docs/knowledge/index.md](knowledge/index.md) under "Not yet covered", so the gap list sits beside the pages themselves rather than here.
 
 ## Phase 4: close the loop on Flight 14
 
