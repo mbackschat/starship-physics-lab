@@ -23,6 +23,18 @@ uv run python deploy/acceptance.py --local       # drive the built site in a rea
 uv run python deploy/screenshot.py               # refresh the README images
 ```
 
+## Committing
+
+**Commit as soon as a piece of work lands. Do not ask first, and do not leave finished work sitting in the working tree.** This overrides the general "only commit when asked" default; in this repository it is standing permission.
+
+"Landed" means verified, not merely written: `ruff`, `mypy` and `pytest` are green, and for anything a reader can see, `deploy/acceptance.py --local` too. A commit that has not been checked is not a landing.
+
+Keep the commits separable. One coherent change per commit, and prefer boundaries where no file straddles two commits, since partial staging is not available here. If a change genuinely spans layers, commit the new modules first and the wiring second: that ordering leaves each commit working on its own.
+
+Conventional Commits, `type(scope): subject`, imperative, lowercase type. Subject line only unless a non-obvious *why* needs one or two sentences of body. No bullet lists, no test counts, no restating the diff.
+
+**Pushing is not automatic.** A push to `main` triggers CI and deploys the live site, so it stays an explicit request. Commit freely; push when asked.
+
 `mypy` is configured to check `src` only and runs `--strict`. `ruff` covers the whole tree with per-directory relaxations already set in `pyproject.toml`; do not add `noqa` where a per-file-ignore already exists.
 
 CI ([.github/workflows/pages.yml](.github/workflows/pages.yml)) runs `ruff`, `mypy` and `pytest` on every push to `main`, and only deploys if all three pass.
