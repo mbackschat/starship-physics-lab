@@ -14,6 +14,10 @@ No install, no sign-up, no server. The whole thing runs in your browser.
 
 *The launch simulator. Pick a rocket, choose how hard to pitch it over, and watch where its velocity actually goes: a Falcon 9's engines produce 9,386 m/s, but only 7,579 m/s of that ever becomes speed. Gravity takes 17 %, steering 2 %, air 0.2 %. Fly it badly and it crashes, and the page tells you why.*
 
+[![The staging split](docs/images/stages.png)](https://mbackschat.github.io/starship-physics-lab/)
+
+*Chapter 4. The same 5,850 tonne rocket every time; only the speed at which the two stages separate changes. The payload optimum sits near 11,500 km/h. Starship separates at 6,000 km/h, which costs it 69 tonnes.*
+
 ## What you can work out for yourself
 
 - **Why going fast is so expensive.** One tonne of rocket needs 1, 3, 7 then 15 tonnes of propellant for 1x, 2x, 3x and 4x the speed. The speed climbs in equal steps; the propellant doubles every time.
