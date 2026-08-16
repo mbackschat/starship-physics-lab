@@ -39,7 +39,7 @@ No install, no sign-up, no server. The whole thing runs in your browser.
 - **Where a launch's velocity goes.** Roughly a fifth never becomes speed at all.
 - **What reuse costs.** Super Heavy carries 330 tonnes of propellant to orbit purely so it can come home again.
 - **Whether Starship really carries 100 tonnes.** The rocket equation fixes about 300 t arriving in orbit no matter what. Whether 40 t or 100 t of that is cargo depends on one number SpaceX has not published since 2019. The app hands you that slider rather than the answer.
-- **How thirteen rockets compare side by side.** Every vehicle in the library, solved for payload and then flown from the pad, in one filterable table.
+- **How every rocket here compares side by side.** Every vehicle in the library, solved for payload and then flown from the pad, in one filterable table.
 
 Units switch between metric and US customary anywhere, in the app and in generated reports.
 
@@ -130,7 +130,7 @@ uv run python deploy/acceptance.py --local       # drive the built site in a bro
 uv run python deploy/screenshot.py               # refresh the README images
 ```
 
-`deploy/acceptance.py --local` serves the built site the way GitHub Pages does and drives it in a real browser: every chapter renders, a shared link opens its chapter on its setting, a reload stays put, and a hand-edited URL falls back rather than breaking. Drop `--local` to run the same checks against the deployed site. It is the only check that sees what a reader sees, so run it before trusting a green test suite about anything user-facing.
+`deploy/acceptance.py --local` serves the built site the way GitHub Pages does and drives it in a real browser. Drop `--local` to run the same checks against the deployed site. It is the only check that sees what a reader sees, so run it before trusting a green test suite about anything user-facing.
 
 ## Provenance
 

@@ -7,6 +7,7 @@ a skill put it one directory deeper and every relative link broke silently.
 """
 
 import re
+import sys
 from pathlib import Path
 from typing import ClassVar
 
@@ -14,6 +15,13 @@ import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
+
+sys.path.insert(0, str(ROOT / "deploy"))
+
+import build  # noqa: E402
+
+NUMBERS = ("no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine")
+"""Enough to spell any count the README is allowed to state in words."""
 SKILLS = sorted((ROOT / ".claude" / "skills").glob("*/SKILL.md"))
 LINK = re.compile(r"\[[^\]]+\]\((?!https?://)([^)#\s]+)\)")
 
@@ -110,6 +118,52 @@ class TestTheReadmeDescribesTheRepositoryThatExists:
         assert "docs/knowledge/" in readme
         assert "raw/" in readme
         assert "docs/knowledge-base.md" in readme, "link to the design, not just the pages"
+
+    def test_every_link_and_image_still_resolves(self):
+        """A moved or renamed file leaves the pitch pointing at nothing.
+
+        Cheaper to catch here than in front of whoever the repository was
+        linked to, since a broken image renders as a broken image on GitHub.
+        """
+        readme = (self.ROOT / "README.md").read_text()
+        targets = re.findall(r"\]\(([^)\s]+)\)", readme) + re.findall(r'src="([^"]+)"', readme)
+        broken = [
+            target
+            for target in targets
+            if not target.startswith(("http", "#", "mailto:"))
+            and not (self.ROOT / target.split("#")[0]).exists()
+        ]
+        assert broken == [], f"README points at {broken}, which is not here"
+
+    def test_every_command_it_offers_names_a_file_that_exists(self):
+        """The development block is the first thing anyone runs.
+
+        A renamed script leaves an invitation to run something that is not
+        there, and the person who follows it has no way to know whether they
+        broke their checkout or the README is simply old.
+        """
+        readme = (self.ROOT / "README.md").read_text()
+        block = readme[readme.index("## Development") :]
+        missing = [
+            name for name in re.findall(r"[\w./-]+\.py", block) if not (self.ROOT / name).exists()
+        ]
+        assert missing == [], f"README offers commands that run {missing}"
+
+    def test_the_runtime_dependency_count_is_the_one_the_build_ships(self):
+        """The README counts the wheels a reader downloads, and that is a claim.
+
+        It is the one number here worth restating, because keeping it small is
+        a deliberate constraint rather than an incidental fact, and adding to
+        it is supposed to be a decision somebody argues for. So it is pinned:
+        add a dependency without saying so and this fails.
+        """
+        readme = (self.ROOT / "README.md").read_text()
+        # stlite already bundles Streamlit, so the build lists one wheel fewer
+        # than the app actually depends on at runtime.
+        runtime = len(build.REQUIREMENTS) + 1
+        assert f"there are {NUMBERS[runtime]}" in readme, (
+            f"the app has {runtime} runtime dependencies; the README says otherwise"
+        )
 
     def test_it_does_not_describe_directories_that_are_gone(self):
         layout = self._layout()
