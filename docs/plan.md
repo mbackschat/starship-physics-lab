@@ -8,9 +8,15 @@ Companion to [physics-reference.md](physics-reference.md), which holds the verif
 
 ## 1. What we are building
 
-A Python web application that lets a curious beginner **understand why rockets perform the way they do**, by playing with them.
+A **physics workbench** with two consumers that must never disagree with each other.
 
-Not a slideshow with sliders bolted on. The user should be able to grab any number in the model, move it, and watch the consequences propagate through a real physics engine. The article's Starship analysis is the worked example that gives the whole thing a spine, but the app teaches the physics, not the polemic.
+**Consumer 1: the web application.** Lets a curious beginner understand why rockets perform the way they do, by playing with them. Not a slideshow with sliders bolted on. The user grabs any number in the model, moves it, and watches the consequences propagate through a real physics engine.
+
+**Consumer 2: scripted analysis.** A person or a coding agent answers a one-off question by writing a short script against the same tested core, and gets back a markdown table, a chart and a CSV. An investigation leaves an artefact in `docs/findings/`, so understanding accumulates in the repository rather than evaporating in a chat log.
+
+The two share everything below the presentation layer: the same physics, the same rocket library, the same validated palette, the same unit system. A figure produced in a script is indistinguishable from the same figure in the app, which is the point. If they could drift apart, the app would eventually be showing something the analysis no longer supports.
+
+The article's Starship analysis is the worked example that gives the whole thing a spine, but the project teaches the physics, not the polemic.
 
 ### Target audience
 
@@ -75,6 +81,9 @@ starship-viz/
     physics-reference.md      verified physics, data, golden numbers
     plan.md                   this file
   src/rocketry/               PHYSICS CORE. zero UI imports. 100 % of golden numbers covered.
+    models.py                 pydantic: Engine, Stage, Vehicle, Flight, Provenance
+    library.py                load() the YAML rocket library, validated and cross-checked
+    vehicle.py                stage-by-stage analysis of a whole vehicle
     constants.py              g0, R_earth, mu, v_rot, unit helpers
     tsiolkovsky.py            M1 delta-v and its four inverse forms
     models.py                 pydantic: Engine, Stage, Vehicle, Mission, Recovery
@@ -98,6 +107,19 @@ starship-viz/
                               inclination, altitude, outcome. Flight 14 sits here as an
                               empty row until it flies. Model predictions are plotted
                               against these points, so new data never touches code
+  src/labbook/                PRESENTATION. may import plotly and pandas; nothing
+                              imports it back. Shared by the app and by scripts.
+    units.py                  metric / US customary, conversion at the edge only
+    palette.py                the validated colour system, one visual language
+    tables.py                 markdown tables with per-column units
+    charts.py                 plotly builders used by both consumers
+    export.py                 save figures as PNG + HTML, tables as MD, data as CSV
+  analysis/                   one script per question. Committed, re-runnable.
+    verify_article.py         reproduces all 64 checkable numbers in the article
+    verify_v4_scaling.py      the V4 stretch and the scaling-exponent sweep
+    staging_split.py          where should a two-stage rocket separate?
+    out/                      generated figures and tables, gitignored
+  docs/findings/              the writeup for each investigation, linking its script
   app/
     Home.py                   entry point, guided tour launcher
     pages/                    one file per chapter, numbered for ordering
@@ -112,7 +134,9 @@ starship-viz/
     test_data.py              every YAML entry validates and round-trips
 ```
 
-**The hard rule: `src/rocketry/` never imports Streamlit, Plotly or pandas.** It is a library that happens to have a web front end. This keeps the physics testable, keeps the app thin, and means a different front end is a weekend, not a rewrite.
+**The hard rule: `src/rocketry/` never imports Streamlit, Plotly, pandas or anything from `labbook`.** It is a library that happens to have a web front end. This keeps the physics testable, keeps the app thin, means a different front end is a weekend rather than a rewrite, and lets a script import the physics without dragging in a charting stack.
+
+**The corollary: `rocketry` is SI throughout, always.** Tonnes, m/s, seconds, metres. Unit conversion happens exactly once, at the edge, in `labbook.units`. A unit bug can therefore change a label but never a result.
 
 ### Data model sketch
 
@@ -192,17 +216,24 @@ Non-negotiable, applied on every page:
 
 Red/green TDD throughout: the golden numbers in [physics-reference section 7](physics-reference.md#7-golden-numbers-test-fixtures) are written as failing tests first, then made to pass.
 
-### M0: Scaffold
-`uv` project, dependency set, `ruff` and `mypy` clean, `pytest` running, directory skeleton. Verification script from the analysis phase moved into `tests/` as the seed.
-**Done when:** `uv run pytest` runs and reports the golden-number tests as failing for the right reason.
+### M0: Scaffold — DONE
+`uv` project, dependency set, `ruff` and `mypy` configured, `pytest` running, directory skeleton, public GitHub repository.
 
-### M1: Physics core
-`tsiolkovsky.py`, `models.py`, `vehicle.py`, `payload.py`, `reuse.py`, `orbit.py`. No UI.
-**Done when:** every fixture in physics-reference section 7 passes except the ascent-simulation and optimiser ones, plus hypothesis properties hold (delta-v monotonic in mass ratio and in Isp; payload solver inverts the forward model to within 1e-6; propellant forms agree).
+### M1: Physics core — DONE
+`tsiolkovsky.py`, `dynamics.py`, `orbit.py`, `payload.py`, `reuse.py`, `scaling.py`, `staging.py`, `reentry.py`. No UI.
+**Done:** 51 golden-number tests and 20 property tests pass, `ruff` and `mypy --strict` clean. The staging optimiser independently reproduces the article's central claim, finding the payload optimum at 11 480 km/h against the 6 000 km/h Starship actually flies.
 
-### M2: Data library
-All five YAML files populated from physics-reference section 5, each entry validating against the pydantic models, each carrying provenance.
-**Done when:** loading the library and running Starship, Falcon 9, Ariane 6 and the Shuttle through the core reproduces their published payloads within the stated tolerance.
+### M2: Data library — DONE
+YAML files populated from physics-reference section 5, each entry validating against the pydantic models, each carrying provenance and an `in_article` flag.
+**Done:** 7 engines, 18 stages, 10 vehicles, 3 flights. `rocketry.vehicle.analyse` reproduces Falcon 9 at 9333 m/s and the Shuttle at 9445 m/s, both in the normal band, and puts Starship at its claimed 100 t payload at 8545 m/s, roughly 850 m/s short of orbit. That gap is the article's argument, arrived at independently.
+
+### M2b: More presets
+Add the remaining vehicles the article discusses (Atlas LV-3B, New Glenn, Long March 10B, SLS Block 1, Soyuz-2), then comparison vehicles it does not (Saturn V, Falcon Heavy, Electron, Vulcan Centaur, Neutron). Requires multi-stage support beyond two stages for Saturn V and Ariane 6.
+**Done when:** every vehicle in the library reproduces its published payload within 10 %, or carries a note explaining why it cannot.
+
+### M2c: Analysis workbench
+`labbook` units, tables, charts and export, plus the `analysis/` and `docs/findings/` convention.
+**Done:** a question can be answered in a 40-line script that emits a markdown table, a PNG, an interactive HTML chart and a CSV, in either unit system.
 
 ### M3: App shell plus chapters 1 and 2
 Streamlit multipage app, shared components, the formula renderer, the three-colour mass visual language, the glossary stub.
@@ -262,9 +293,42 @@ Concrete consequences for implementation, not just tone:
 
 The analytic delta-v budget (M1) carries chapters 1, 2, 4, 5, 6, 7 and 7b on its own. The numerical 2D simulation (M6) exists for chapter 3, where watching gravity loss accumulate in real time beats any static explanation. Keeping them separate means chapter 3 can slip without blocking anything else.
 
-### D5: Deployment — local first
+### D5: Hosting — **GitHub Pages via stlite** (decided)
 
-`uv run streamlit run app/Home.py`. Add an `stlite` static export in M8 if a shareable link is wanted. Streamlit Community Cloud is the middle option for a hosted URL without a build step.
+Repository: [github.com/mbackschat/starship-physics-lab](https://github.com/mbackschat/starship-physics-lab), public.
+
+**Primary: GitHub Pages, serving an [stlite](https://github.com/whitphx/stlite) build.** stlite runs the same Streamlit codebase in the browser on Pyodide. There is no server, so it is free permanently, never sleeps, never cold-starts a container, and scales to any number of readers. For a beginner clicking a link, that last point matters more than anything: a hosted Streamlit app that has gone to sleep costs the reader 30 seconds of blank screen, and most of them will not wait.
+
+This works here because the app is pure computation. No database, no secrets, no server-side state. numpy, scipy, pandas, pydantic and plotly all have Pyodide wheels; `ambiance` is pure Python and installs via micropip. The one dependency that would not survive is `kaleido`, which is why it is already a dev-only dependency: it is used by analysis scripts for PNG export and is never imported by the app.
+
+The cost is a one-time download of roughly 20 to 30 MB of Pyodide on first visit. Mitigate with a splash screen that says what is loading, and preload the rocket library so the first chart appears immediately after.
+
+**Secondary: Streamlit Community Cloud**, for a live URL during development with zero build step. Point it at the repo and it redeploys on push. Free, but apps sleep after inactivity and are capped at 1 GB of RAM.
+
+**Rejected:** Hugging Face Spaces (works, free, but also sleeps and adds a second place to keep in sync); Render, Railway and Fly.io (free tiers now credit-card gated or withdrawn).
+
+Deployment tasks, in M8:
+
+1. `pyproject.toml` already separates runtime from dev dependencies. Keep it that way; every runtime dependency must have a Pyodide wheel.
+2. Add `deploy/index.html` with the stlite bootstrap listing the app's requirements.
+3. Add a GitHub Actions workflow that builds the static bundle and publishes to Pages on push to `main`.
+4. Keep `uv run streamlit run app/Home.py` working locally and identically. If the two ever diverge, the local one is authoritative.
+
+### D6: Units — **switchable, at the presentation edge only** (decided)
+
+Metric and US customary, switchable in the app's sidebar and as one argument to any report or table in `labbook`.
+
+The physics core never sees a unit system. `labbook.units.Formatter` converts once, at the point of display, and `labbook.tables.Col` declares what each column measures so a whole report converts with one argument. Specific impulse is deliberately left in seconds in both systems, which is worth a sentence of explanation in the glossary: it is the same number for everyone, and that is exactly why engineers quote it that way.
+
+### D7: Presets — **every vehicle in the article, plus more, with article ones highlighted** (decided)
+
+Presets are the app's entry point. A beginner should never face an empty form. Every chapter opens on a real vehicle, and every control starts from that preset's values rather than from a default.
+
+The library carries an `in_article` flag and a `category` (`flown`, `announced`, `concept`, `historic`). The UI highlights article-discussed entries, because those are the ones a reader may want to check against the text, and groups the rest as further comparisons.
+
+Loaded so far, all from the article: Starship V3 and V4, Falcon 9 in droneship and expendable configurations, Ariane 64, the Space Shuttle, and the article's four thought experiments (Raptor 33 + Raptor 4, Raptor 33 + Raptor 3, the expendable variant and the pessimistic 400 t booster). Flights 12, 13 and the unflown 14 are in `data/flights.yaml`.
+
+Still to add, all mentioned in the article and all with published data: Atlas LV-3B (John Glenn's, and the article's balloon-tank example), New Glenn, Long March 10B, SLS Block 1, Soyuz-2. Then vehicles not in the article but worth comparing: Saturn V, Falcon Heavy, Electron, Vulcan Centaur, Neutron. Tracked as M2b.
 
 ---
 
@@ -285,11 +349,11 @@ The analytic delta-v budget (M1) carries chapters 1, 2, 4, 5, 6, 7 and 7b on its
 
 ## 8. Immediate next steps
 
-Nothing is blocked. Start at step 1.
+M0, M1, M2 and M2c are done. Next, in order:
 
-1. **M0 scaffold.** `uv init`, dependency set from section 2, `ruff` and `mypy` configured, `pytest` wired up.
-2. **Write `tests/test_golden.py`** from [physics-reference section 7](physics-reference.md#7-golden-numbers-test-fixtures). All red.
-3. **Build `src/rocketry/`** until they are green. This is M1 and it is the foundation everything else stands on.
-4. **M2 data library**, then M3 app shell with chapters 1 and 2.
+1. **M3 app shell with chapters 1 and 2.** Streamlit multipage skeleton, the unit toggle in the sidebar, the preset picker with article entries highlighted, the formula-with-numbers renderer, the glossary stub.
+2. **M4 ascent simulation and chapter 3.** The one genuinely new piece of physics still missing.
+3. **M2b more presets**, which can proceed in parallel since it is data entry plus research.
+4. **M8 hosting**, which is worth doing early and cheaply so there is a live URL to look at while building.
 
-`analysis/verify_article.py` and `analysis/verify_v4_scaling.py` already compute most of the golden numbers with dependency-free code. They are the reference implementation to port and test against, not code to import.
+Each analysis question answered along the way gets a script in `analysis/` and a short writeup in `docs/findings/`.
