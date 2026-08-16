@@ -19,6 +19,7 @@ If a finding cannot be reproduced by running one command, it is not a finding ye
 | [article-verification](article-verification/finding.md) | Do the source article's numbers hold up? | 61 of 64 reproduce; 3 errors found |
 | [v4-scaling](v4-scaling/finding.md) | Does making Starship's ship bigger in V4 help? | No, and the size of the harm turns on one assumption |
 | [flight-14-prediction](flight-14-prediction/finding.md) | What will Flight 14 deliver to orbit? | 296 to 298 t total, whatever the ship weighs. **Pre-registered before the flight.** |
+| [fleet-comparison](fleet-comparison/finding.md) | How does every rocket in the library compare, once flown? | 5 of 13 are modelled as they fly, and those land within 12 % |
 
 A study may also be written *before* the answer is knowable. A prediction committed
 ahead of the measurement is the only kind that can be checked honestly afterwards,
