@@ -1,0 +1,191 @@
+# Complete launch vehicles. See docs/physics-reference.md section 5.3.
+#
+# stages are listed bottom-up: first stage first.
+# payload_leo_t is the operator's published figure, which is a claim to be
+# tested against the physics, not an input to it.
+
+starship_v3:
+  name: Starship / Super Heavy V3
+  operator: SpaceX
+  stages: [super_heavy_v3, starship_v3]
+  fairing_t: 0.0
+  payload_leo_t: 100.0
+  payload_claim_provenance: contested
+  launch_latitude_deg: 25.997
+  launch_site: Starbase, Texas
+  staging_speed_kmh: 6000.0
+  provenance: estimated
+  in_article: true
+  category: flown
+  source: docs/physics-reference.md section 3.3
+  note: >
+    The 100 t payload claim requires a ship dry mass near 160 t. The article's
+    reconstruction gives about 40 t. Both are shown; neither is asserted.
+
+starship_v4:
+  name: Starship / Super Heavy V4 (announced)
+  operator: SpaceX
+  stages: [super_heavy_v4, starship_v4]
+  fairing_t: 0.0
+  payload_leo_t: 200.0
+  payload_claim_provenance: contested
+  launch_latitude_deg: 25.997
+  launch_site: Starbase, Texas
+  staging_speed_kmh: 6000.0
+  provenance: estimated
+  in_article: true
+  category: announced
+  source: SpaceX V4 plans; analysis in docs/physics-reference.md section 3.8
+  note: >
+    42 engines, about 142 m stacked, 2027. Makes the stage propellant ratio
+    worse, 1.76 to 1 against V3's 2.28 to 1.
+
+falcon9_droneship:
+  name: Falcon 9 (droneship recovery)
+  operator: SpaceX
+  stages: [falcon9_stage1, falcon9_stage2]
+  fairing_t: 1.9
+  payload_leo_t: 17.5
+  payload_claim_provenance: published
+  launch_latitude_deg: 28.5
+  launch_site: Cape Canaveral, Florida
+  staging_speed_kmh: 8000.0
+  provenance: published
+  in_article: true
+  category: flown
+  source: Wikipedia Falcon 9
+  note: >
+    The calibration reference. Its published payload and its computed payload
+    agree, which is what makes the same method trustworthy on Starship.
+
+falcon9_expendable:
+  name: Falcon 9 (expendable)
+  operator: SpaceX
+  stages: [falcon9_stage1_expendable, falcon9_stage2]
+  fairing_t: 1.9
+  payload_leo_t: 22.8
+  payload_claim_provenance: published
+  launch_latitude_deg: 28.5
+  launch_site: Cape Canaveral, Florida
+  staging_speed_kmh: 10800.0
+  provenance: published
+  in_article: true
+  category: flown
+  source: Wikipedia Falcon 9
+  note: Reuse costs 23 % of payload and 20 % of total mass delivered to orbit.
+
+ariane_64:
+  name: Ariane 64
+  operator: ArianeGroup
+  stages: [ariane6_core, ariane6_ulpm]
+  fairing_t: 2.5
+  payload_leo_t: 21.6
+  payload_claim_provenance: published
+  launch_latitude_deg: 5.2
+  launch_site: Kourou, French Guiana
+  staging_speed_kmh: 0.0
+  provenance: published
+  in_article: true
+  category: flown
+  source: ESA, ArianeGroup
+  note: >
+    Included for one reason: its upper stage has a worse dry-mass fraction than
+    Starship's and lifts more, because it starts from a much higher speed.
+
+space_shuttle:
+  name: Space Shuttle
+  operator: NASA
+  stages: [shuttle_srb_pair, shuttle_orbiter_et]
+  fairing_t: 0.0
+  payload_leo_t: 27.5
+  payload_claim_provenance: published
+  launch_latitude_deg: 28.5
+  launch_site: Kennedy Space Center, Florida
+  staging_speed_kmh: 4900.0
+  provenance: published
+  in_article: true
+  category: historic
+  source: NASA. Liftoff 2030 t, payload 27.5 t to 204 km, orbiter 78 t dry.
+  note: >
+    Put 105.5 t into orbit on a 2030 t stack, a 5.2 % mass fraction, almost
+    identical to Starship's 5.1 %. The difference is how much of it was cargo:
+    26 % against 13 %.
+
+# ---------------------------------------------------------------------------
+# The source article's thought experiments. Every one keeps the same 5850 t
+# liftoff mass as the real Starship, so the comparison is like for like: the
+# only thing that changes is where the stages separate.
+# ---------------------------------------------------------------------------
+
+raptor33_raptor4:
+  name: "Raptor 33 + Raptor 4 (staging at 10 000 km/h)"
+  operator: Thought experiment
+  stages: [raptor33_booster, raptor4_ship]
+  fairing_t: 0.0
+  payload_leo_t: 110.0
+  payload_claim_provenance: derived
+  launch_latitude_deg: 25.997
+  launch_site: Starbase, Texas
+  staging_speed_kmh: 10000.0
+  category: concept
+  in_article: true
+  provenance: derived
+  source: Article, "Die 10.000 km/h der Raptor 33"
+  note: >
+    Same liftoff mass as Starship, a Falcon 9 style staging split, and more than
+    the 100 t Starship was promised. Also 87 t to a 53 degree Starlink orbit and
+    68 t to polar, both of which today's Starship struggles to reach at all.
+
+raptor33_raptor3:
+  name: "Raptor 33 + Raptor 3 (staging at 12 000 km/h)"
+  operator: Thought experiment
+  stages: [raptor33_booster_12k, raptor3_ship]
+  fairing_t: 0.0
+  payload_leo_t: 120.0
+  payload_claim_provenance: derived
+  launch_latitude_deg: 25.997
+  launch_site: Starbase, Texas
+  staging_speed_kmh: 12000.0
+  category: concept
+  in_article: true
+  provenance: derived
+  source: Article, "Ein noch kleineres Starship wäre noch besser"
+  note: >
+    The upper stage is now smaller relative to the booster than Falcon 9's is,
+    and the payload finally weighs more than the reusable stage that carried it.
+
+raptor33_expendable:
+  name: "Raptor 33 with an expendable upper stage"
+  operator: Thought experiment
+  stages: [raptor33_booster, raptor33_expendable_ship]
+  fairing_t: 0.0
+  payload_leo_t: 230.0
+  payload_claim_provenance: derived
+  launch_latitude_deg: 25.997
+  launch_site: Starbase, Texas
+  staging_speed_kmh: 10000.0
+  category: concept
+  in_article: true
+  provenance: derived
+  source: Article, "Eine gute Super Heavy ist wichtiger als ein besseres Starship"
+  note: >
+    Throw the upper stage away and the same booster lifts 230 t, or sends over
+    50 t to Mars. A useful upper bound on what the booster alone is worth.
+
+raptor33_pessimistic:
+  name: "Raptor 33 + Raptor 3, pessimistic 400 t booster"
+  operator: Thought experiment
+  stages: [raptor33_heavy_booster, raptor3_ship_small]
+  fairing_t: 0.0
+  payload_leo_t: 94.0
+  payload_claim_provenance: derived
+  launch_latitude_deg: 25.997
+  launch_site: Starbase, Texas
+  staging_speed_kmh: 12000.0
+  category: concept
+  in_article: true
+  provenance: derived
+  source: Article, "Ein noch kleineres Starship wäre noch besser", sensitivity case
+  note: >
+    The article stress-testing its own assumption. A booster 100 t heavier than
+    planned still delivers 94 t, because a well split rocket is forgiving.

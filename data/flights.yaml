@@ -1,0 +1,69 @@
+# Observed flight record. See docs/physics-reference.md section 9.
+#
+# This file is the reason the app never needs a code change when a rocket flies.
+# Model predictions are plotted against these observations. A flight that has
+# not happened yet sits here with null fields so its absence is visible.
+
+- number: 12
+  vehicle: starship_v3
+  date: 2026-05-01
+  date_precision: month
+  payload_t: 37.5
+  payload_description: 22 Starlink V3 mass simulators
+  reached_orbit: false
+  trajectory: suborbital
+  max_velocity_kmh: null
+  booster_outcome: >
+    Flipped abnormally fast after separation, most engines failed, hit the Gulf
+    of Mexico at 1450 km/h.
+  ship_outcome: Reached planned velocity, splashed down.
+  provenance: published
+  source: Wikipedia Starship flight test 12
+
+- number: 13
+  vehicle: starship_v3
+  date: 2026-07-24
+  date_precision: day
+  payload_t: 34.1
+  payload_description: 20 operational Starlink V3 satellites
+  reached_orbit: false
+  trajectory: suborbital by design, about 500 km/h short of orbital velocity
+  max_velocity_kmh: 26500.0
+  booster_outcome: >
+    Boostback burn ended early at T+2:55. Landing burn relit only 10 of 13
+    engines, engines shut down, vehicle destroyed on impact.
+  ship_outcome: >
+    Softest splashdown yet. Stayed intact and operational after tipping over.
+    Raptor relight demonstrated at T+38:58, the burn used to weigh the vehicle.
+  events:
+    stage_separation_s: 141
+    seco_s: 485
+    relight_s: 2338
+    splashdown_s: 3921
+  provenance: published
+  source: Wikipedia Starship flight test 13; Space.com
+  note: >
+    The 14 s relight is what docs/physics-reference.md section 3.2 uses to weigh
+    the ship at 242 to 259 t total. Satellite unit mass 34.1 / 20 = 1.705 t,
+    which reproduces Flight 12's 37.5 t for 22 satellites exactly.
+
+- number: 14
+  vehicle: starship_v3
+  date: null
+  date_precision: planned late August 2026
+  payload_t: null
+  payload_description: Operational Starlink V3 satellites
+  reached_orbit: null
+  trajectory: first orbital attempt
+  max_velocity_kmh: null
+  booster_outcome: null
+  ship_outcome: null
+  provenance: announced
+  source: >
+    Musk on the SpaceX earnings call, 4 August 2026; FCC filing.
+  note: >
+    NOT YET FLOWN. Three firsts on one flight: first orbital attempt, first ship
+    tower catch, booster returning to the launch site. This will produce the
+    first direct measurement of what Starship delivers to a real orbit, which
+    is the number the whole payload argument turns on. Fill this row in when it
+    flies; no code should need to change.

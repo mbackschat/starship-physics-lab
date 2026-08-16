@@ -1,0 +1,101 @@
+# Rocket engines. See docs/physics-reference.md section 5.1.
+#
+# provenance: published | estimated | contested | derived
+# Thrust in tonnes-force, Isp in seconds, mass in kg.
+
+raptor_3:
+  name: Raptor 3 (sea level)
+  propellants: CH4/LOX
+  thrust_sl_tf: 280.0
+  thrust_vac_tf: 268.0
+  isp_sl_s: 327.0
+  isp_vac_s: 350.0
+  mass_kg: 1525.0
+  min_throttle: 0.40
+  provenance: published
+  source: SpaceX, August 2024; Super Heavy Block 3 stack thrust 80.8 MN / 33
+  note: >
+    Runs throttled to about 250 tf at liftoff, roughly 89 % of its 280 tf
+    rating. Wikipedia lists 330 s at sea level for the Block 3 stack; the
+    article uses 327 s, which is the Raptor 2 figure and slightly conservative.
+
+raptor_3_vacuum:
+  name: Raptor 3 Vacuum
+  propellants: CH4/LOX
+  thrust_sl_tf: null
+  thrust_vac_tf: 300.0
+  isp_sl_s: null
+  isp_vac_s: 380.0
+  mass_kg: 1900.0
+  min_throttle: 0.40
+  provenance: estimated
+  source: Extrapolated from Raptor 2 Vacuum and SpaceX statements
+  note: Large nozzle, cannot be run at sea level.
+
+raptor_2:
+  name: Raptor 2
+  propellants: CH4/LOX
+  thrust_sl_tf: 230.0
+  thrust_vac_tf: 258.0
+  isp_sl_s: 327.0
+  isp_vac_s: 347.0
+  mass_kg: 1630.0
+  min_throttle: 0.40
+  provenance: published
+  source: SpaceX; Wikipedia SpaceX Raptor
+  note: Flew on Super Heavy Block 1 and 2.
+
+merlin_1d:
+  name: Merlin 1D (sea level)
+  propellants: RP-1/LOX
+  thrust_sl_tf: 86.2
+  thrust_vac_tf: 93.4
+  isp_sl_s: 283.0
+  isp_vac_s: 312.0
+  mass_kg: 470.0
+  min_throttle: 0.57
+  provenance: published
+  source: Wikipedia Falcon 9, Block 5 figures
+  note: Nine of these fly on a Falcon 9 first stage.
+
+merlin_1d_vacuum:
+  name: Merlin 1D Vacuum
+  propellants: RP-1/LOX
+  thrust_sl_tf: null
+  thrust_vac_tf: 100.0
+  isp_sl_s: null
+  isp_vac_s: 348.0
+  mass_kg: 490.0
+  min_throttle: 0.39
+  provenance: published
+  source: Wikipedia Falcon 9; 981 kN
+  note: Single engine on the Falcon 9 second stage.
+
+vinci:
+  name: Vinci
+  propellants: LH2/LOX
+  thrust_sl_tf: null
+  thrust_vac_tf: 18.4
+  isp_sl_s: null
+  isp_vac_s: 457.0
+  mass_kg: 550.0
+  min_throttle: 1.0
+  provenance: published
+  source: ESA, ArianeGroup; 180 kN
+  note: >
+    Re-ignitable. Powers the Ariane 6 upper stage, whose dry-mass fraction is
+    worse than Starship's and which still delivers 22 t. See
+    docs/physics-reference.md section 4.
+
+rs_25:
+  name: RS-25 (Space Shuttle Main Engine)
+  propellants: LH2/LOX
+  thrust_sl_tf: 190.0
+  thrust_vac_tf: 232.0
+  isp_sl_s: 366.0
+  isp_vac_s: 452.0
+  mass_kg: 3200.0
+  min_throttle: 0.67
+  provenance: published
+  source: NASA
+  note: Three flew on each Shuttle orbiter and were recovered with it.

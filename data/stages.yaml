@@ -1,0 +1,374 @@
+# Rocket stages. See docs/physics-reference.md section 5.2.
+#
+# isp_ascent_s is the flight-average used for ideal delta-v, which is lower than
+# the engine's vacuum rating because part of the burn happens in atmosphere.
+# recovery.burns are listed in reverse chronological order, last burn first,
+# which is how the mass ratios compose.
+
+super_heavy_v3:
+  name: Super Heavy V3
+  dry_mass_t: 300.0
+  propellant_t: 3650.0
+  engine: raptor_3
+  engine_count: 33
+  diameter_m: 9.0
+  isp_ascent_s: 340.0
+  residual_propellant_t: 0.0
+  provenance: estimated
+  in_article: true
+  source: >
+    Propellant 3650 t published (Wikipedia, Super Heavy Block 3). Dry mass
+    estimated at 300 t by the source article; Wikipedia lists 275 t for
+    Block 1/2, and Block 3 is taller.
+  note: Returns to the launch site, which is the expensive recovery mode.
+  recovery:
+    mode: tower_catch
+    burns:
+      - {delta_v: 600.0, isp: 330.0, label: landing burn}
+      - {delta_v: 1800.0, isp: 330.0, label: boostback}
+
+starship_v3:
+  name: Starship V3
+  dry_mass_t: 220.0
+  propellant_t: 1600.0
+  engine: raptor_3
+  engine_count: 6
+  diameter_m: 9.0
+  isp_ascent_s: 365.0
+  residual_propellant_t: 40.0
+  provenance: contested
+  in_article: true
+  source: >
+    Propellant 1600 t published. Dry mass unpublished since 2019. The article
+    estimates 200 to 220 t from Musk's 2019 statement, the hover-thrust bracket
+    and a 14 s relight; Wikipedia lists 85 to 100 t for V1 and V2; SpaceX's own
+    100 t payload claim implies roughly 160 t.
+  note: >
+    THE contested number. See docs/physics-reference.md correction C15. Treat as
+    a parameter, never as a fact.
+  recovery:
+    mode: tower_catch
+    burns:
+      - {delta_v: 300.0, isp: 300.0, label: landing burn}
+
+falcon9_stage1:
+  name: Falcon 9 first stage (Block 5)
+  dry_mass_t: 25.6
+  propellant_t: 395.7
+  engine: merlin_1d
+  engine_count: 9
+  diameter_m: 3.66
+  isp_ascent_s: 301.0
+  residual_propellant_t: 0.0
+  provenance: published
+  in_article: true
+  source: Wikipedia Falcon 9, Block 5. Article uses 385 t, which is slightly low.
+  note: >
+    Already so slender that it cannot be stretched further without bending
+    loads becoming the limit.
+  recovery:
+    mode: droneship
+    burns:
+      - {delta_v: 500.0, isp: 300.0, label: landing burn}
+      - {delta_v: 500.0, isp: 311.0, label: entry burn}
+
+falcon9_stage2:
+  name: Falcon 9 second stage (Block 5)
+  dry_mass_t: 4.0
+  propellant_t: 107.0
+  engine: merlin_1d_vacuum
+  engine_count: 1
+  diameter_m: 3.66
+  isp_ascent_s: 348.0
+  residual_propellant_t: 0.5
+  provenance: published
+  in_article: true
+  source: >
+    Wikipedia Falcon 9. Propellant is quoted between 92.7 t and 111 t across
+    sources; 107 t is the commonly used Block 5 figure and is what the article
+    uses. Fairing adds about 1.9 t.
+  note: Expended. The 0.5 t residual is for a controlled deorbit.
+  recovery: null
+
+ariane6_ulpm:
+  name: Ariane 6 upper stage (ULPM)
+  dry_mass_t: 6.0
+  propellant_t: 31.0
+  engine: vinci
+  engine_count: 1
+  diameter_m: 5.4
+  isp_ascent_s: 457.0
+  residual_propellant_t: 0.0
+  provenance: published
+  in_article: true
+  source: ESA, ArianeGroup. 25 t LOX plus 5 t LH2.
+  note: >
+    Dry-mass fraction of 16 % is worse than Starship's 12 %, and it still lifts
+    22 t, because it stages far faster. Structural quality is not the problem;
+    the staging split is.
+  recovery: null
+
+
+super_heavy_v4:
+  name: Super Heavy V4 (announced)
+  dry_mass_t: 332.9
+  propellant_t: 4050.0
+  engine: raptor_3
+  engine_count: 33
+  diameter_m: 9.0
+  isp_ascent_s: 340.0
+  residual_propellant_t: 0.0
+  provenance: estimated
+  in_article: true
+  source: >
+    Propellant 4050 t announced. Dry mass scaled linearly from Super Heavy V3
+    at exponent 1.0, which is the article's assumption.
+  note: Stretch goal is 300 tf per engine, about 10 000 tf of liftoff thrust.
+  recovery:
+    mode: tower_catch
+    burns:
+      - {delta_v: 600.0, isp: 330.0, label: landing burn}
+      - {delta_v: 1800.0, isp: 330.0, label: boostback}
+
+starship_v4:
+  name: Starship V4 (announced)
+  dry_mass_t: 316.2
+  propellant_t: 2300.0
+  engine: raptor_3
+  engine_count: 9
+  diameter_m: 9.0
+  isp_ascent_s: 365.0
+  residual_propellant_t: 57.5
+  provenance: contested
+  in_article: true
+  source: >
+    Propellant 2300 t announced, 9 engines (3 sea level, 6 vacuum). Dry mass
+    scaled linearly from Starship V3, which is an assumption worth arguing
+    about: at exponent 0 it stays at 220 t and payload swings from 12 t to
+    108 t. See docs/physics-reference.md section 3.8.
+  note: >
+    Six vacuum engines instead of three should lift the flight-average Isp
+    above the 365 s assumed here, worth roughly 23 t of payload.
+  recovery:
+    mode: tower_catch
+    burns:
+      - {delta_v: 300.0, isp: 300.0, label: landing burn}
+
+falcon9_stage1_expendable:
+  name: Falcon 9 first stage (expendable)
+  dry_mass_t: 25.6
+  propellant_t: 395.7
+  engine: merlin_1d
+  engine_count: 9
+  diameter_m: 3.66
+  isp_ascent_s: 301.0
+  residual_propellant_t: 0.0
+  provenance: published
+  in_article: true
+  source: Wikipedia Falcon 9, Block 5.
+  note: Same stage, nothing held back, so it stages about 2800 km/h faster.
+  recovery: null
+
+ariane6_core:
+  name: Ariane 6 core stage plus four boosters
+  dry_mass_t: 14.7
+  propellant_t: 140.0
+  engine: vinci
+  engine_count: 1
+  diameter_m: 5.4
+  isp_ascent_s: 380.0
+  residual_propellant_t: 0.0
+  provenance: estimated
+  in_article: true
+  source: >
+    Simplified: the P120C solid boosters are folded into an equivalent core.
+    Adequate for comparing staging splits, not for modelling Ariane 6 in detail.
+  note: Included as a comparison point, not as a subject of study.
+  recovery: null
+
+
+# ---------------------------------------------------------------------------
+# The source article's thought experiments. These never existed. Propellant
+# loads are derived so that each stack still weighs 5850 t at liftoff, the same
+# as the real Starship, which is the whole point of the comparison.
+# ---------------------------------------------------------------------------
+
+raptor33_booster:
+  name: "Raptor 33 booster (staging at 10 000 km/h)"
+  dry_mass_t: 300.0
+  propellant_t: 4250.0
+  engine: raptor_3
+  engine_count: 33
+  diameter_m: 9.0
+  isp_ascent_s: 340.0
+  residual_propellant_t: 213.0
+  provenance: derived
+  in_article: true
+  source: >
+    Article section "Die 10.000 km/h der Raptor 33". Propellant derived so the
+    stack still weighs 5850 t; verified in docs/physics-reference.md 3.6.
+  note: >
+    A stretched Super Heavy flying a Falcon 9 style profile: no boostback, brake
+    to 5300 km/h, land on a ship. Dry mass deliberately left at 300 t rather
+    than the 250 t the simpler flight profile would allow, to keep the argument
+    conservative.
+  recovery:
+    mode: droneship
+    burns:
+      - {delta_v: 500.0, isp: 327.0, label: landing burn}
+      - {delta_v: 1305.6, isp: 350.0, label: entry braking}
+
+raptor4_ship:
+  name: "Raptor 4 ship"
+  dry_mass_t: 140.0
+  propellant_t: 1022.0
+  engine: raptor_3
+  engine_count: 4
+  diameter_m: 9.0
+  isp_ascent_s: 365.0
+  residual_propellant_t: 20.0
+  provenance: derived
+  in_article: true
+  source: Article section "Ein kleines Starship mit über 100 Tonnen Nutzlast".
+  note: >
+    Inert mass scaled linearly from Starship: 160 t including landing
+    propellant, against Starship's 250 t. Four engines instead of six, smaller
+    fins, far fewer heat shield tiles.
+
+raptor33_booster_12k:
+  name: "Raptor 33 booster (staging at 12 000 km/h)"
+  dry_mass_t: 300.0
+  propellant_t: 4618.0
+  engine: raptor_3
+  engine_count: 33
+  diameter_m: 9.0
+  isp_ascent_s: 340.0
+  residual_propellant_t: 303.0
+  provenance: derived
+  in_article: true
+  source: Article section "Ein noch kleineres Starship wäre noch besser".
+  note: >
+    Same booster, staging even faster. The article flags the 300 t dry mass
+    assumption as questionable here, since the stage is now 35 % larger.
+  recovery:
+    mode: droneship
+    burns:
+      - {delta_v: 500.0, isp: 327.0, label: landing burn}
+      - {delta_v: 1861.1, isp: 350.0, label: entry braking}
+
+raptor3_ship:
+  name: "Raptor 3 ship"
+  dry_mass_t: 95.0
+  propellant_t: 711.0
+  engine: raptor_3
+  engine_count: 3
+  diameter_m: 9.0
+  isp_ascent_s: 365.0
+  residual_propellant_t: 16.0
+  provenance: derived
+  in_article: true
+  source: Article section "Ein noch kleineres Starship wäre noch besser".
+  note: >
+    Less than half the size of today's Starship. The point at which the payload
+    finally weighs more than the reusable stage carrying it.
+
+raptor33_expendable_ship:
+  name: "Expendable upper stage on a Raptor 33"
+  dry_mass_t: 40.0
+  propellant_t: 1022.0
+  engine: raptor_3_vacuum
+  engine_count: 4
+  diameter_m: 9.0
+  isp_ascent_s: 365.0
+  residual_propellant_t: 0.0
+  provenance: derived
+  in_article: true
+  source: Article section "Eine gute Super Heavy ist wichtiger als ein besseres Starship".
+  note: >
+    Ten times the Falcon 9 upper stage's dry mass at roughly ten times its
+    propellant capacity. No heat shield, no fins, no landing propellant.
+  recovery: null
+
+raptor33_heavy_booster:
+  name: "Raptor 33 booster, pessimistic 400 t dry"
+  dry_mass_t: 400.0
+  propellant_t: 4708.0
+  engine: raptor_3
+  engine_count: 33
+  diameter_m: 9.0
+  isp_ascent_s: 340.0
+  residual_propellant_t: 404.0
+  provenance: derived
+  in_article: true
+  source: Article section "Ein noch kleineres Starship wäre noch besser", sensitivity case.
+  note: >
+    The article's own stress test: even if the booster came out 100 t heavier
+    than planned, the payload only falls from 120 t to 94 t. Well optimised
+    rockets are forgiving; badly split ones are not.
+  recovery:
+    mode: droneship
+    burns:
+      - {delta_v: 500.0, isp: 327.0, label: landing burn}
+      - {delta_v: 1861.1, isp: 350.0, label: entry braking}
+
+raptor3_ship_small:
+  name: "Raptor 3 ship on the pessimistic booster"
+  dry_mass_t: 75.0
+  propellant_t: 560.0
+  engine: raptor_3
+  engine_count: 3
+  diameter_m: 9.0
+  isp_ascent_s: 365.0
+  residual_propellant_t: 13.0
+  provenance: derived
+  in_article: true
+  source: Article section "Ein noch kleineres Starship wäre noch besser", sensitivity case.
+  note: Only a third of Starship's propellant load, and still 94 t of payload.
+  recovery: null
+
+# The Space Shuttle does not fit a clean two-stage model: the boosters and the
+# main engines burn together from the pad, and the orbiter's ascent propellant
+# lives in a tank it throws away. Decomposed here the only way that is
+# physically honest: boosters as stage 1, orbiter plus external tank as stage 2.
+
+shuttle_srb_pair:
+  name: Space Shuttle solid rocket boosters (pair)
+  dry_mass_t: 182.0
+  propellant_t: 1000.0
+  engine: rs_25
+  engine_count: 2
+  diameter_m: 3.71
+  isp_ascent_s: 269.0
+  residual_propellant_t: 0.0
+  provenance: published
+  in_article: true
+  source: >
+    NASA. Two SRBs, 91 t empty and 500 t of propellant each. The engine field
+    names the RS-25 only because the library keys stages to an engine; SRBs are
+    solid motors and their Isp is given directly by isp_ascent_s.
+  note: Recovered by parachute and refurbished, which this model does not credit.
+  recovery: null
+
+shuttle_orbiter_et:
+  name: Space Shuttle orbiter plus external tank
+  dry_mass_t: 104.5
+  propellant_t: 735.0
+  engine: rs_25
+  engine_count: 3
+  diameter_m: 8.4
+  isp_ascent_s: 440.0
+  residual_propellant_t: 10.8
+  provenance: published
+  in_article: true
+  source: >
+    NASA. Orbiter 78 t dry plus external tank 26.5 t dry, burning 735 t of
+    propellant through three RS-25s. Residual is the OMS load used for orbit
+    insertion, manoeuvring and deorbit.
+  note: >
+    The orbiter itself reached orbit, so the Shuttle delivered 105.5 t there of
+    which 27.5 t was cargo. Almost the same mass fraction as Starship, but twice
+    the share of it useful. See docs/physics-reference.md correction C14.
+  recovery:
+    mode: runway
+    burns:
+      - {delta_v: 100.0, isp: 313.0, label: deorbit burn}
