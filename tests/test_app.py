@@ -149,3 +149,29 @@ def test_sandbox_shows_the_trap_when_a_smaller_stage_is_not_lighter():
     app.slider[3].set_value(900.0).run()   # upper stage propellant
     after = float(app.metric[4].value.split()[0].replace(",", ""))
     assert after < before
+
+
+def test_payload_page_reads_its_state_from_the_url():
+    """A shared link must land the next reader on the same number."""
+    app = AppTest.from_file(str(APP / "pages" / "7_The_payload_question.py"), default_timeout=60)
+    app.query_params["dry"] = "165"
+    app.run()
+    assert not app.exception
+    assert app.metric[1].value.startswith("165")
+
+
+def test_payload_page_survives_a_hand_edited_url():
+    """The URL is the one input a reader can type into. It must not break the page."""
+    for junk in ("rubbish", "", "-40", "99999"):
+        app = AppTest.from_file(
+            str(APP / "pages" / "7_The_payload_question.py"), default_timeout=60
+        )
+        app.query_params["dry"] = junk
+        app.run()
+        assert not app.exception, f"query dry={junk!r} broke the page"
+
+
+def test_moving_the_slider_updates_the_shareable_url():
+    app = run(APP / "pages" / "7_The_payload_question.py")
+    app.slider[0].set_value(160).run()
+    assert app.query_params["dry"] == "160"

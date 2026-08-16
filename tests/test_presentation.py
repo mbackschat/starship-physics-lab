@@ -160,3 +160,45 @@ class TestMassBreakdown:
         assert booster.propellant + booster.recovery == pytest.approx(
             booster.stage.propellant_t, rel=1e-9
         )
+
+
+class TestSharedState:
+    """A reader who finds something interesting must be able to send it to somebody."""
+
+    def test_a_value_survives_a_round_trip(self):
+        from labbook.sharing import read_number, write_state
+
+        params = write_state({"dry": 165.0})
+        assert read_number(params, "dry", default=1.0) == 165.0
+
+    def test_a_missing_key_falls_back_to_the_default(self):
+        from labbook.sharing import read_number
+
+        assert read_number({}, "dry", default=220.0) == 220.0
+
+    def test_rubbish_in_the_url_does_not_break_the_page(self):
+        from labbook.sharing import read_number
+
+        for junk in ("", "abc", "NaN", "1e999", "--5"):
+            assert read_number({"dry": junk}, "dry", default=220.0) == 220.0
+
+    def test_values_are_clamped_to_the_control_they_feed(self):
+        """Someone will hand-edit the URL. The slider must still be able to show it."""
+        from labbook.sharing import read_number
+
+        assert read_number({"dry": "9999"}, "dry", default=220.0, low=80.0, high=260.0) == 260.0
+        assert read_number({"dry": "-5"}, "dry", default=220.0, low=80.0, high=260.0) == 80.0
+
+    def test_state_is_written_as_plain_readable_text(self):
+        from labbook.sharing import write_state
+
+        assert write_state({"dry": 165.0, "vehicle": "starship_v3"}) == {
+            "dry": "165",
+            "vehicle": "starship_v3",
+        }
+
+    def test_whole_numbers_lose_their_trailing_zero(self):
+        from labbook.sharing import write_state
+
+        assert write_state({"a": 220.0})["a"] == "220"
+        assert write_state({"a": 0.85})["a"] == "0.85"

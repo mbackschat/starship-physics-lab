@@ -9,16 +9,16 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import streamlit as st
-from components.shell import library, sidebar
+from components.shell import SLOGAN, TITLE, library, sidebar
 
 from labbook.units import Quantity
 
+st.set_page_config(page_title=TITLE, page_icon="🚀", layout="wide")
 formatter = sidebar()
-st.set_page_config(page_title="Starship Physics Lab", page_icon="🚀", layout="wide")
+lib = library()
 
-st.title("Starship Physics Lab")
-st.markdown("##### Understand Starship. Then build a better one.")
-st.caption("Why rockets perform the way they do, worked out by moving the numbers yourself.")
+st.title(TITLE)
+st.markdown(f"##### {SLOGAN}")
 
 st.markdown(
     """
@@ -32,41 +32,59 @@ through a real physics engine. Move one and watch what it does to the rest.
 """
 )
 
-lib = library()
 left, middle, right = st.columns(3)
 left.metric("Rockets to explore", len(lib.vehicles))
 middle.metric("Engines", len(lib.engines))
 right.metric("Flights on record", sum(1 for flight in lib.flights if flight.has_flown))
 
 st.divider()
+st.subheader("The tour")
+st.caption("Eleven chapters, in order. Each answers one question and takes a few minutes.")
 
-st.subheader("Start here")
-st.markdown(
-    """
-| Chapter | The question it answers |
-|---|---|
-| **1 · The rocket equation** | Why is going fast so expensive? |
-| **2 · Anatomy of a rocket** | What is a rocket actually made of, and how little of it is cargo? |
+# The first five are the physics; the rest apply it. That split is the only
+# thing a newcomer needs to know about the ordering.
+FOUNDATIONS = 5
 
-More chapters are being built: the launch simulator, the staging split, what
-reuse costs, and the Starship payload question.
-"""
-)
+CHAPTERS = [
+    ("1 · The rocket equation", "Why is going fast so expensive?", "Start here"),
+    ("2 · Anatomy", "What is a rocket made of, and how little of it is cargo?", ""),
+    ("3 · Launch", "Where does all the velocity actually go?", ""),
+    ("4 · Stages", "Why throw half the rocket away, and where?", "The big one"),
+    ("5 · Reuse", "What does it cost to get the booster back?", ""),
+    ("6 · Weighing Starship", "How do you weigh a rocket you have never touched?", ""),
+    ("7 · The payload question", "100 tonnes, or 38?", "The point of it all"),
+    ("8 · Bigger is better?", "Starship V4 grows the ship. Does that help?", ""),
+    ("9 · Build your own", "Now you try.", ""),
+    ("10 · Fact check", "Was the article this came from right?", ""),
+    ("11 · Glossary", "What did that word mean?", ""),
+]
+
+first, second = st.columns(2, gap="large")
+for index, (title, question, tag) in enumerate(CHAPTERS):
+    column = first if index < 6 else second
+    with column, st.container(border=True):
+        heading = f"**{title}**"
+        if tag:
+            heading += f" · :grey[{tag}]"
+        st.markdown(heading)
+        st.caption(question)
+    if index == FOUNDATIONS - 1:
+        first.caption("Those five are the physics. Everything after applies it.")
 
 st.divider()
-
 st.subheader("A worked example runs through all of it")
 st.markdown(
     f"""
 In August 2026 a German article argued that SpaceX's Starship carries far less
-payload than claimed. Its physics turned out to be sound: of 64 checkable
-numbers, 61 reproduce independently within 2 %.
+payload than claimed. Its physics turned out to be sound: of the numbers checked
+in chapter 10, almost all reproduce independently.
 
 But the argument rests on one number nobody outside SpaceX knows: **how much the
 ship itself weighs**. The rocket equation fixes roughly
-{formatter.format(300.0, Quantity.MASS)} arriving in orbit no matter what. Whether
-{formatter.format(40.0, Quantity.MASS)} or {formatter.format(100.0, Quantity.MASS)}
-of that is cargo depends only on how heavy the ship is.
+{formatter.format(296.0, Quantity.MASS)} arriving in orbit no matter what.
+Whether {formatter.format(38.0, Quantity.MASS)} or
+{formatter.format(100.0, Quantity.MASS)} of that is cargo depends only on how
+heavy the ship is.
 
 So this app does not tell you the answer. It hands you the slider.
 """
@@ -74,5 +92,6 @@ So this app does not tell you the answer. It hands you the slider.
 
 st.caption(
     "Every number in the library carries its provenance: published, estimated or "
-    "contested. Nothing contested is ever shown as if somebody had measured it."
+    "contested. Nothing contested is ever shown as if somebody had measured it. "
+    "Units switch between metric and US customary in the sidebar."
 )

@@ -10,6 +10,7 @@ from components.shell import library, mode, page, sidebar, try_this, why
 
 from labbook.casestudy import ESTIMATES, PayloadPoint, payload_curve
 from labbook.charts import payload_against_dry_mass
+from labbook.sharing import read_number, write_state
 from labbook.tables import Col, table
 from labbook.units import Quantity
 
@@ -46,15 +47,21 @@ def curve(low: float, high: float) -> list[PayloadPoint]:
 
 points = curve(80.0, 260.0)
 
+LOW, HIGH, DEFAULT = 80, 260, 220
+shared = read_number(
+    st.query_params, "dry", default=float(DEFAULT), low=float(LOW), high=float(HIGH)
+)
+
 chosen = st.slider(
     "How much does Starship weigh empty?",
-    min_value=80,
-    max_value=260,
-    value=220,
+    min_value=LOW,
+    max_value=HIGH,
+    value=int(round(shared / 5) * 5),
     step=5,
     format="%d t",
     help="Nobody outside SpaceX knows. Published views span this whole range.",
 )
+st.query_params.update(write_state({"dry": float(chosen)}))
 # Solve the reader's exact value rather than snapping to the nearest sampled
 # point, or the metrics disagree with the slider they were just dragged from.
 nearest = payload_curve(library(), "starship_v3", [float(chosen)])[0]
@@ -166,6 +173,11 @@ large engineering achievement, and SpaceX has not claimed it publicly.
 weeks, and it will deploy real satellites to a real orbit. That is a direct
 measurement of the number this whole chapter is arguing about.
 """,
+)
+
+st.caption(
+    "The address bar follows the slider, so a link to this page carries whatever "
+    "you set it to. Send someone the number you think is right."
 )
 
 try_this(
