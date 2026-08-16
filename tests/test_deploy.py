@@ -43,6 +43,29 @@ def test_every_chapter_page_is_collected(files):
     assert len(pages) >= 3
 
 
+def test_the_mark_is_collected(files):
+    """The app inlines it from the virtual filesystem, so it has to be mounted.
+
+    Without it every page raises on import rather than merely losing a picture.
+    """
+    assert "assets/logo.svg" in files
+
+
+def test_the_app_can_find_the_mark_the_way_the_browser_build_lays_it_out(files, tmp_path):
+    """The lookup walks upward for an ``assets`` directory, so the shape matters.
+
+    Locally that finds ``<repo>/assets``. In the browser the packages are
+    flattened to the mount root and ``assets`` sits beside them, which is a
+    different shape reached by the same search.
+    """
+    for virtual in files:
+        target = tmp_path / virtual
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(b"")
+    assert (tmp_path / "assets" / "logo.svg").is_file()
+    assert (tmp_path / "labbook" / "logo.py").is_file()
+
+
 def test_nothing_from_src_leaks_into_the_paths(files):
     """Packages are flattened out of src/ so they import at the mount root."""
     assert not any(name.startswith("src/") for name in files)
@@ -114,6 +137,20 @@ def test_the_bootstrap_page_forwards_the_path_to_the_app(files):
     html = build._index(sorted(files))
     assert "replaceState" in html, "nothing moves the chapter path into the query string"
     assert f'searchParams.set("{build.CHAPTER_PARAM}"' in html
+
+
+def test_the_boot_screen_shows_the_mark_while_python_downloads(files):
+    """The first visit downloads an interpreter. Something has to be on screen.
+
+    Inlined rather than linked: this same page answers unmatched paths such as
+    /repo/The_payload_question, so a relative href would resolve against the
+    wrong directory in exactly the case the 404 copy exists for.
+    """
+    html = build._index(sorted(files))
+    boot = html.split('<div id="boot">', 1)[1].split("</div>", 1)[0]
+    assert "<svg" in boot
+    assert "<img" not in boot, "a relative src resolves wrongly on the 404 copy"
+    assert 'rel="icon" href="data:image/svg+xml,' in html
 
 
 def test_the_build_and_the_app_agree_on_the_chapter_parameter():

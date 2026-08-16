@@ -10,6 +10,7 @@ from collections.abc import Sequence
 
 import plotly.graph_objects as go
 
+from labbook.curves import BurnSample, LoadingSample
 from labbook.palette import (
     AXIS,
     GRIDLINE,
@@ -305,6 +306,210 @@ def trajectory(
         mode=mode,
         show_legend=False,
     )
+
+
+def burn_animation(
+    trace: Sequence[BurnSample],
+    *,
+    formatter: Formatter = METRIC,
+    mode: Mode = Mode.LIGHT,
+    title: str = "During the burn",
+    subtitle: str = "",
+    frames: int = 40,
+) -> go.Figure:
+    """Play a burn through, so the curve is watched being drawn rather than read.
+
+    The shape is the lesson and it surprises people: the line steepens. Equal
+    chunks of propellant buy more and more speed, because the vehicle keeps
+    throwing away the mass it no longer has to accelerate. Readers who have just
+    met the logarithm expect the opposite, which is why this one moves.
+
+    Args:
+        trace: Samples through the burn, from :func:`labbook.curves.burn_trace`.
+        formatter: Unit system to display in.
+        mode: Light or dark surface.
+        title: Chart title.
+        subtitle: Optional second line under the title.
+        frames: How many animation steps to emit. Every frame carries the curve
+            so far, so this is the one real cost of the animation.
+
+    Returns:
+        The figure, with a play button.
+    """
+    x = formatter.values([sample.burnt_t for sample in trace], Quantity.MASS)
+    y = formatter.values([sample.velocity_ms for sample in trace], Quantity.VELOCITY)
+    live = colour(Series.PAYLOAD, mode)
+
+    figure = go.Figure(
+        data=[
+            # The finished curve, held back so the moving line has somewhere to
+            # go. Without it the axes rescale on every frame and the steepening
+            # is hidden by the rescaling.
+            go.Scatter(
+                x=x, y=y, mode="lines", hoverinfo="skip", showlegend=False,
+                line={"color": INK_MUTED[mode], "width": 1, "dash": "dot"},
+            ),
+            go.Scatter(
+                x=x[:1], y=y[:1], mode="lines", showlegend=False, hoverinfo="skip",
+                line={"color": live, "width": 3},
+            ),
+            go.Scatter(
+                x=x[:1], y=y[:1], mode="markers", showlegend=False, hoverinfo="skip",
+                marker={
+                    "color": HIGHLIGHT,
+                    "size": 11,
+                    "line": {"color": SURFACE[mode], "width": 2},
+                },
+            ),
+        ]
+    )
+
+    steps = _frame_indices(len(trace), frames)
+    figure.frames = [
+        go.Frame(
+            name=str(index),
+            traces=[1, 2],
+            data=[
+                go.Scatter(x=x[: index + 1], y=y[: index + 1]),
+                go.Scatter(x=[x[index]], y=[y[index]]),
+            ],
+        )
+        for index in steps
+    ]
+    figure.update_layout(
+        updatemenus=[
+            {
+                "type": "buttons",
+                "direction": "right",
+                "showactive": False,
+                # Anchored right. The title is set flush left by base_layout, so
+                # a left-anchored button lands on top of it.
+                "x": 1.0,
+                "y": 1.02,
+                "xanchor": "right",
+                "yanchor": "bottom",
+                "pad": {"r": 4, "t": 4},
+                "bgcolor": SURFACE[mode],
+                "bordercolor": AXIS[mode],
+                "font": {"color": INK_SECONDARY[mode], "size": 12},
+                "buttons": [
+                    {
+                        "label": "▶  Burn it",
+                        "method": "animate",
+                        "args": [
+                            None,
+                            {
+                                "frame": {"duration": 45, "redraw": False},
+                                "fromcurrent": True,
+                                "transition": {"duration": 0},
+                            },
+                        ],
+                    },
+                    {
+                        "label": "↺",
+                        "method": "animate",
+                        "args": [
+                            [str(steps[0])],
+                            {"frame": {"duration": 0, "redraw": False}, "mode": "immediate"},
+                        ],
+                    },
+                ],
+            }
+        ]
+    )
+    return base_layout(
+        figure,
+        title=title,
+        subtitle=subtitle,
+        x_label=formatter.axis_label("Propellant burnt", Quantity.MASS),
+        y_label=formatter.axis_label("Speed gained", Quantity.VELOCITY),
+        mode=mode,
+        show_legend=False,
+    )
+
+
+def loading_curve(
+    sweep: Sequence[LoadingSample],
+    *,
+    formatter: Formatter = METRIC,
+    mode: Mode = Mode.LIGHT,
+    title: str = "Before the burn",
+    subtitle: str = "",
+    at_t: float | None = None,
+) -> go.Figure:
+    """Plot what each extra tonne of propellant *loaded* is worth to a designer.
+
+    The companion to :func:`burn_animation` and the mirror image of it. This one
+    flattens. Showing the two together is the point: they are the same equation
+    answering two different questions, and fusing them is the usual mistake.
+
+    Args:
+        sweep: Samples from :func:`labbook.curves.loading_sweep`.
+        formatter: Unit system to display in.
+        mode: Light or dark surface.
+        title: Chart title.
+        subtitle: Optional second line under the title.
+        at_t: Mark the reader's own rocket at this propellant load, tonnes.
+
+    Returns:
+        The figure.
+    """
+    figure = go.Figure()
+    figure.add_trace(
+        go.Scatter(
+            x=formatter.values([sample.propellant_t for sample in sweep], Quantity.MASS),
+            y=formatter.values([sample.delta_v_ms for sample in sweep], Quantity.VELOCITY),
+            mode="lines",
+            showlegend=False,
+            line={"color": colour(Series.PROPELLANT, mode), "width": 3},
+            hovertemplate="%{x:,.0f} loaded → %{y:,.0f}<extra></extra>",
+        )
+    )
+    if at_t is not None:
+        here = min(sweep, key=lambda sample: abs(sample.propellant_t - at_t))
+        figure.add_trace(
+            go.Scatter(
+                x=[formatter.value(here.propellant_t, Quantity.MASS)],
+                y=[formatter.value(here.delta_v_ms, Quantity.VELOCITY)],
+                mode="markers+text",
+                showlegend=False,
+                hoverinfo="skip",
+                marker={
+                    "color": HIGHLIGHT,
+                    "size": 11,
+                    "line": {"color": SURFACE[mode], "width": 2},
+                },
+                text=["  yours"],
+                textposition="middle right",
+                textfont={"color": INK_SECONDARY[mode], "size": 12},
+            )
+        )
+    return base_layout(
+        figure,
+        title=title,
+        subtitle=subtitle,
+        x_label=formatter.axis_label("Propellant loaded", Quantity.MASS),
+        y_label=formatter.axis_label("Speed the finished rocket reaches", Quantity.VELOCITY),
+        mode=mode,
+        show_legend=False,
+    )
+
+
+def _frame_indices(count: int, frames: int) -> list[int]:
+    """Pick which samples to emit as animation frames.
+
+    Args:
+        count: How many samples the trace holds.
+        frames: How many frames are wanted.
+
+    Returns:
+        Indices into the trace, always including the first and the last so the
+        animation starts at rest and finishes on the real answer.
+    """
+    if count <= frames:
+        return list(range(count))
+    step = (count - 1) / (frames - 1)
+    return sorted({round(index * step) for index in range(frames)} | {0, count - 1})
 
 
 def _share(value: float, total: float) -> str:

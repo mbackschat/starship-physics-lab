@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 128" class="ship-mark"
+     role="img" aria-labelledby="ship-mark-title">
+  <title id="ship-mark-title">Starship Physics Lab</title>
+
+  <!--
+    A stylised launch vehicle: slender body, fore and aft flaps, lit engine.
+    Deliberately generic, and carrying no operator's name, wordmark or livery.
+
+    The body takes `currentColor`, so it inherits whatever text colour the page
+    is already using and stays legible when the reader switches to a dark theme
+    without anything having to recolour it. The nose is payload blue and the
+    flame is propellant orange: the same assignments every chart in the project
+    uses, chosen to sit on both the light and the dark surface.
+
+    Self-contained on purpose. It is inlined into the app, and it is also the
+    favicon and the boot screen's artwork, none of which can run Python.
+  -->
+
+  <style>
+    @keyframes ship-burn {
+      0%, 100% { transform: scaleY(0.86); opacity: 0.85; }
+      50%      { transform: scaleY(1.14); opacity: 1; }
+    }
+    .ship-mark__flame {
+      transform-origin: 28px 88px;
+      animation: ship-burn 0.9s ease-in-out infinite;
+    }
+    .ship-mark__core {
+      transform-origin: 28px 88px;
+      animation: ship-burn 0.62s ease-in-out infinite reverse;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .ship-mark__flame, .ship-mark__core { animation: none; }
+    }
+  </style>
+
+  <g class="ship-mark__flame">
+    <path d="M 21 87 Q 28 119 35 87 Z" fill="#e5622d" opacity="0.9"/>
+    <path class="ship-mark__core" d="M 24.5 87 Q 28 107 31.5 87 Z" fill="#d99400"/>
+  </g>
+
+  <!--
+    Parts are separated by a gap in the page's own background rather than by an
+    outline, which is the trick every chart here uses to keep stacked shapes
+    readable. `paint-order` draws that stroke behind the fill so it thins the
+    silhouette instead of fattening it.
+  -->
+  <g fill="currentColor" stroke="var(--ship-gap, #fcfcfb)" stroke-width="1.5"
+     stroke-linejoin="round" paint-order="stroke">
+    <path d="M 20 34 L 12 50 L 20 52 Z"/>
+    <path d="M 36 34 L 44 50 L 36 52 Z"/>
+    <path d="M 20 66 L 7 88 L 20 88 Z"/>
+    <path d="M 36 66 L 49 88 L 36 88 Z"/>
+    <path d="M 20 88 L 20 30 Q 20 12 28 4 Q 36 12 36 30 L 36 88 Z"/>
+  </g>
+
+  <path d="M 20 31 L 20 30 Q 20 12 28 4 Q 36 12 36 30 L 36 31 Z" fill="#3080dd"
+        stroke="var(--ship-gap, #fcfcfb)" stroke-width="1.5" stroke-linejoin="round"
+        paint-order="stroke"/>
+</svg>

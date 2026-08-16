@@ -16,9 +16,11 @@ Out:  deploy/site/
 
 import shutil
 from pathlib import Path
+from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "deploy" / "site"
+LOGO = ROOT / "assets" / "logo.svg"
 
 STLITE_VERSION = "1.8.1"
 """Pinned. An unpinned CDN import means the app can break without a commit.
@@ -50,11 +52,12 @@ TREES = {
     "rocketry": ROOT / "src" / "rocketry",
     "labbook": ROOT / "src" / "labbook",
     "data": ROOT / "data",
+    "assets": ROOT / "assets",
 }
 """Source tree to destination. The packages are flattened out of ``src/`` so
 they sit at the mount root and import without any path juggling."""
 
-SUFFIXES = {".py", ".yaml", ".yml"}
+SUFFIXES = {".py", ".yaml", ".yml", ".svg"}
 
 
 def collect() -> dict[str, Path]:
@@ -117,6 +120,11 @@ def _index(virtual_paths: list[str]) -> str:
         for path in virtual_paths
     )
     requirements = "\n        ".join(REQUIREMENTS)
+    # Inlined rather than linked. This same page answers unmatched paths such as
+    # /repo/The_payload_question, so a relative href would resolve against the
+    # wrong directory in exactly the case the 404 copy exists to handle.
+    logo = LOGO.read_text().strip()
+    favicon = f"data:image/svg+xml,{quote(logo)}"
     return f"""<!doctype html>
 <html lang="en">
   <head>
@@ -127,6 +135,7 @@ def _index(virtual_paths: list[str]) -> str:
       name="description"
       content="Understand Starship. Then build a better one. An interactive rocket physics explorer that runs entirely in your browser."
     />
+    <link rel="icon" href="{favicon}" />
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/@stlite/browser@{STLITE_VERSION}/build/stlite.css"
@@ -136,13 +145,16 @@ def _index(virtual_paths: list[str]) -> str:
       streamlit-app {{ display: block; min-height: 100vh; }}
       #boot {{
         position: fixed; inset: 0; display: grid; place-content: center;
-        text-align: center; gap: 0.75rem; padding: 2rem;
-        background: #fcfcfb; color: #0b0b0b; z-index: 9;
+        justify-items: center; text-align: center; gap: 0.75rem; padding: 2rem;
+        background: #fcfcfb; color: #0b0b0b; --ship-gap: #fcfcfb; z-index: 9;
       }}
+      /* The mark paints its body in currentColor, so it follows #boot's own
+         colour and needs no separate dark-mode artwork. */
+      #boot svg {{ height: 132px; width: auto; }}
       #boot h1 {{ font-size: 1.4rem; margin: 0; }}
       #boot p {{ margin: 0; color: #52514e; max-width: 34rem; line-height: 1.5; }}
       @media (prefers-color-scheme: dark) {{
-        #boot {{ background: #1a1a19; color: #fff; }}
+        #boot {{ background: #1a1a19; color: #fff; --ship-gap: #1a1a19; }}
         #boot p {{ color: #c3c2b7; }}
       }}
     </style>
@@ -172,6 +184,7 @@ def _index(virtual_paths: list[str]) -> str:
   </head>
   <body>
     <div id="boot">
+      {logo}
       <h1>Starting the physics engine</h1>
       <p>
         This page runs Python in your browser, so the first visit downloads the
