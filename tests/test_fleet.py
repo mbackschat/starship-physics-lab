@@ -7,7 +7,15 @@ the app and a figure in a study must not be able to disagree.
 
 import pytest
 
-from labbook.fleet import CORE_COLUMNS, EXTRA_COLUMNS, FleetRow, fleet, matching
+from labbook.catalog import browse
+from labbook.fleet import (
+    CORE_COLUMNS,
+    EXTRA_COLUMNS,
+    FleetRow,
+    fleet,
+    in_groups,
+    matching,
+)
 from labbook.tables import table
 from rocketry.library import load
 
@@ -20,6 +28,11 @@ def lib():
 @pytest.fixture(scope="module")
 def rows(lib):
     return fleet(lib)
+
+
+@pytest.fixture(scope="module")
+def groups(lib):
+    return browse(lib)
 
 
 class TestTheRows:
@@ -100,3 +113,28 @@ class TestTheColumns:
         assert rendered.startswith("|")
         assert "Falcon 9" in rendered
         assert len(rendered.splitlines()) == len(rows) + 2
+
+
+class TestGroups:
+    """The same grouping the vehicle picker uses, so the two cannot disagree."""
+
+    def test_no_groups_keeps_everything(self, rows):
+        assert in_groups(rows, []) == rows
+
+    def test_one_group_keeps_only_its_vehicles(self, rows, groups):
+        concepts = next(g for g in groups if "thought experiment" in g.name)
+        found = in_groups(rows, [concepts])
+        assert {row.key for row in found} == set(concepts.keys)
+
+    def test_groups_compose_without_duplicating(self, rows, groups):
+        found = in_groups(rows, list(groups))
+        assert [row.key for row in found] == [row.key for row in rows]
+
+    def test_it_composes_with_the_text_filter(self, rows, groups):
+        concepts = next(g for g in groups if "thought experiment" in g.name)
+        found = matching(in_groups(rows, [concepts]), "expendable")
+        assert [row.key for row in found] == ["raptor33_expendable"]
+
+    def test_order_is_the_row_order_not_the_group_order(self, rows, groups):
+        shuffled = in_groups(rows, list(reversed(groups)))
+        assert [row.key for row in shuffled] == [row.key for row in rows]

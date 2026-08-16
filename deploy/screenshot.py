@@ -91,6 +91,12 @@ SHOTS = (
         page_label="Rocket equation",
         description="the rocket equation with the reader's own numbers substituted in",
     ),
+    Shot(
+        name="fleet",
+        page_label="Fleet",
+        description="every vehicle in the library, solved and flown, in one table",
+        height=1400,
+    ),
 )
 
 

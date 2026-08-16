@@ -13,6 +13,7 @@ the result rather than calling this per vehicle in a loop.
 from collections.abc import Sequence
 from dataclasses import dataclass
 
+from labbook.catalog import Group
 from labbook.tables import Align, Col
 from labbook.units import Quantity
 from rocketry.ascent import AscentSettings, simulate
@@ -134,6 +135,31 @@ def fleet(library: Library, settings: AscentSettings | None = None) -> list[Flee
         for key, vehicle in library.vehicles.items()
         if vehicle.payload_leo_t is not None
     ]
+
+
+def in_groups(rows: Sequence[FleetRow], groups: Sequence[Group]) -> list[FleetRow]:
+    """Keep only the rows belonging to a selection of groups.
+
+    The groups are the ones :func:`labbook.catalog.browse` already builds for
+    the vehicle picker, rather than a second set invented here, so a rocket
+    cannot be filed under one heading in the picker and another in this table.
+
+    Composes with :func:`matching`, and preserves row order rather than group
+    order: a reader ticking two groups expects the table to keep the order it
+    already had, not to be resorted underneath them.
+
+    Args:
+        rows: Rows to filter.
+        groups: Groups to keep. Empty keeps everything, which is what a picker
+            with nothing ticked should mean.
+
+    Returns:
+        The matching rows, in the order given.
+    """
+    if not groups:
+        return list(rows)
+    wanted = {key for group in groups for key in group.keys}
+    return [row for row in rows if row.key in wanted]
 
 
 def matching(rows: Sequence[FleetRow], query: str) -> list[FleetRow]:

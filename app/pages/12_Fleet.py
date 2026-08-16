@@ -19,8 +19,16 @@ from components.shell import (
 )
 
 from labbook.breakdown import as_series, mass_components
+from labbook.catalog import browse
 from labbook.charts import mass_breakdown, trajectory
-from labbook.fleet import CORE_COLUMNS, EXTRA_COLUMNS, FleetRow, fleet, matching
+from labbook.fleet import (
+    CORE_COLUMNS,
+    EXTRA_COLUMNS,
+    FleetRow,
+    fleet,
+    in_groups,
+    matching,
+)
 from labbook.tables import Col, table
 from labbook.visuals import rocket_cutaway
 from rocketry.ascent import AscentResult, simulate
@@ -69,9 +77,11 @@ def flight(key: str) -> AscentResult:
     return simulate(analyse(library(), key))
 
 
-controls, _ = st.columns([1, 1], gap="large")
+GROUPS = browse(lib)
 
-with controls:
+by_text, by_group = st.columns([1, 1.4], gap="large")
+
+with by_text:
     query = st.text_input(
         "Filter",
         placeholder="falcon, nasa, concept, starship…",
@@ -86,11 +96,24 @@ with controls:
         ),
     )
 
+with by_group:
+    chosen = st.multiselect(
+        "Groups",
+        options=[group.name for group in GROUPS],
+        help="The same grouping the vehicle pickers use. None ticked means all of them.",
+    )
+    for group in GROUPS:
+        if group.name in chosen and group.hint:
+            st.caption(group.hint)
+
 columns: list[Col] = [*CORE_COLUMNS, *EXTRA_COLUMNS] if everything else list(CORE_COLUMNS)
-shown = matching(rows(), query)
+shown = matching(in_groups(rows(), [g for g in GROUPS if g.name in chosen]), query)
 
 if not shown:
-    st.info(f"Nothing matches **{query}**. Try a shorter word, or clear the box.", icon="🔍")
+    st.info(
+        "Nothing matches that. Try a shorter word, clear the box, or untick a group.",
+        icon="🔍",
+    )
 else:
     st.markdown(table(shown, columns), unsafe_allow_html=False)
     st.caption(
@@ -100,24 +123,46 @@ else:
         "after gravity, air and steering have taken their cut."
     )
 
+def naming(rows: list[FleetRow], singular: str, plural: str) -> str:
+    """Name some vehicles in bold, with a verb that agrees with how many.
+
+    One row is the common case here, and "Saturn V are still descending" is the
+    kind of sentence that makes a reader trust the numbers less.
+
+    Args:
+        rows: The vehicles to name.
+        singular: Sentence remainder when there is exactly one.
+        plural: Sentence remainder otherwise.
+
+    Returns:
+        Markdown ready for a callout.
+    """
+    names = ", ".join(row.name for row in rows)
+    return f"**{names}** {singular if len(rows) == 1 else plural}"
+
+
+SHORTFALL = (
+    " when the engines stop, so the budget is short of the orbit this model aims "
+    "at. That is the model's honest answer, not a display bug."
+)
+
 falling = [row for row in shown if row.climb_rate_ms < -100]
 if falling:
     st.warning(
-        "**"
-        + ", ".join(row.name for row in falling)
-        + "** are still descending when their engines stop, which means they do "
-        "not have the budget for the orbit this model aims at. That is the "
-        "model's honest answer, not a display bug.",
+        naming(falling, "is still descending", "are still descending") + SHORTFALL,
         icon="📉",
     )
 
 limited = [row for row in shown if row.limits]
 if limited:
     st.info(
-        "**"
-        + ", ".join(row.name for row in limited)
-        + "** are not modelled exactly as they fly. Their rows are readable as "
-        "shapes rather than as figures.",
+        naming(
+            limited,
+            "is not modelled exactly as it flies. Read that row as a shape rather "
+            "than as a figure.",
+            "are not modelled exactly as they fly. Read those rows as shapes rather "
+            "than as figures.",
+        ),
         icon="🧮",
     )
 
@@ -173,7 +218,10 @@ if shown:
                 formatter=formatter,
                 mode=chart_mode,
                 title="What it is made of, stage by stage",
-                subtitle="The top bar is the stage that reaches orbit.",
+                subtitle=(
+                    "Read it like the rocket: the top bar reaches orbit, the "
+                    "bottom one leaves the pad. Payload is the blue sliver."
+                ),
             ),
             width="stretch",
         )
@@ -182,7 +230,7 @@ if shown:
         # Everything in the tanks counts as propellant here, including what a
         # returning stage holds back: the drawing is about what the vehicle is
         # made of, not about what it spends going up.
-        loaded = sum(result.stage.propellant_t for result in analysis.stages)
+        loaded = sum(entry.stage.propellant_t for entry in analysis.stages)
         st.caption("**The whole stack**, filled to show how much of it is propellant.")
         st.markdown(
             rocket_cutaway(
