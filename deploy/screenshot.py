@@ -64,6 +64,12 @@ SHOTS = (
         height=1450,
     ),
     Shot(
+        name="stages",
+        page_label="Stages",
+        description="the staging split, worth a factor of two in payload",
+        height=1150,
+    ),
+    Shot(
         name="anatomy",
         page_label="Anatomy",
         description="what a rocket is made of, and how little of it is cargo",

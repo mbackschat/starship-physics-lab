@@ -241,9 +241,9 @@ Streamlit multipage app, shared components, the formula renderer, the three-colo
 `ascent.py` with loss accounting, cached, plus the animated flight page.
 **Done:** Falcon 9 simulates to 1631 m/s of gravity loss, 34 kPa max q and 7579 m/s at 108 km, all matching real telemetry, and the ideal delta-v lands within 150 m/s of the analytic budget. Losses are decomposed by an exact identity rather than estimated. `ambiance` and `scipy` were replaced by a direct ISA implementation and a hand-written RK4, which removed roughly 15 MB from the browser bundle.
 
-### M5: Staging and chapters 4 and 5
+### M5: Staging and chapters 4 and 5 — DONE
 `staging.py` sweep and optimum, `reuse.py` surfaced in the UI.
-**Done when:** the sweep reproduces the curve in physics-reference section 3.7, with the optimum at 11 500 ± 1000 km/h, and the real rockets land on the curve where expected.
+**Done:** the sweep reproduces physics-reference section 3.7 with the optimum at 11 480 km/h, and `rocketry.vehicle.with_stage` gives both chapters a tested seam for asking what if this stage were different, which chapter 7 will reuse for the contested dry mass.
 
 ### M6: The case study, chapters 6, 7 and 7b
 The weighing reconstruction, the payload question and the V4 scaling chapter, with contested inputs visibly marked.

@@ -11,6 +11,7 @@ import pytest
 from streamlit.testing.v1 import AppTest
 
 from labbook.units import UnitSystem
+from rocketry.reuse import RecoveryProfile
 
 APP = Path(__file__).resolve().parents[1] / "app"
 PAGES = sorted(APP.glob("pages/*.py"))
@@ -68,3 +69,43 @@ def test_units_toggle_changes_what_is_displayed():
     assert not app.exception
     assert app.metric[0].value != metric_before
     assert "lb" in app.metric[0].value
+
+
+def test_stages_page_responds_to_the_upper_stage_weight():
+    """A lighter upper stage must move the optimum and the payload."""
+    app = run(APP / "pages" / "4_Stages.py")
+    before = app.metric[1].value
+    app.slider[0].set_value(0.10).run()
+    assert not app.exception
+    assert app.metric[1].value != before
+
+
+def test_stages_page_shows_the_optimum_far_above_starships_split():
+    app = run(APP / "pages" / "4_Stages.py")
+    best = app.metric[0].value
+    assert "km/h" in best
+    assert int(best.split()[0].replace(",", "")) > 9000
+
+
+def test_reuse_page_switches_recovery_mode():
+    app = run(APP / "pages" / "5_Reuse.py")
+    droneship_reserve = app.metric[0].value
+    app.radio[0].set_value(RecoveryProfile.RTLS).run()
+    assert not app.exception
+    assert app.metric[0].value != droneship_reserve
+
+
+def test_reuse_page_says_expendable_holds_nothing_back():
+    app = run(APP / "pages" / "5_Reuse.py")
+    app.radio[0].set_value(RecoveryProfile.EXPENDABLE).run()
+    assert not app.exception
+    assert app.metric[0].value.startswith("0 ")
+
+
+def test_flying_back_costs_more_than_landing_on_a_ship():
+    app = run(APP / "pages" / "5_Reuse.py")
+    app.radio[0].set_value(RecoveryProfile.DRONESHIP).run()
+    ship = float(app.metric[0].value.split()[0].replace(",", ""))
+    app.radio[0].set_value(RecoveryProfile.RTLS).run()
+    home = float(app.metric[0].value.split()[0].replace(",", ""))
+    assert home > ship

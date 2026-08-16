@@ -8,7 +8,7 @@ stage does, including what a reusable stage spends on coming home.
 from dataclasses import dataclass
 
 from rocketry.library import Library
-from rocketry.models import Stage
+from rocketry.models import Stage, Vehicle
 from rocketry.reuse import recovery_propellant
 from rocketry.tsiolkovsky import delta_v
 
@@ -116,7 +116,23 @@ def analyse(library: Library, vehicle_key: str, payload_t: float | None = None) 
     if payload is None:
         raise ValueError(f"vehicle {vehicle_key!r} has no payload figure; pass payload_t")
 
-    stages = library.stages_of(vehicle_key)
+    return _analyse_stages(vehicle, library.stages_of(vehicle_key), payload)
+
+
+def _analyse_stages(
+    vehicle: Vehicle, stages: list[Stage], payload: float
+) -> VehicleAnalysis:
+    """Walk an already-resolved stack bottom-up.
+
+    Args:
+        vehicle: The vehicle being analysed.
+        stages: Its stages, in launch order, already resolved and possibly
+            altered.
+        payload: Payload to carry, tonnes.
+
+    Returns:
+        The stage-by-stage analysis.
+    """
     results: list[StageAnalysis] = []
     for index, stage in enumerate(stages):
         above = payload + vehicle.fairing_t + sum(s.wet_mass_t for s in stages[index + 1 :])
@@ -182,3 +198,35 @@ def _recovery_reserve(stage: Stage) -> float:
     if stage.recovery is None:
         return 0.0
     return recovery_propellant(stage.dry_mass_t, list(stage.recovery.burns))
+
+
+def with_stage(
+    library: Library, vehicle_key: str, stage_key: str, **changes: object
+) -> VehicleAnalysis:
+    """Re-analyse a vehicle with one of its stages altered.
+
+    The seam for every "what if" the app asks: what if this booster came home a
+    different way, what if this ship were lighter. The library itself is never
+    modified, so two scenarios on the same page cannot interfere.
+
+    Args:
+        library: The rocket library.
+        vehicle_key: Vehicle to analyse.
+        stage_key: Which of its stages to alter.
+        **changes: Fields to override on that stage.
+
+    Returns:
+        The analysis of the altered vehicle.
+
+    Raises:
+        ValueError: If that stage is not part of this vehicle, which is almost
+            always a typo rather than an intention.
+    """
+    vehicle = library.vehicle(vehicle_key)
+    if stage_key not in vehicle.stages:
+        flying = ", ".join(vehicle.stages)
+        raise ValueError(f"stage {stage_key!r} does not fly on {vehicle_key!r}. It has: {flying}")
+
+    altered = library.stage(stage_key).model_copy(update=dict(changes))
+    stages = [altered if key == stage_key else library.stage(key) for key in vehicle.stages]
+    return _analyse_stages(vehicle, stages, vehicle.payload_leo_t or 0.0)
