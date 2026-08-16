@@ -19,6 +19,7 @@ Requires the dev dependencies and a browser:
 """
 
 import argparse
+import re
 import socket
 import subprocess
 import sys
@@ -418,6 +419,115 @@ def check_reset(page: Page, base: str, failures: list[str]) -> None:
         print(f"   ok       still {started} after another control moves")
 
 
+DARK_PROBE = """
+() => {
+  const paint = (el, prop) => el ? getComputedStyle(el)[prop] : null;
+  const surface = document.querySelector('.js-plotly-plot .main-svg');
+  // A unified tooltip is drawn as a legend inside the hover layer, not as the
+  // `.hovertext` a single-trace hover produces.
+  const panel = document.querySelector('.hoverlayer .legend .bg');
+  const words = document.querySelector('.hoverlayer .legend text');
+  return {
+    page: paint(document.querySelector('.stApp'), 'backgroundColor'),
+    chart: surface ? surface.style.background : null,
+    heading: paint(document.querySelector('h1'), 'color'),
+    panel: paint(panel, 'fill'),
+    words: paint(words, 'fill'),
+  };
+}
+"""
+"""What the reader's own browser says it painted, rather than what we asked for."""
+
+DARK_ENOUGH = 0.35
+"""Below this, on a 0 to 1 scale, a surface reads as dark."""
+
+READABLE = 0.35
+"""How far apart ink and its background must be to be legible."""
+
+
+def _brightness(colour: str | None) -> float | None:
+    """How light a rendered colour is, from 0 to 1.
+
+    Args:
+        colour: A CSS colour as the browser reports it, or None.
+
+    Returns:
+        Its perceived brightness, or None if there was no colour.
+    """
+    if not colour:
+        return None
+    parts = [int(number) for number in re.findall(r"\d+", colour)[:3]]
+    if len(parts) < 3:
+        return None
+    red, green, blue = parts
+    return (0.299 * red + 0.587 * green + 0.114 * blue) / 255
+
+
+def check_dark_mode(page: Page, base: str, failures: list[str]) -> None:
+    """A reader whose browser is dark must not be handed light charts.
+
+    Streamlit's own chrome follows the browser's `prefers-color-scheme` without
+    the server ever being told, so `theme.base` stays "light" and said so to
+    anything that asked. Every chart was therefore drawn on a white surface and
+    pasted onto a dark page. Nothing in the unit tests could see it: they ask a
+    chart what it would look like in a mode they hand it, and it answers
+    correctly in both.
+
+    The same blind spot produced two smaller versions of itself, a near-white
+    legend panel and white hover text on a white tooltip, which is why this
+    check reads the colours the browser actually painted rather than the ones
+    the code intended.
+
+    Args:
+        page: The browser page.
+        base: Site root.
+        failures: Collects what went wrong.
+    """
+    print("7. a dark browser gets a dark app, charts included")
+    page.emulate_media(color_scheme="dark")
+    try:
+        boot(page, base + "The_payload_question")
+        page.wait_for_selector(".js-plotly-plot", timeout=BOOT_TIMEOUT_MS)
+        page.wait_for_timeout(SETTLE_MS)
+
+        # Plotly's own drag layer, which is exactly the plot area. Aiming at
+        # the middle of the container instead lands in the margin below the
+        # axis, where there is nothing to hover and no tooltip to check.
+        plot = page.locator(".js-plotly-plot .nsewdrag").first
+        box = plot.bounding_box()
+        if box:
+            middle = (box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+            page.mouse.move(*middle)
+            page.mouse.move(middle[0] + 6, middle[1])
+            page.wait_for_timeout(2_000)
+        seen = page.evaluate(DARK_PROBE)
+
+        for name in ("page", "chart"):
+            level = _brightness(seen[name])
+            if level is None:
+                failures.append(f"the {name} reported no colour in dark mode")
+                print(f"   MISSING  the {name} has no colour")
+            elif level > DARK_ENOUGH:
+                failures.append(f"the {name} stayed light in a dark browser: {seen[name]}")
+                print(f"   ERROR    the {name} is light: {seen[name]}")
+            else:
+                print(f"   ok       the {name} is dark: {seen[name]}")
+
+        ink, behind = _brightness(seen["words"]), _brightness(seen["panel"])
+        if ink is None or behind is None:
+            # Reported rather than skipped: the tooltip is the thing that was
+            # unreadable, so not reaching it leaves the defect unchecked.
+            failures.append("no tooltip appeared to check, so its contrast is unverified")
+            print("   ERROR    no tooltip appeared")
+        elif abs(ink - behind) < READABLE:
+            failures.append(f"tooltip text {seen['words']} is unreadable on {seen['panel']}")
+            print(f"   ERROR    tooltip {seen['words']} on {seen['panel']}")
+        else:
+            print(f"   ok       tooltip text reads against its panel ({abs(ink - behind):.2f})")
+    finally:
+        page.emulate_media(color_scheme="light")
+
+
 def main() -> int:
     """Run every check against a local build or the deployed site.
 
@@ -450,6 +560,7 @@ def main() -> int:
                 check_hostile_urls,
                 check_drawings,
                 check_reset,
+                check_dark_mode,
             ):
                 check(page, base, failures)
                 print()
