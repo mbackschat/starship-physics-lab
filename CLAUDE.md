@@ -192,7 +192,9 @@ Prose is deliberately never scanned for numbers. It is unreliable and it fails s
 
 There is no separate lint step. The checks are tests, so `uv run pytest` and therefore CI already run them.
 
-**Except freshness, which is deselected by default.** Every page carries a `stale_after` date, and `uv run pytest -m freshness` reports the ones past it. It is kept out of the default run because it fails as a *date* passes rather than as a *change* lands, and a check that reddens an unrelated commit on a Tuesday morning is a check people learn to ignore. Nothing runs it automatically, so it needs either a habit or a scheduled agent.
+**Except freshness, which runs on its own schedule.** Every page carries a `stale_after` date. That check is kept out of the default run because it fails as a *date* passes rather than as a *change* lands, and a check that reddens an unrelated commit on a Monday morning is one people learn to ignore.
+
+Instead [.github/workflows/freshness.yml](.github/workflows/freshness.yml) runs weekly, and turns expiry into a tracked work item: one GitHub issue, rewritten while pages are due and **closed automatically** when none are. `uv run python -m knowledge` produces the report it files and exits non-zero when anything is due; `uv run pytest -m freshness` is the same check as a test. Renaming that entry point without updating the workflow would silently stop the corpus being maintained, so `tests/test_knowledge.py` holds the two together.
 
 `src/knowledge.py` reads and validates pages. It is authoring tooling, deliberately outside both shipped packages and outside `deploy/build.py`'s trees so it never becomes a wheel the reader downloads; a test in `tests/test_deploy.py` holds that. `raw/` is text only, never binaries, because the point of keeping a source is being able to diff it when it is recaptured.
 

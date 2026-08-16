@@ -321,6 +321,53 @@ def load_pages(root: Path) -> list[Page]:
     ]
 
 
+def stale_pages(pages: list[Page], today: dt.date) -> list[Page]:
+    """Which pages have passed their recheck date.
+
+    Args:
+        pages: The corpus.
+        today: The date to compare against.
+
+    Returns:
+        The pages due a recheck, soonest expiry first.
+    """
+    due = [entry for entry in pages if entry.is_stale(today)]
+    return sorted(due, key=lambda entry: entry.stale_after or today)
+
+
+def freshness_report(pages: list[Page], today: dt.date) -> str:
+    """Describe what needs rechecking, in a form worth pasting into an issue.
+
+    Args:
+        pages: The corpus.
+        today: The date to compare against.
+
+    Returns:
+        A markdown report. Says so plainly when nothing is due.
+    """
+    due = stale_pages(pages, today)
+    if not due:
+        return f"All {len(pages)} knowledge pages are within their recheck date."
+
+    lines = [
+        f"{len(due)} of {len(pages)} knowledge pages have passed their `stale_after` date.",
+        "",
+        "Recheck each against its sources, update the page and its `asserts` together,",
+        "then set a new `stale_after`. If a source has moved on, capture it again as a",
+        "new file in `raw/` rather than editing the old capture.",
+        "",
+    ]
+    for entry in due:
+        lines.append(f"### `{entry.path.name}` — expired {entry.stale_after}")
+        lines.append("")
+        for source in entry.sources:
+            resource = source.get("resource", "?")
+            retrieved = source.get("last_modified", "undated")
+            lines.append(f"- {resource} (retrieved {retrieved})")
+        lines.append("")
+    return "\n".join(lines)
+
+
 def unresolved_feeds(page: Page, repo_root: Path) -> list[str]:
     """Which of a page's ``feeds`` references point at nothing.
 
@@ -417,3 +464,22 @@ def _same(claimed: Any, actual: Any) -> bool:
     if isinstance(claimed, int | float) and isinstance(actual, int | float):
         return math.isclose(claimed, actual, rel_tol=1e-9, abs_tol=1e-12)
     return bool(claimed == actual)
+
+
+def main() -> int:
+    """Report which pages need rechecking.
+
+    The entry point the scheduled workflow runs. Exits non-zero when something
+    is due, so the workflow can tell without parsing the output.
+
+    Returns:
+        Process exit code: 1 if any page is stale, 0 otherwise.
+    """
+    pages = load_pages(KNOWLEDGE_DIR)
+    today = dt.date.today()
+    print(freshness_report(pages, today))
+    return 1 if stale_pages(pages, today) else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

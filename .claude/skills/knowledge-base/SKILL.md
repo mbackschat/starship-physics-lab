@@ -55,12 +55,13 @@ uv run pytest tests/test_knowledge.py
 
 It checks that pages parse, declare a `type`, cite a dated source, declare a `stale_after`, carry a `provenance`, are listed in the index, point at library entries that exist, and **do not contradict the values they assert**. CI runs it with everything else.
 
-Freshness is separate and deselected by default, because it fails on a date rather than on a change:
+Freshness is separate, because it fails on a date rather than on a change:
 
 ```sh
-uv run pytest -m freshness
+uv run python -m knowledge     # the report the weekly workflow files as an issue
+uv run pytest -m freshness     # the same check, as a test
 ```
 
-Run it when picking up the corpus after a gap. Anything it names needs its sources recaptured and its `asserts` rechecked, then a new `stale_after`.
+A weekly workflow runs this and opens one GitHub issue listing what is due, closing it again when nothing is. **If you are here because of that issue:** recapture each named source into `raw/` as a new dated file, update the page and its `asserts` together, set a new `stale_after`, and log it. Do not simply push the date out; that is how a corpus becomes confidently wrong.
 
 What no check can catch is whether a page's prose agrees with its own `asserts`. That is why step 4 of ingest matters: the assertion is the contract, so it has to cover every value the page states.

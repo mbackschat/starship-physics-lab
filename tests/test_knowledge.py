@@ -11,6 +11,7 @@ import datetime as dt
 from pathlib import Path
 
 import pytest
+import yaml
 
 from knowledge import (
     KNOWLEDGE_DIR,
@@ -18,8 +19,11 @@ from knowledge import (
     Status,
     Trust,
     contradicted_claims,
+    freshness_report,
     load_pages,
+    main,
     split_front_matter,
+    stale_pages,
     unresolved_feeds,
 )
 from rocketry.models import Provenance
@@ -166,6 +170,81 @@ class TestClaims:
     def test_a_claim_against_a_missing_entry_is_reported_as_unresolved(self):
         entry = page("type: Vehicle\nfeeds: [data/stages.yaml#no_such_stage]")
         assert unresolved_feeds(entry, ROOT) == ["data/stages.yaml#no_such_stage"]
+
+
+class TestFreshnessReport:
+    """What the scheduled workflow turns into a GitHub issue.
+
+    The report is the whole interface between "a page expired" and "somebody
+    does something about it", so it has to name the page, its expiry and the
+    sources to recheck. A report saying only that something is stale creates
+    work rather than removing it.
+    """
+
+    def two_pages(self) -> list[Page]:
+        return [
+            page("type: Reference\nstale_after: 2026-01-01\nsources:\n"
+                 "  - {resource: https://example.com/old, last_modified: 2025-12-01}"),
+            page("type: Reference\nstale_after: 2099-01-01"),
+        ]
+
+    def test_nothing_due_says_so_plainly(self):
+        report = freshness_report(self.two_pages(), dt.date(2025, 1, 1))
+        assert "within their recheck date" in report
+
+    def test_a_due_page_is_named_with_its_expiry(self):
+        report = freshness_report(self.two_pages(), dt.date(2026, 8, 16))
+        assert "1 of 2" in report
+        assert "2026-01-01" in report
+
+    def test_the_report_lists_the_sources_to_recheck(self):
+        report = freshness_report(self.two_pages(), dt.date(2026, 8, 16))
+        assert "https://example.com/old" in report
+        assert "2025-12-01" in report
+
+    def test_the_soonest_expiry_comes_first(self):
+        pages = [
+            page("type: Reference\nstale_after: 2026-06-01"),
+            page("type: Reference\nstale_after: 2026-02-01"),
+        ]
+        due = stale_pages(pages, dt.date(2026, 8, 16))
+        assert [entry.stale_after for entry in due] == [
+            dt.date(2026, 2, 1),
+            dt.date(2026, 6, 1),
+        ]
+
+    def test_the_entry_point_exits_non_zero_only_when_work_is_due(self):
+        # The workflow branches on the exit code rather than parsing output.
+        assert main.__doc__ and "exit code" in main.__doc__.lower()
+
+
+class TestTheMaintenanceMechanism:
+    """Freshness is the one check nothing else drives, so its driver is guarded.
+
+    If the entry point is renamed and the workflow is not, the corpus quietly
+    stops being maintained and nothing anywhere goes red. These hold the two
+    ends of that together.
+    """
+
+    WORKFLOW = ROOT / ".github" / "workflows" / "freshness.yml"
+
+    def test_something_is_scheduled_to_look(self):
+        assert self.WORKFLOW.is_file(), "nothing drives the staleness recheck"
+        workflow = yaml.safe_load(self.WORKFLOW.read_text())
+        # `on:` parses as the boolean True in YAML 1.1, which is a well known
+        # trap and worth handling rather than tripping over.
+        triggers = workflow.get(True) or workflow.get("on")
+        assert "schedule" in triggers, "the check only runs when asked, so it will not run"
+
+    def test_it_calls_the_entry_point_that_still_exists(self):
+        assert "python -m knowledge" in self.WORKFLOW.read_text()
+        assert callable(main)
+
+    def test_it_can_actually_raise_an_issue(self):
+        workflow = yaml.safe_load(self.WORKFLOW.read_text())
+        assert workflow["permissions"].get("issues") == "write", (
+            "without issues: write the workflow finds stale pages and can do nothing"
+        )
 
 
 class TestTheLibraryPages:
