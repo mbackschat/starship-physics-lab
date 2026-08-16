@@ -21,7 +21,14 @@ stale_after: 2026-11-30
 
 provenance: published
 feeds:
-  - data/engines.yaml#raptor_3
+  - target: data/engines.yaml#raptor_3
+    asserts:
+      thrust_sl_tf: 280.0
+      thrust_vac_tf: 268.0
+      isp_sl_s: 327.0
+      isp_vac_s: 350.0
+      mass_kg: 1525.0
+      min_throttle: 0.40
   - data/engines.yaml#raptor_3_vacuum
 ---
 

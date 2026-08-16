@@ -177,13 +177,19 @@ stale_after: 2026-09-30           # absolute date, not a TTL
 
 provenance: contested             # extension: the Provenance vocabulary
 feeds:                            # extension: entries this page is evidence for
-  - data/vehicles.yaml#starship_v3
+  - target: data/stages.yaml#starship_v3
+    asserts: {dry_mass_t: 220.0}  # held to this; see below
+  - data/vehicles.yaml#starship_v3   # bare form: existence only
 ---
 ```
 
 **Trust and provenance are different axes and both are needed.** `verified` answers *did a person check this page*, and its tier is derived rather than stored: no `verified` key means unverified, machine actors only means machine-confirmed, any `human:` actor means human-reviewed. `provenance` answers *how much weight can this number bear*. A human-reviewed page can describe a contested number. Never collapse them into one field, and never replace either with a numeric score.
 
-**`feeds:` is the load-bearing extension.** It names the library entries a page stands behind, and `tests/test_knowledge.py` fails if a reference points at an entry that does not exist. The numeric-consistency check on top of it is Phase 2 and not built yet.
+**`feeds:` is the load-bearing extension, and `asserts` is what makes it bite.** A bare reference only claims the entry exists. A `target` with `asserts` states the values the page stands behind, and `tests/test_knowledge.py` fails if the library disagrees, naming the field and both values. That is the whole reason the corpus is worth keeping rather than bookmarking things: if an operator restates a figure and only one of the two places is updated, the suite goes red.
+
+Prose is deliberately never scanned for numbers. It is unreliable and it fails silently, so a page states what it stands behind explicitly. The corollary is that `asserts` should carry every value a page displays in a table, because anything left out is unguarded.
+
+There is no separate lint step. The checks are tests, so `uv run pytest` and therefore CI already run them.
 
 `src/knowledge.py` reads and validates pages. It is authoring tooling, deliberately outside both shipped packages and outside `deploy/build.py`'s trees so it never becomes a wheel the reader downloads; a test in `tests/test_deploy.py` holds that. `raw/` is text only, never binaries, because the point of keeping a source is being able to diff it when it is recaptured.
 

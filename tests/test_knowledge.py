@@ -17,6 +17,7 @@ from knowledge import (
     Page,
     Status,
     Trust,
+    contradicted_claims,
     load_pages,
     split_front_matter,
     unresolved_feeds,
@@ -111,6 +112,62 @@ class TestLifecycle:
         assert not page("type: Reference").is_stale(dt.date(2099, 1, 1))
 
 
+class TestClaims:
+    """A page may assert what a library entry says, and then be held to it.
+
+    This is the check the corpus exists to make possible. Prose is not parsed
+    for numbers, because that is unreliable and fails silently; a page states
+    the values it stands behind, and those are compared exactly.
+    """
+
+    def test_a_feed_may_be_a_plain_reference_with_nothing_asserted(self):
+        entry = page("type: Vehicle\nfeeds: [data/stages.yaml#starship_v3]")
+        assert entry.feeds[0].target == "data/stages.yaml#starship_v3"
+        assert entry.feeds[0].asserts == {}
+        assert not unresolved_feeds(entry, ROOT)
+        assert not contradicted_claims(entry, ROOT)
+
+    def test_matching_claims_pass(self):
+        entry = page(
+            "type: Vehicle\nfeeds:\n"
+            "  - target: data/stages.yaml#starship_v3\n"
+            "    asserts: {dry_mass_t: 220.0, propellant_t: 1600.0}"
+        )
+        assert not contradicted_claims(entry, ROOT)
+
+    def test_a_claim_the_library_contradicts_is_reported(self):
+        entry = page(
+            "type: Vehicle\nfeeds:\n"
+            "  - target: data/stages.yaml#starship_v3\n"
+            "    asserts: {dry_mass_t: 999.0}"
+        )
+        found = contradicted_claims(entry, ROOT)
+        assert len(found) == 1
+        assert "dry_mass_t" in found[0] and "999" in found[0] and "220" in found[0]
+
+    def test_a_claim_about_a_field_that_does_not_exist_is_reported(self):
+        entry = page(
+            "type: Vehicle\nfeeds:\n"
+            "  - target: data/stages.yaml#starship_v3\n"
+            "    asserts: {invented_field: 1.0}"
+        )
+        assert contradicted_claims(entry, ROOT)
+
+    def test_claims_work_against_list_shaped_files_too(self):
+        # Flights are a list whose entries identify themselves by number, not a
+        # keyed mapping. A reference should read the same either way.
+        entry = page(
+            "type: Flight\nfeeds:\n"
+            "  - target: data/flights.yaml#13\n"
+            "    asserts: {payload_t: 34.1}"
+        )
+        assert not contradicted_claims(entry, ROOT)
+
+    def test_a_claim_against_a_missing_entry_is_reported_as_unresolved(self):
+        entry = page("type: Vehicle\nfeeds: [data/stages.yaml#no_such_stage]")
+        assert unresolved_feeds(entry, ROOT) == ["data/stages.yaml#no_such_stage"]
+
+
 class TestTheLibraryPages:
     """The real pages in docs/knowledge/, checked as a body of work."""
 
@@ -147,6 +204,19 @@ class TestTheLibraryPages:
         for entry in pages:
             missing = unresolved_feeds(entry, ROOT)
             assert not missing, f"{entry.path} feeds entries that do not exist: {missing}"
+
+    def test_no_page_contradicts_the_library_it_stands_behind(self, pages):
+        # The guarantee. If an operator restates a figure and only one of the
+        # two places is updated, this is what fails.
+        for entry in pages:
+            wrong = contradicted_claims(entry, ROOT)
+            assert not wrong, f"{entry.path} disagrees with the library: {wrong}"
+
+    def test_at_least_one_page_actually_asserts_something(self, pages):
+        # A corpus where every feed is a bare reference would pass the check
+        # above while guaranteeing nothing at all.
+        asserted = sum(len(feed.asserts) for entry in pages for feed in entry.feeds)
+        assert asserted, "no page asserts any value, so the consistency check is vacuous"
 
     def test_every_page_is_listed_in_the_index(self, pages):
         index = (KNOWLEDGE_DIR / "index.md").read_text()

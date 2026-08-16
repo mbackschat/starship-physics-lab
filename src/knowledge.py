@@ -17,7 +17,8 @@ rather than a private fork of the format.
 """
 
 import datetime as dt
-from dataclasses import dataclass
+import math
+from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
 from typing import Any
@@ -61,6 +62,39 @@ class Trust(StrEnum):
 
 HUMAN_PREFIX = "human:"
 """OKF actor format marking a person rather than an agent or a process."""
+
+
+@dataclass(frozen=True, slots=True)
+class Feed:
+    """A library entry a page stands behind, and what it says about it.
+
+    Attributes:
+        target: A reference of the form ``<file>#<key>``, for example
+            ``data/stages.yaml#starship_v3``.
+        asserts: Field name to the value the page claims that entry holds.
+            Empty when the page only claims the entry exists.
+    """
+
+    target: str
+    asserts: dict[str, Any] = field(default_factory=dict)
+
+    @classmethod
+    def parse(cls, declared: Any) -> "Feed":
+        """Read a feed written either as a bare reference or as a claim.
+
+        A page that only wants to record which entries it explains writes a
+        string. One prepared to be held to the numbers writes a mapping.
+
+        Args:
+            declared: The entry as it appears in the front matter.
+
+        Returns:
+            The feed.
+        """
+        if isinstance(declared, dict):
+            asserts = declared.get("asserts") or {}
+            return cls(target=str(declared.get("target", "")), asserts=dict(asserts))
+        return cls(target=str(declared))
 
 
 def split_front_matter(text: str) -> tuple[dict[str, Any], str]:
@@ -164,17 +198,16 @@ class Page:
         return [entry for entry in declared if isinstance(entry, dict)]
 
     @property
-    def feeds(self) -> list[str]:
+    def feeds(self) -> list[Feed]:
         """Library entries this page is the evidence for.
 
-        A project extension, not OKF. Each reference is ``<file>#<key>``, for
-        example ``data/vehicles.yaml#starship_v3``.
+        A project extension, not OKF.
 
         Returns:
-            The references, empty if this page backs nothing.
+            The feeds, empty if this page backs nothing.
         """
         declared = self.front.get("feeds") or []
-        return [str(entry) for entry in declared]
+        return [Feed.parse(entry) for entry in declared]
 
     @property
     def status(self) -> Status:
@@ -291,9 +324,8 @@ def load_pages(root: Path) -> list[Page]:
 def unresolved_feeds(page: Page, repo_root: Path) -> list[str]:
     """Which of a page's ``feeds`` references point at nothing.
 
-    This is the check the whole corpus exists to make possible. A page claiming
-    to be the evidence for a library entry has to point at an entry that is
-    really there, or the two can drift apart without anyone noticing.
+    A page claiming to be the evidence for a library entry has to point at an
+    entry that is really there, or the two can drift apart unnoticed.
 
     Args:
         page: The page to check.
@@ -302,36 +334,86 @@ def unresolved_feeds(page: Page, repo_root: Path) -> list[str]:
     Returns:
         The references that could not be resolved, empty if all of them were.
     """
-    missing: list[str] = []
-    for reference in page.feeds:
-        target, _, key = reference.partition("#")
-        path = repo_root / target
-        if not key or not path.is_file() or not _holds(path, key):
-            missing.append(reference)
-    return missing
+    return [feed.target for feed in page.feeds if _resolve(feed.target, repo_root) is None]
 
 
-def _holds(path: Path, key: str) -> bool:
-    """Whether a YAML file contains an entry under a given key.
+def contradicted_claims(page: Page, repo_root: Path) -> list[str]:
+    """Where a page's asserted values disagree with the library.
+
+    The guarantee the corpus exists to provide. Prose is deliberately not
+    scanned for numbers: that is unreliable and fails silently. A page states
+    what it stands behind under ``asserts`` and is held to exactly that.
+
+    Args:
+        page: The page to check.
+        repo_root: Repository root, which the references are relative to.
+
+    Returns:
+        One readable line per disagreement, empty if the page and the library
+        agree everywhere they both speak.
+    """
+    problems: list[str] = []
+    for feed in page.feeds:
+        entry = _resolve(feed.target, repo_root)
+        if entry is None:
+            continue
+        for name, claimed in feed.asserts.items():
+            if name not in entry:
+                problems.append(f"{feed.target} has no field {name!r}")
+            elif not _same(claimed, entry[name]):
+                problems.append(
+                    f"{feed.target} field {name!r}: page says {claimed!r}, "
+                    f"library says {entry[name]!r}"
+                )
+    return problems
+
+
+def _resolve(reference: str, repo_root: Path) -> dict[str, Any] | None:
+    """Find the library entry a ``<file>#<key>`` reference names.
 
     The library is a mixture of shapes: engines, stages and vehicles are keyed
     mappings, while flights are a list whose entries identify themselves by
     number. Both are accepted so a reference reads the same either way.
 
     Args:
-        path: The YAML file.
-        key: The fragment from a ``feeds`` reference.
+        reference: The reference to resolve.
+        repo_root: Repository root, which it is relative to.
 
     Returns:
-        True if the entry exists.
+        The entry, or None if the file or the key does not exist.
     """
+    target, _, key = reference.partition("#")
+    path = repo_root / target
+    if not key or not path.is_file():
+        return None
     loaded = yaml.safe_load(path.read_text())
     if isinstance(loaded, dict):
-        return key in loaded
+        found = loaded.get(key)
+        return found if isinstance(found, dict) else None
     if isinstance(loaded, list):
-        return any(
-            isinstance(entry, dict)
-            and any(str(entry.get(field)) == key for field in ("key", "number", "name"))
-            for entry in loaded
-        )
-    return False
+        for entry in loaded:
+            if isinstance(entry, dict) and any(
+                str(entry.get(name)) == key for name in ("key", "number", "name")
+            ):
+                return entry
+    return None
+
+
+def _same(claimed: Any, actual: Any) -> bool:
+    """Whether an asserted value matches what the library holds.
+
+    Numbers are compared with a tolerance because both sides pass through YAML
+    and a page writing 220 for a stored 220.0 is agreement, not a discrepancy.
+
+    Args:
+        claimed: What the page says.
+        actual: What the library says.
+
+    Returns:
+        True if they agree.
+    """
+    if isinstance(claimed, bool) or isinstance(actual, bool):
+        return claimed is actual
+    if isinstance(claimed, int | float) and isinstance(actual, int | float):
+        return math.isclose(claimed, actual, rel_tol=1e-9, abs_tol=1e-12)
+    return bool(claimed == actual)

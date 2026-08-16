@@ -25,8 +25,17 @@ stale_after: 2026-09-30
 
 provenance: contested
 feeds:
-  - data/vehicles.yaml#starship_v3
-  - data/stages.yaml#starship_v3
+  - target: data/stages.yaml#starship_v3
+    asserts:
+      dry_mass_t: 220.0
+      propellant_t: 1600.0
+      engine_count: 6
+      diameter_m: 9.0
+      isp_ascent_s: 365.0
+  - target: data/vehicles.yaml#starship_v3
+    asserts:
+      payload_leo_t: 100.0
+      staging_speed_kmh: 6000.0
 ---
 
 # Starship / Super Heavy V3

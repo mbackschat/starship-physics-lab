@@ -17,7 +17,11 @@ stale_after: 2027-01-31
 
 provenance: published
 feeds:
-  - data/flights.yaml#12
+  - target: data/flights.yaml#12
+    asserts:
+      date: 2026-05-22
+      payload_t: 37.5
+      reached_orbit: false
 ---
 
 # Flight 12
