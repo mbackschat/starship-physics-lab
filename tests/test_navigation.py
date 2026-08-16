@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from labbook.navigation import (
+    ARTICLE_URL,
     CHAPTERS,
     FOUNDATIONS,
     REPOSITORY_URL,
@@ -125,3 +126,22 @@ def test_every_chapter_is_listed_in_the_sidebar_with_no_collapse():
     # And the build has to ship the config, or the deployed site keeps the toggle.
     build = (root / "deploy" / "build.py").read_text()
     assert '".streamlit"' in build
+
+
+def test_the_source_article_is_linked_where_the_app_talks_about_it():
+    """It is public, and the fact-check is worthless if you cannot go and look.
+
+    The project deliberately does not redistribute the article, which is the
+    only way to handle a copyrighted source. That is a reason to cite it by
+    link, not a reason to hide it.
+    """
+    root = Path(__file__).resolve().parents[1]
+    assert ARTICLE_URL.startswith("https://")
+    for page in ("Home.py", "pages/10_Fact_check.py"):
+        assert "ARTICLE_URL" in (root / "app" / page).read_text(), page
+
+
+def test_the_article_url_is_not_repeated_by_hand_anywhere_in_the_app():
+    root = Path(__file__).resolve().parents[1]
+    for page in sorted((root / "app").rglob("*.py")):
+        assert "golem.de" not in page.read_text(), f"{page.name} should use ARTICLE_URL"

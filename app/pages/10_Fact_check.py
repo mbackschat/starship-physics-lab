@@ -15,15 +15,19 @@ from components.shell import (
 )
 
 from labbook.factcheck import Verdict, check_all
+from labbook.navigation import ARTICLE_TITLE, ARTICLE_URL, REFERENCE_URL
 from labbook.tables import Col, table
 
 page("10 · Fact check", "Every number in the source article, recomputed here and now.")
 formatter = sidebar()
 
 st.markdown(
-    """
-This whole project started from one article. Before building anything on it,
-every checkable number in it was recomputed independently.
+    f"""
+This whole project started from one article:
+**[{ARTICLE_TITLE}]({ARTICLE_URL})**, Golem.de, 14 August 2026, in German. It is
+worth reading, and you should be able to disagree with what follows by going and
+looking. Before building anything on it, every checkable number in it was
+recomputed independently.
 
 Nothing below is a stored answer. Each row is calculated when this page loads,
 by the same physics engine that runs every other chapter. If the library changed,
@@ -45,6 +49,10 @@ st.success(
     "verification, 61 of 64 checkable numbers hold within 2 %. The physics in "
     "the article is sound and its arithmetic is very nearly clean.",
     icon="✅",
+)
+st.caption(
+    f"The claim-by-claim log behind that, all 64 of them with their sources, is in "
+    f"[docs/physics-reference.md]({REFERENCE_URL})."
 )
 
 st.markdown(

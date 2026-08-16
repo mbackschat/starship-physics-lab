@@ -21,7 +21,7 @@ from components.shell import (
 )
 
 from labbook.logo import mark
-from labbook.navigation import REPOSITORY_URL, applications, foundations
+from labbook.navigation import ARTICLE_URL, REPOSITORY_URL, applications, foundations
 from labbook.sharing import CHAPTER_PARAM, carry, route_for
 from labbook.units import Quantity
 
@@ -98,8 +98,8 @@ st.divider()
 st.subheader("A worked example runs through all of it")
 st.markdown(
     f"""
-In August 2026 a German article argued that SpaceX's Starship carries far less
-payload than claimed. Its physics turned out to be sound: of the numbers checked
+In August 2026 [a German article]({ARTICLE_URL}) argued that SpaceX's Starship
+carries far less payload than claimed. Its physics turned out to be sound: of the numbers checked
 in chapter 10, almost all reproduce independently.
 
 But the argument rests on one number nobody outside SpaceX knows: **how much the

@@ -9,6 +9,7 @@ import streamlit as st
 from components.shell import chapter_footer, library, page, sidebar, try_this, why
 
 from labbook.casestudy import weigh_from_burn
+from labbook.navigation import ARTICLE_URL
 from labbook.tables import Col, table
 from labbook.units import Quantity
 
@@ -167,7 +168,8 @@ between 200 and 250 tonnes at landing.
 try_this(
     "Set the burn to 10 seconds and then to 14. The measured mass moves by about "
     "70 tonnes. This is why the exact burn duration matters so much, and why the "
-    "source article is careful to give a range rather than a single number."
+    f"[source article]({ARTICLE_URL}) is careful to give a range rather than a "
+    "single number."
 )
 
 st.caption(

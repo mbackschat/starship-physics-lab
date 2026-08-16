@@ -98,6 +98,24 @@ The only thing a newcomer needs to know about the ordering.
 REPOSITORY_URL = "https://github.com/mbackschat/starship-physics-lab"
 """Where the source lives. Shown on every page, because the working is the point."""
 
+ARTICLE_URL = (
+    "https://www.golem.de/news/spacex-wie-das-starship-den-kampf-gegen-die-physik-"
+    "verliert-2608-211916.html"
+)
+"""The article this whole project set out to check.
+
+Cited by link and never redistributed, which is the only way a copyrighted
+source can be handled here. It is public, so a reader who wants to disagree with
+the fact-check should be one click from the thing being checked. Hiding it would
+undercut the point of publishing the working.
+"""
+
+ARTICLE_TITLE = "SpaceX: Wie das Starship den Kampf gegen die Physik verliert"
+"""Its own title, in its own language. Golem.de, 14 August 2026."""
+
+REFERENCE_URL = f"{REPOSITORY_URL}/blob/main/docs/physics-reference.md"
+"""The claim-by-claim verification log, for a reader who wants all 64 numbers."""
+
 
 def chapter(number: int) -> Chapter:
     """Look up a chapter by its number.
