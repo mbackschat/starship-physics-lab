@@ -150,6 +150,23 @@ The project's stance is physics first, verdict last. Chapters 1 to 5 teach mecha
 - The fact-check chapter reports the article's **errors as well as its confirmations**, by name.
 - **No loaded language in any string.** "Starship's dry mass is disputed" ships; "Starship is objectively bad" does not.
 
+### Numbers from different sources are not comparable until you check that they measure the same thing
+
+The project's whole claim is that its numbers were checked, so what counts as a check is load-bearing. Three lessons, each paid for.
+
+**A figure means nothing without the frame it was measured in.** Falcon 9's 22.8 t and 17.5 t only support "recovery costs 23 %" because both are published for the same **28.5° reference orbit**. Had one been a 53° Starlink orbit, part of the difference would have been an inclination penalty rather than recovery propellant, and a model tuned to close that gap would have been fitted to the wrong thing. The frames that bite in this domain:
+
+- **Reference orbit and inclination** behind a payload figure. Almost never stated in a secondary source.
+- **Velocity relative to the ground or to inertial space**, which differ by up to 465 m/s at the equator, and neither of which is what a non-rotating simulation reports.
+- **Whether a manoeuvre's "Δv" is what the engines produced or what the vehicle lost.** Most of a Falcon 9 entry burn's deceleration is atmosphere. Charging propellant for the second double-counts the air.
+- **At what moment a mass is quoted**: at ignition, at separation, at burnout, with or without residuals.
+
+**Cross-check along routes that do not share an assumption.** Two sources agreeing proves little when both inherit the same frame. Falcon 9's droneship reserve was settled by three: a Δv budget, a share of the propellant load, and engine mass flow times observed burn duration. **The last two mention no velocity at all**, which is exactly what made the first one usable. When only one route exists, say so rather than implying corroboration.
+
+**Arithmetic on a claim's own numbers is not a check of it.** The article's "reuse costs 25 % of payload" was recorded as verified because `1 − 17.5 / 22.8 = 23.2 %`. That checks the division and would have passed against any physics whatsoever. It is the same mistake as a test asserting `analyse()` payloads, which are the published claims copied out of the YAML: **a claim compared against a restatement of itself.** Both existed here. A real check reaches the number by a route the claim did not take.
+
+One more, about direction. When the model disagrees with a source, **the implementation is the more likely culprit**. Here the library said reuse cost 7 % and the article said 25 %; the temptation was to doubt the article, and the article was right.
+
 ### Two Streamlit traps that unit tests cannot see
 
 Both of these produce a page that runs perfectly, passes every test, and is visibly wrong. Only `deploy/acceptance.py` catches them, which is why it exists.
