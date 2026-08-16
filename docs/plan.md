@@ -327,6 +327,13 @@ Deployment tasks, in M8:
 3. Add a GitHub Actions workflow that builds the static bundle and publishes to Pages on push to `main`.
 4. Keep `uv run streamlit run app/Home.py` working locally and identically. If the two ever diverge, the local one is authoritative.
 
+**What hosting on a static site actually cost, found by testing the deployed page (August 2026).** Streamlit writes the current chapter into the address bar, and neither half of that survives GitHub Pages on its own:
+
+1. Pages has no route for `/The_payload_question`, so it answers with its own error page. Every link the app produces was dead: reload a chapter, bookmark one, or share one. Fixed by writing the bootstrap page twice, as `index.html` and as the `404.html` Pages serves for any unmatched path.
+2. Even then the chapter never reaches Python. The browser runtime reports *its own mount point* as `st.context.url` and forwards only the query string, so the path is invisible to the app. Fixed in the bootstrap page, which moves the chapter out of the path and into the query string before Python starts. `labbook.sharing.route_for` then forwards, carrying the reader's settings by hand because Streamlit clears the query string when it switches page.
+
+The lesson worth keeping is about testing, not routing: a fully green test suite said nothing about any of this, because no test met the app the way a reader does. `deploy/acceptance.py` now does, against a local build or the deployed site.
+
 ### D6: Units — **switchable, at the presentation edge only** (decided)
 
 Metric and US customary, switchable in the app's sidebar and as one argument to any report or table in `labbook`.

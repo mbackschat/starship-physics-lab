@@ -84,13 +84,15 @@ Every milestone in [docs/plan.md](docs/plan.md) is complete.
 | done | **M8a** Fact check and glossary chapters |
 | done | **M8b** Guided tour, shareable links, dark mode locked by tests |
 
-250 tests, `ruff` and `mypy --strict` clean, all green in CI before anything deploys. Full plan in [docs/plan.md](docs/plan.md).
+262 tests, `ruff` and `mypy --strict` clean, all green in CI before anything deploys. Full plan in [docs/plan.md](docs/plan.md).
 
 ## How it runs in a browser
 
 GitHub Pages serves static files, and browsers only execute JavaScript and WebAssembly. Python works because **[Pyodide](https://pyodide.org) is CPython itself compiled to WebAssembly**, and [stlite](https://github.com/whitphx/stlite) packages Streamlit for it. Your browser downloads the interpreter once, then runs the very same `.py` files that run locally. Nothing is sent anywhere.
 
 That imposes one useful discipline: every runtime dependency is a wheel the reader has to download. `scipy` and `ambiance` were dropped in favour of a forty-line standard atmosphere and a hand-written RK4 integrator, which took about 15 MB out of the bundle.
+
+It also costs one piece of plumbing. Streamlit writes the current chapter into the address bar, but a static host has no route for those paths and the browser runtime never shows the path to Python: it reports its own mount point as the URL and forwards only the query string. So the build writes its page twice, as `index.html` and as the `404.html` that answers every unmatched path, and that page moves the chapter out of the path and into the query string before Python starts. Without it, every link the app produces answers with GitHub's error page: reload a chapter, bookmark one, or share one, and it dies.
 
 ## Layout
 
@@ -100,7 +102,7 @@ src/labbook/    presentation: units, palette, tables, charts, export
 app/            Streamlit front end, thin glue over the two above
 data/           the rocket library as editable YAML, every entry sourced
 studies/        one folder per question: script, finding, figures
-deploy/         static site build and screenshot capture
+deploy/         static site build, browser acceptance checks, screenshots
 ```
 
 Two rules that do not bend:
@@ -112,15 +114,18 @@ Two rules that do not bend:
 
 ```sh
 uv sync                                          # install
-uv run pytest                                    # 250 tests
+uv run pytest                                    # 262 tests
 uv run ruff check . && uv run mypy               # lint and types
 uv run streamlit run app/Home.py                 # the app, locally
 
 uv run python studies/staging-split/run.py       # answer a question
 uv run python deploy/build.py                    # build the static site
-uv run playwright install chromium               # once, for screenshots
+uv run playwright install chromium               # once, for the browser checks
+uv run python deploy/acceptance.py --local       # drive the built site in a browser
 uv run python deploy/screenshot.py               # refresh the README images
 ```
+
+`deploy/acceptance.py --local` serves the built site the way GitHub Pages does and drives it in a real browser: every chapter renders, a shared link opens its chapter on its setting, a reload stays put, and a hand-edited URL falls back rather than breaking. Drop `--local` to run the same checks against the deployed site. It is the only check that sees what a reader sees, so run it before trusting a green test suite about anything user-facing.
 
 ## Provenance
 
