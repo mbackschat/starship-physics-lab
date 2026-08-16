@@ -6,19 +6,25 @@
 
 - number: 12
   vehicle: starship_v3
-  date: 2026-05-01
-  date_precision: month
+  date: 2026-05-22
+  date_precision: day
   payload_t: 37.5
-  payload_description: 22 Starlink V3 mass simulators
+  payload_description: 20 Starlink V3 mass simulators plus 2 working satellites
   reached_orbit: false
-  trajectory: suborbital
+  trajectory: suborbital by design, deliberately short of orbital velocity
   max_velocity_kmh: null
   booster_outcome: >
     Flipped abnormally fast after separation, most engines failed, hit the Gulf
     of Mexico at 1450 km/h.
-  ship_outcome: Reached planned velocity, splashed down.
+  ship_outcome: Reached planned velocity, splashed down in the Indian Ocean.
   provenance: published
-  source: Wikipedia Starship flight test 12
+  source: Wikipedia Starship flight test 12, retrieved 2026-08-16
+  note: >
+    First flight of Block 3 vehicles (B19 and S39) and first launch from
+    Starbase's second pad. Sources disagree on the two working satellites:
+    Wikipedia's flight 12 article calls them modified Starlink V2, its launch
+    list calls them V3. The distinction does not affect the mass used here, so
+    it is recorded rather than resolved. See docs/knowledge/flights/flight-12.md.
 
 - number: 13
   vehicle: starship_v3
@@ -41,11 +47,15 @@
     relight_s: 2338
     splashdown_s: 3921
   provenance: published
-  source: Wikipedia Starship flight test 13; Space.com
+  source: Wikipedia Starship flight test 13, retrieved 2026-08-16; Space.com
   note: >
+    B20 and S40. First Starship flight to deploy operational satellites, and the
+    first upper stage to survive splashdown intact, which allowed the heat
+    shield and engines to be inspected afterwards.
+
     The 14 s relight is what docs/physics-reference.md section 3.2 uses to weigh
     the ship at 242 to 259 t total. Satellite unit mass 34.1 / 20 = 1.705 t,
-    which reproduces Flight 12's 37.5 t for 22 satellites exactly.
+    which reproduces Flight 12's 37.5 t for 22 units exactly.
 
 - number: 14
   vehicle: starship_v3
