@@ -10,8 +10,14 @@ from components.shell import chapter_footer, library, mode, page, sidebar, try_t
 
 from labbook.charts import staging_sweep
 from labbook.tables import Col, table
-from labbook.units import Quantity
-from rocketry.staging import StagingModel, optimal_delta_v_split, optimal_staging_speed
+from labbook.units import Quantity, from_kmh, to_kmh
+from rocketry.staging import (
+    REFERENCE_STAGING,
+    SWEEP_CEILING,
+    StagingModel,
+    optimal_delta_v_split,
+    optimal_staging_speed,
+)
 from rocketry.staging import staging_sweep as sweep_model
 from rocketry.vehicle import analyse
 
@@ -31,19 +37,31 @@ But *where* you separate is a real choice, and it turns out to matter enormously
 )
 
 
+# Speeds a reader recognises, in km/h. The core computes in m/s and this page is
+# the edge where the two meet, so every crossing goes through from_kmh/to_kmh.
+MARKERS = (
+    ("Starship as flown", 6000.0),
+    ("Falcon 9's split", 8000.0),
+    ("Article's redesign", 10000.0),
+)
+
+
 @st.cache_data(show_spinner=False)
-def sweep(shape: float, entry_speed: float) -> list[tuple[float, float]]:
+def sweep(shape: float, entry_speed_kmh: float) -> list[tuple[float, float]]:
     """Payload against staging speed, cached so the slider stays responsive.
 
     Args:
         shape: Upper stage inert mass per tonne of its propellant.
-        entry_speed: Speed the booster must slow to before reentry, km/h.
+        entry_speed_kmh: Speed the booster must slow to before reentry, km/h.
 
     Returns:
         Pairs of staging speed in km/h and payload in tonnes.
     """
-    model = StagingModel(ship_inert_per_propellant=shape, entry_speed_kmh=entry_speed)
-    return sweep_model(model, low_kmh=6000, high_kmh=16000, step_kmh=250)
+    model = StagingModel(
+        ship_inert_per_propellant=shape, entry_speed=from_kmh(entry_speed_kmh)
+    )
+    curve = sweep_model(model, REFERENCE_STAGING, SWEEP_CEILING, step=from_kmh(250.0))
+    return [(to_kmh(speed), payload) for speed, payload in curve]
 
 
 controls, chart = st.columns([1, 2.4], gap="large")
@@ -80,14 +98,14 @@ with controls:
     )
 
 curve = sweep(inert, entry_speed)
-model = StagingModel(ship_inert_per_propellant=inert, entry_speed_kmh=entry_speed)
+model = StagingModel(ship_inert_per_propellant=inert, entry_speed=from_kmh(entry_speed))
 best = optimal_staging_speed(model)
-as_flown = model.payload_at(6000.0)
+as_flown = model.payload_at(REFERENCE_STAGING)
 at_best = model.payload_at(best)
 
 with chart:
     one, two, three = st.columns(3)
-    one.metric("Best staging speed", formatter.speed(best, digits=0))
+    one.metric("Best staging speed", formatter.speed(to_kmh(best), digits=0))
     two.metric("Payload there", formatter.mass(at_best, digits=0))
     three.metric(
         "Starship's actual split",
@@ -98,9 +116,7 @@ with chart:
         staging_sweep(
             curve,
             markers=[
-                ("Starship as flown", 6000.0, model.payload_at(6000.0)),
-                ("Falcon 9's split", 8000.0, model.payload_at(8000.0)),
-                ("Article's redesign", 10000.0, model.payload_at(10000.0)),
+                (label, kmh, model.payload_at(from_kmh(kmh))) for label, kmh in MARKERS
             ],
             formatter=formatter,
             mode=chart_mode,

@@ -10,7 +10,7 @@ import pytest
 from labbook.breakdown import as_series, mass_components
 from labbook.charts import loss_waterfall, mass_breakdown, staging_sweep, trajectory
 from labbook.palette import SURFACE, Mode, Series, all_colours, colour
-from labbook.units import METRIC, US
+from labbook.units import METRIC, US, from_kmh
 from rocketry.ascent import simulate
 from rocketry.library import load
 from rocketry.staging import StagingModel
@@ -62,7 +62,7 @@ class TestUnitsReachTheCharts:
 class TestLegends:
     def test_a_single_series_needs_no_legend_box(self):
         model = StagingModel()
-        figure = staging_sweep(sweep_model(model, step_kmh=1000))
+        figure = staging_sweep(sweep_model(model, step=from_kmh(1000)))
         assert figure.layout.showlegend is False
 
     def test_several_series_always_get_one(self, rows):

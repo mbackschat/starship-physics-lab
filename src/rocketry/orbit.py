@@ -17,17 +17,16 @@ class InclinationUnreachableError(ValueError):
     """
 
 
-def orbital_velocity(altitude_km: float) -> float:
+def orbital_velocity(altitude_m: float) -> float:
     """Speed needed for a circular orbit at a given altitude.
 
     Args:
-        altitude_km: Altitude above mean sea level, km.
+        altitude_m: Altitude above mean sea level, metres.
 
     Returns:
         Circular orbital velocity, m/s.
     """
-    radius = R_EARTH_M + altitude_km * 1000.0
-    return math.sqrt(MU_EARTH / radius)
+    return math.sqrt(MU_EARTH / (R_EARTH_M + altitude_m))
 
 
 def is_reachable(inclination_deg: float, latitude_deg: float) -> bool:

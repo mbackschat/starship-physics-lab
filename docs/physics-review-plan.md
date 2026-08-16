@@ -24,17 +24,6 @@ The reviewer recommended moving the Shuttle to the excused list. **That would fa
 - [ ] Replace the Shuttle's RS-25 placeholder, or mark the stage as not simulatable.
 - [ ] Decide whether mixed engine types within a stage should be representable, or rejected at load time.
 
-## 6. The core is not uniform in its units
-
-The stated non-negotiable rule is SI throughout, conversion only at the presentation edge. Two functions take other units:
-
-- `orbital_velocity(altitude_km)` takes kilometres. `orbital_velocity(200_000)` returns 1,390 m/s.
-- `StagingModel` takes km/h. `payload_at(1666.7)` returns −84.8 t where the equivalent 6,000 km/h returns 56.7 t.
-
-**Rated lower than the reviewer did.** Both parameters are named for their units, so nothing computes wrong for a caller who reads the signature, and the data models legitimately store what sources publish. This is a footgun and an inconsistency with a stated rule, not a defect producing wrong numbers today.
-
-- [ ] Decide between converting these to SI at the boundary, or amending the rule in CLAUDE.md to say the core is SI except where a parameter name says otherwise. Either is defensible; the present state, where the rule and the code disagree, is not.
-
 ## 7. Reuse costs the model almost nothing
 
 Not from the review. Found while fixing finding 1, which had been hiding it: the fairing error flattered Falcon 9 by 1.7 t of payload, and removing it left the calibration reference 1.2 t *over* its published figure instead of 0.5 t under.
@@ -58,4 +47,5 @@ Removed as they land. See git history.
 - **Scenario overrides bypassed validation.** `model_copy` wrote fields blind, so a negative dry mass gave a confident answer and a misspelled field was silently ignored. Stages are now rebuilt and revalidated. `20dc38d`.
 - **Recovery burns could create propellant.** `Burn` now rejects negative delta-v and non-positive Isp, with a property test that the reserve is never negative. `661a77c`.
 - **`mass_to_orbit_t` omitted the recovery reserve**, and the case study had routed around it, leaving one idea implemented twice with the wrong copy public. Fixed at that root: the property counts the reserve and `payload_curve` now reads it. `0aac35f`.
+- **The core was not uniform in its units.** `orbital_velocity` took kilometres and `StagingModel` took km/h, so `payload_at(1666.7)` returned −84.8 t where the same speed as 6,000 km/h returned 56.7 t. Both now take m/s and metres, the app and the study cross the boundary through `labbook.units.from_kmh` / `to_kmh`, and `tests/test_units.py` walks the core so the next one cannot be added quietly. It found a third the review had not: `Engine.mass_kg`, which is allowlisted because nothing calculates with it. CLAUDE.md rule 2 now states the split between computation and recorded source figures.
 - **The fairing was carried to orbit.** It is now released when the last stage ignites, which is where the three-stage vehicles here really shed theirs and 35 s early for Falcon 9, worth 0.16 % of payload. Falcon 9 moved from 16.96 t to 18.68 t and `falcon9_expendable` stopped needing an excuse, so it moved to `MUST_REPRODUCE`. What that exposed is finding 7.

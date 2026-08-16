@@ -6,11 +6,23 @@ See docs/physics-reference.md sections 2.6, 3.7 and 3.8.
 import math
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import Final
 
 from rocketry.constants import KMH_TO_MS
 from rocketry.reuse import Burn, mass_at_separation
 from rocketry.scaling import LINEAR, scaled_dry_mass
 from rocketry.tsiolkovsky import delta_v, final_mass, mass_ratio
+
+REFERENCE_STAGING: Final[float] = 6000.0 * KMH_TO_MS
+"""Staging speed Starship flies today, m/s.
+
+The article quotes 6,000 km/h and so does the app, which is why the conversion
+is written out here rather than the number: it is the same figure, said once, in
+the unit this package computes in.
+"""
+
+SWEEP_CEILING: Final[float] = 16000.0 * KMH_TO_MS
+"""Fastest staging speed worth sweeping, m/s. 16,000 km/h, past the peak."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -153,9 +165,13 @@ def two_stage_payload(
 class StagingModel:
     """A rocket whose staging velocity can be moved, with everything else fixed.
 
-    Defaults reproduce the Starship stack, so `payload_at(6000)` is roughly what
-    it flies today and the optimum is elsewhere. Used for the sweep in
-    docs/physics-reference.md section 3.7.
+    Defaults reproduce the Starship stack, so `payload_at(REFERENCE_STAGING)` is
+    roughly what it flies today and the optimum is elsewhere. Used for the sweep
+    in docs/physics-reference.md section 3.7.
+
+    Speeds are m/s, like everything else in this package. The article and the
+    app both talk in km/h, and that conversion belongs at the presentation edge:
+    :func:`labbook.units.from_kmh`.
 
     Attributes:
         liftoff_mass: Fully fuelled stack mass, tonnes.
@@ -163,13 +179,13 @@ class StagingModel:
         booster_isp: Flight-average booster specific impulse, seconds.
         ship_isp: Flight-average upper stage specific impulse, seconds.
         total_delta_v: Mission budget both stages supply together, m/s.
-        reference_staging_kmh: Staging speed at which the booster supplies
-            `reference_booster_delta_v`, km/h.
+        reference_staging_speed: Staging speed at which the booster supplies
+            `reference_booster_delta_v`, m/s.
         reference_booster_delta_v: Booster velocity at the reference staging
             speed, m/s.
         ship_inert_per_propellant: Upper stage inert mass, including its landing
             propellant, per tonne of its own propellant.
-        entry_speed_kmh: Speed the booster must slow to before reentry, km/h.
+        entry_speed: Speed the booster must slow to before reentry, m/s.
         brake_isp: Specific impulse of the braking burn, seconds.
         landing: The booster's landing burn.
     """
@@ -179,51 +195,50 @@ class StagingModel:
     booster_isp: float = 340.0
     ship_isp: float = 365.0
     total_delta_v: float = 9404.0
-    reference_staging_kmh: float = 6000.0
+    reference_staging_speed: float = REFERENCE_STAGING
     reference_booster_delta_v: float = 2796.0
     ship_inert_per_propellant: float = 250.0 / 1600.0
-    entry_speed_kmh: float = 5300.0
+    entry_speed: float = 5300.0 * KMH_TO_MS
     brake_isp: float = 350.0
     landing: Burn = field(default_factory=lambda: Burn(delta_v=500.0, isp=327.0, label="landing"))
 
-    def booster_delta_v_at(self, staging_speed_kmh: float) -> float:
+    def booster_delta_v_at(self, staging_speed: float) -> float:
         """Velocity the booster must supply to stage at a given speed.
 
         Args:
-            staging_speed_kmh: Speed at separation, km/h.
+            staging_speed: Speed at separation, m/s.
 
         Returns:
             Booster velocity contribution, m/s.
         """
-        extra = (staging_speed_kmh - self.reference_staging_kmh) * KMH_TO_MS
-        return self.reference_booster_delta_v + extra
+        return self.reference_booster_delta_v + (staging_speed - self.reference_staging_speed)
 
-    def booster_mass_at_separation(self, staging_speed_kmh: float) -> float:
+    def booster_mass_at_separation(self, staging_speed: float) -> float:
         """Booster mass at separation, including everything it needs to get home.
 
         Args:
-            staging_speed_kmh: Speed at separation, km/h.
+            staging_speed: Speed at separation, m/s.
 
         Returns:
             Booster mass at separation, tonnes.
         """
-        brake_dv = max(0.0, (staging_speed_kmh - self.entry_speed_kmh) * KMH_TO_MS)
+        brake_dv = max(0.0, staging_speed - self.entry_speed)
         burns = [self.landing, Burn(delta_v=brake_dv, isp=self.brake_isp, label="entry braking")]
         return mass_at_separation(self.booster_dry, burns)
 
-    def payload_at(self, staging_speed_kmh: float) -> float:
+    def payload_at(self, staging_speed: float) -> float:
         """Payload delivered when the stages separate at a given speed.
 
         Args:
-            staging_speed_kmh: Speed at separation, km/h.
+            staging_speed: Speed at separation, m/s.
 
         Returns:
             Payload, tonnes. Negative means this split cannot reach orbit at all.
         """
-        booster_dv = self.booster_delta_v_at(staging_speed_kmh)
+        booster_dv = self.booster_delta_v_at(staging_speed)
         ship_dv = self.total_delta_v - booster_dv
         after_ascent = final_mass(self.liftoff_mass, booster_dv, self.booster_isp)
-        available = after_ascent - self.booster_mass_at_separation(staging_speed_kmh)
+        available = after_ascent - self.booster_mass_at_separation(staging_speed)
         if available <= 0 or ship_dv <= 0:
             return float("-inf")
         in_orbit = final_mass(available, ship_dv, self.ship_isp)
@@ -232,24 +247,27 @@ class StagingModel:
 
 
 def staging_sweep(
-    model: StagingModel, low_kmh: float = 6000.0, high_kmh: float = 16000.0, step_kmh: float = 500.0
+    model: StagingModel,
+    low: float = REFERENCE_STAGING,
+    high: float = SWEEP_CEILING,
+    step: float = 500.0 * KMH_TO_MS,
 ) -> list[tuple[float, float]]:
     """Payload as a function of staging speed.
 
     Args:
         model: The vehicle to sweep.
-        low_kmh: Lowest staging speed to try, km/h.
-        high_kmh: Highest staging speed to try, km/h.
-        step_kmh: Grid spacing, km/h.
+        low: Lowest staging speed to try, m/s.
+        high: Highest staging speed to try, m/s.
+        step: Grid spacing, m/s.
 
     Returns:
-        Pairs of staging speed in km/h and payload in tonnes, in ascending
-        order of speed. Configurations that cannot reach orbit are omitted.
+        Pairs of staging speed in m/s and payload in tonnes, in ascending order
+        of speed. Configurations that cannot reach orbit are omitted.
     """
     results: list[tuple[float, float]] = []
-    steps = round((high_kmh - low_kmh) / step_kmh)
+    steps = round((high - low) / step)
     for i in range(steps + 1):
-        speed = low_kmh + i * step_kmh
+        speed = low + i * step
         payload = model.payload_at(speed)
         if math.isfinite(payload):
             results.append((speed, payload))
@@ -257,22 +275,22 @@ def staging_sweep(
 
 
 def optimal_staging_speed(
-    model: StagingModel, low_kmh: float = 6000.0, high_kmh: float = 16000.0
+    model: StagingModel, low: float = REFERENCE_STAGING, high: float = SWEEP_CEILING
 ) -> float:
     """Staging speed that maximises payload.
 
     Args:
         model: The vehicle to optimise.
-        low_kmh: Lowest staging speed to consider, km/h.
-        high_kmh: Highest staging speed to consider, km/h.
+        low: Lowest staging speed to consider, m/s.
+        high: Highest staging speed to consider, m/s.
 
     Returns:
-        Best staging speed, km/h, resolved to 10 km/h.
+        Best staging speed, m/s, resolved to about 3 m/s.
 
     Raises:
         ValueError: If no staging speed in the range can reach orbit.
     """
-    sweep = staging_sweep(model, low_kmh, high_kmh, step_kmh=10.0)
+    sweep = staging_sweep(model, low, high, step=10.0 * KMH_TO_MS)
     if not sweep:
         raise ValueError("no staging speed in this range reaches orbit")
     return max(sweep, key=lambda pair: pair[1])[0]

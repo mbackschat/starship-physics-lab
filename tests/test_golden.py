@@ -10,6 +10,7 @@ Default tolerance is 1 % unless a test says otherwise.
 
 import pytest
 
+from rocketry.constants import KMH_TO_MS
 from rocketry.dynamics import (
     acceleration_after,
     gravity_thrust_fraction,
@@ -22,6 +23,7 @@ from rocketry.reentry import area_ratio, diameter_for_equal_loading
 from rocketry.reuse import Burn, mass_at_separation, recovery_propellant
 from rocketry.scaling import scaled_dry_mass
 from rocketry.staging import (
+    REFERENCE_STAGING,
     StagingModel,
     optimal_delta_v_split,
     optimal_staging_speed,
@@ -184,7 +186,7 @@ class TestOrbitAndInclination:
     """Section 7, block 6."""
 
     def test_orbital_velocity_at_200_km(self):
-        assert orbital_velocity(altitude_km=200) == pytest.approx(7784, rel=PCT_1)
+        assert orbital_velocity(altitude_m=200_000) == pytest.approx(7784, rel=PCT_1)
 
     def test_rotation_bonus_due_east(self):
         assert rotation_bonus(inclination_deg=25.997, latitude_deg=25.997) == pytest.approx(
@@ -241,15 +243,18 @@ class TestStagingOptimum:
         return StagingModel()
 
     def test_optimum_is_far_above_the_as_flown_split(self, model: StagingModel):
-        assert optimal_staging_speed(model) == pytest.approx(11500, abs=1000)
+        # The article's numbers are km/h; the model computes in m/s.
+        assert optimal_staging_speed(model) == pytest.approx(
+            11500 * KMH_TO_MS, abs=1000 * KMH_TO_MS
+        )
 
     def test_optimum_roughly_doubles_the_payload(self, model: StagingModel):
-        as_flown = model.payload_at(6000)
+        as_flown = model.payload_at(REFERENCE_STAGING)
         best = model.payload_at(optimal_staging_speed(model))
         assert best > 2 * as_flown
 
     def test_as_flown_split_reproduces_the_articles_ballpark(self, model: StagingModel):
-        assert model.payload_at(6000) == pytest.approx(57, rel=0.15)
+        assert model.payload_at(REFERENCE_STAGING) == pytest.approx(57, rel=0.15)
 
     def test_equal_stages_are_optimal_when_stages_are_identical(self):
         share = optimal_delta_v_split(isp=350, structural_coefficient=0.08, total_delta_v=9404)

@@ -77,7 +77,7 @@ with left:
     wet = dry + propellant
     ratio = wet / dry
     achieved = delta_v(wet, dry, isp)
-    orbital = orbital_velocity(200)
+    orbital = orbital_velocity(200_000)
 
     st.metric("Speed this rocket reaches", formatter.velocity(achieved, digits=0))
     st.progress(

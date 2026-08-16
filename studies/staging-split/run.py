@@ -10,9 +10,14 @@ Out:  studies/staging-split/out/staging-split.{png,html,md,csv}
 
 from labbook import US, Col, Quantity, beside, save_data, save_figure, save_table, table
 from labbook.charts import staging_sweep
-from labbook.units import METRIC
+from labbook.units import METRIC, from_kmh, to_kmh
 from rocketry.library import load
-from rocketry.staging import StagingModel, optimal_staging_speed
+from rocketry.staging import (
+    REFERENCE_STAGING,
+    SWEEP_CEILING,
+    StagingModel,
+    optimal_staging_speed,
+)
 from rocketry.staging import staging_sweep as sweep_model
 from rocketry.vehicle import analyse
 
@@ -20,10 +25,13 @@ FORMATTER = METRIC  # swap for US to produce the same report in pounds and mph
 
 lib = load()
 model = StagingModel()
-curve = sweep_model(model, low_kmh=6000, high_kmh=16000, step_kmh=250)
+curve = [
+    (to_kmh(speed), payload)
+    for speed, payload in sweep_model(model, REFERENCE_STAGING, SWEEP_CEILING, from_kmh(250.0))
+]
 best_speed = optimal_staging_speed(model)
 best_payload = model.payload_at(best_speed)
-as_flown = model.payload_at(6000)
+as_flown = model.payload_at(REFERENCE_STAGING)
 
 # --- Where the real vehicles and the article's concepts sit ------------------
 
@@ -76,7 +84,7 @@ report = table(
 
 print(report)
 print()
-print(f"Optimum staging speed in this model : {FORMATTER.speed(best_speed)}")
+print(f"Optimum staging speed in this model : {FORMATTER.speed(to_kmh(best_speed))}")
 print(f"Payload there                       : {FORMATTER.mass(best_payload)}")
 print(f"Payload as flown at 6 000 km/h      : {FORMATTER.mass(as_flown)}")
 print(f"Cost of the current split           : {best_payload / as_flown:.1f}x less payload")
@@ -86,11 +94,15 @@ print(FORMATTER.mass(5850), "->", US.mass(5850), "|", FORMATTER.speed(10000), "-
 
 # --- Chart -------------------------------------------------------------------
 
+# Labelled in km/h, the way the article and the chart speak; the model takes m/s.
 markers = [
-    ("Starship as flown", 6000.0, model.payload_at(6000.0)),
-    ("Falcon 9 split", 8000.0, model.payload_at(8000.0)),
-    ("Article: Raptor 33 + 4", 10000.0, model.payload_at(10000.0)),
-    ("Article: Raptor 33 + 3", 12000.0, model.payload_at(12000.0)),
+    (label, kmh, model.payload_at(from_kmh(kmh)))
+    for label, kmh in (
+        ("Starship as flown", 6000.0),
+        ("Falcon 9 split", 8000.0),
+        ("Article: Raptor 33 + 4", 10000.0),
+        ("Article: Raptor 33 + 3", 12000.0),
+    )
 ]
 
 figure = staging_sweep(

@@ -68,7 +68,11 @@ CI ([.github/workflows/pages.yml](.github/workflows/pages.yml)) runs `ruff`, `my
 ## The two rules that do not bend
 
 1. **`src/rocketry/` never imports Streamlit, Plotly, pandas or `labbook`.** The dependency arrow points one way only: `app/` → `labbook/` → `rocketry/`. Breaking this makes the physics untestable without a browser and breaks the scripted-analysis consumer.
-2. **`src/rocketry/` is SI throughout** (tonnes, m/s, seconds, tonnes-force). Units convert exactly once, at the presentation edge, in `labbook.units`. A unit bug can then change a label but never a result. Specific impulse stays in seconds in both systems and is deliberately never converted.
+2. **`src/rocketry/` is SI throughout** (tonnes, m/s, metres, seconds, tonnes-force). Units convert exactly once, at the presentation edge, in `labbook.units`. A unit bug can then change a label but never a result. Specific impulse stays in seconds in both systems and is deliberately never converted.
+
+   The rule's real content is *one unit per quantity*, which is why tonnes and tonnes-force qualify. It binds anything a calculation reads. Library fields that merely record what a source published may keep that source's unit, and then the name must say so: `staging_speed_kmh`, `max_velocity_kmh`, `mass_kg`. The test is whether a calculation reads it. `tests/test_units.py` walks the core and fails on any other name in a foreign unit, so the allowlist is the only way in and stays reviewed.
+
+   The article speaks km/h and so does chapter 4. Cross that boundary with `labbook.units.from_kmh` / `to_kmh`, never with a bare multiplication in a page.
 
 ## Scope and audience
 

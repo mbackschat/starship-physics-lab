@@ -43,7 +43,12 @@ class Quantity(StrEnum):
     """Stored in m/s. Used for delta-v and instantaneous speed."""
 
     SPEED = "speed"
-    """Stored in km/h. Used where the source quotes km/h, such as staging speed."""
+    """Stored in km/h. Used where the source quotes km/h, such as staging speed.
+
+    The *core* never stores km/h. Values reaching this quantity have already
+    crossed the edge, either from a library field that names its unit or through
+    :func:`to_kmh`.
+    """
 
     ALTITUDE = "altitude"
     """Stored in metres."""
@@ -71,6 +76,33 @@ class Quantity(StrEnum):
 
     PERCENT = "percent"
     """A fraction from 0 to 1, displayed as a percentage."""
+
+
+_MS_PER_KMH = 1.0 / 3.6
+
+
+def from_kmh(kmh: float) -> float:
+    """A speed a reader or a source gave in km/h, in the m/s the core takes.
+
+    Args:
+        kmh: Speed, km/h.
+
+    Returns:
+        The same speed, m/s.
+    """
+    return kmh * _MS_PER_KMH
+
+
+def to_kmh(ms: float) -> float:
+    """A speed the core produced in m/s, in the km/h a reader recognises.
+
+    Args:
+        ms: Speed, m/s.
+
+    Returns:
+        The same speed, km/h, ready for :attr:`Quantity.SPEED`.
+    """
+    return ms / _MS_PER_KMH
 
 
 _LB_PER_TONNE = 2204.622622
