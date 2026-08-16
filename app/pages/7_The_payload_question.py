@@ -10,7 +10,7 @@ from components.shell import library, mode, page, sidebar, try_this, why
 
 from labbook.casestudy import ESTIMATES, PayloadPoint, payload_curve
 from labbook.charts import payload_against_dry_mass
-from labbook.sharing import read_number, write_state
+from labbook.sharing import collect, read_number, write_state
 from labbook.tables import Col, table
 from labbook.units import Quantity
 
@@ -54,7 +54,11 @@ LOW, HIGH, DEFAULT, STEP = 80, 260, 220, 5
 # every time the URL moved, silently throwing away what they just set.
 if "dry_mass" not in st.session_state:
     shared = read_number(
-        st.query_params, "dry", default=float(DEFAULT), low=float(LOW), high=float(HIGH)
+        collect(st.session_state, st.query_params),
+        "dry",
+        default=float(DEFAULT),
+        low=float(LOW),
+        high=float(HIGH),
     )
     st.session_state["dry_mass"] = int(round(shared / STEP) * STEP)
 

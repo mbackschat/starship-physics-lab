@@ -9,11 +9,24 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import streamlit as st
-from components.shell import SLOGAN, TITLE, library, sidebar
+from components.shell import SLOGAN, TITLE, chapter_pages, library, sidebar
 
+from labbook.sharing import CHAPTER_PARAM, carry, route_for
 from labbook.units import Quantity
 
 st.set_page_config(page_title=TITLE, page_icon="🚀", layout="wide")
+
+# Streamlit writes a chapter's own path into the address bar as the reader
+# moves, but a static host has no route back for it, so reloading, bookmarking
+# or sharing a chapter all arrive here instead. The bootstrap page leaves that
+# chapter in the query string, since the path itself never reaches Python.
+# Forward to it, carrying the reader's settings by hand because switching page
+# throws the query string away.
+_chapter = route_for(st.query_params.get(CHAPTER_PARAM, ""), chapter_pages())
+if _chapter:
+    carry(st.session_state, dict(st.query_params))
+    st.switch_page(_chapter)
+
 formatter = sidebar()
 lib = library()
 

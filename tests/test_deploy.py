@@ -75,6 +75,54 @@ def test_index_refuses_to_build_without_its_entrypoint():
         build._index(["rocketry/ascent.py"])
 
 
+def test_the_site_answers_unknown_paths_with_the_app(tmp_path, monkeypatch, files):
+    """GitHub Pages serves 404.html for any path that is not a file on disk.
+
+    Streamlit puts a chapter's own path in the address bar, so without this the
+    reader's URL bar is full of links that answer with GitHub's error page:
+    reloading a chapter, bookmarking one, or sharing one all fail.
+    """
+    monkeypatch.setattr(build, "SITE", tmp_path / "site")
+    build.write_site(files)
+
+    fallback = tmp_path / "site" / "404.html"
+    assert fallback.exists(), "no 404.html, so every deep link lands on GitHub's error page"
+    assert fallback.read_text() == (tmp_path / "site" / "index.html").read_text()
+
+
+def test_the_fallback_page_finds_its_files_from_a_chapter_url(tmp_path, monkeypatch, files):
+    """Relative URLs in the fallback resolve against the chapter path, not the root.
+
+    A chapter URL is one segment deep, so ``./app/Home.py`` still resolves to the
+    site root only because the segment is not a directory. Anything absolute
+    would break under the project sub-path Pages serves from.
+    """
+    monkeypatch.setattr(build, "SITE", tmp_path / "site")
+    build.write_site(files)
+
+    html = (tmp_path / "site" / "404.html").read_text()
+    assert 'url="/app/' not in html, "absolute paths break under the /repo-name/ sub-path"
+    assert f'url="./{build.ENTRYPOINT}"' in html
+
+
+def test_the_bootstrap_page_forwards_the_path_to_the_app(files):
+    """The browser runtime hides the URL path from Python.
+
+    It reports its own mount point as the URL and passes on only the query
+    string, so the chapter has to be moved there before the app starts.
+    """
+    html = build._index(sorted(files))
+    assert "replaceState" in html, "nothing moves the chapter path into the query string"
+    assert f'searchParams.set("{build.CHAPTER_PARAM}"' in html
+
+
+def test_the_build_and_the_app_agree_on_the_chapter_parameter():
+    """Two halves of one handshake, in two languages. A typo would be silent."""
+    from labbook.sharing import CHAPTER_PARAM
+
+    assert build.CHAPTER_PARAM == CHAPTER_PARAM
+
+
 def test_the_bundle_stays_small(files):
     """Every kilobyte here is downloaded before the reader sees anything."""
     total_kb = sum(path.stat().st_size for path in files.values()) / 1024

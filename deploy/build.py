@@ -37,6 +37,14 @@ anything.
 
 ENTRYPOINT = "app/Home.py"
 
+CHAPTER_PARAM = "chapter"
+"""Where the bootstrap page leaves the chapter it found in the path.
+
+Must match ``labbook.sharing.CHAPTER_PARAM``; a test holds the two together.
+Kept as a literal rather than imported so the build stays runnable without the
+app's own package on the path.
+"""
+
 TREES = {
     "app": ROOT / "app",
     "rocketry": ROOT / "src" / "rocketry",
@@ -67,6 +75,12 @@ def collect() -> dict[str, Path]:
 def write_site(files: dict[str, Path]) -> None:
     """Copy the app into the site directory and write its index page.
 
+    The same page is written twice. GitHub Pages serves ``404.html`` for any
+    path with no file behind it, and Streamlit puts a chapter's own path in the
+    address bar the moment the reader navigates. Without the second copy, every
+    URL the app itself produces answers with GitHub's error page: reload a
+    chapter, bookmark one, or share one, and it dies.
+
     Args:
         files: Mapping of virtual path to file on disk.
     """
@@ -77,7 +91,9 @@ def write_site(files: dict[str, Path]) -> None:
         destination = SITE / virtual
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(real, destination)
-    (SITE / "index.html").write_text(_index(sorted(files)))
+    index = _index(sorted(files))
+    (SITE / "index.html").write_text(index)
+    (SITE / "404.html").write_text(index)
     (SITE / ".nojekyll").write_text("")
 
 
@@ -130,6 +146,25 @@ def _index(virtual_paths: list[str]) -> str:
         #boot p {{ color: #c3c2b7; }}
       }}
     </style>
+    <script>
+      // This same page answers every unmatched path, so a chapter URL such as
+      // /repo/The_payload_question arrives here with the chapter in the path.
+      // The app never sees that: stlite reports its own mount point as the URL
+      // and passes on only the query string. So move the path into the query
+      // string now, while this is still an ordinary web page.
+      //
+      // Deliberately dumb: it forwards whatever segment it finds and lets the
+      // app decide whether that names a chapter. The slug rule lives in Python,
+      // in labbook.sharing, and is not worth restating in a second language.
+      (function () {{
+        var here = new URL(window.location.href);
+        var root = new URL(".", here).pathname;
+        var rest = here.pathname.slice(root.length).replace(/\\/$/, "");
+        if (!rest || rest.endsWith(".html")) return;
+        here.searchParams.set("{CHAPTER_PARAM}", rest);
+        window.history.replaceState(null, "", root + here.search + here.hash);
+      }})();
+    </script>
     <script
       type="module"
       src="https://cdn.jsdelivr.net/npm/@stlite/browser@{STLITE_VERSION}/build/stlite.js"

@@ -5,6 +5,7 @@ can be tested without a browser.
 """
 
 from collections.abc import Sequence
+from pathlib import Path
 
 import streamlit as st
 
@@ -72,6 +73,19 @@ def sidebar() -> Formatter:
         )
         st.divider()
     return METRIC if choice is UnitSystem.METRIC else US
+
+
+def chapter_pages() -> list[str]:
+    """Every chapter page, as Streamlit refers to them.
+
+    Globbed rather than listed so a renamed chapter cannot leave a stale entry
+    behind.
+
+    Returns:
+        Page paths relative to the entrypoint, in chapter order.
+    """
+    folder = Path(__file__).resolve().parent.parent / "pages"
+    return [f"pages/{path.name}" for path in sorted(folder.glob("*.py"))]
 
 
 def mode() -> Mode:

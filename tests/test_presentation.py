@@ -202,3 +202,81 @@ class TestSharedState:
 
         assert write_state({"a": 220.0})["a"] == "220"
         assert write_state({"a": 0.85})["a"] == "0.85"
+
+
+class TestChapterRouting:
+    """The URL in the address bar has to lead back to the page it names.
+
+    Streamlit rewrites the address bar as the reader navigates, but on a static
+    host nothing routes that path back to a chapter. Whoever copies their
+    address bar gets a link that must still work.
+    """
+
+    PAGES = (
+        "pages/1_Rocket_equation.py",
+        "pages/7_The_payload_question.py",
+        "pages/11_Glossary.py",
+    )
+
+    def test_a_page_file_maps_to_the_url_streamlit_gives_it(self):
+        from labbook.sharing import page_slug
+
+        assert page_slug("pages/7_The_payload_question.py") == "The_payload_question"
+        assert page_slug("pages/11_Glossary.py") == "Glossary"
+
+    def test_a_chapter_url_routes_to_its_page(self):
+        from labbook.sharing import route_for
+
+        assert (
+            route_for("https://host/repo/The_payload_question?dry=165", self.PAGES)
+            == "pages/7_The_payload_question.py"
+        )
+
+    def test_the_site_root_is_not_a_chapter(self):
+        """The landing page must not bounce the reader anywhere."""
+        from labbook.sharing import route_for
+
+        assert route_for("https://host/repo/", self.PAGES) is None
+        assert route_for("https://host/repo", self.PAGES) is None
+
+    def test_an_unknown_path_stays_on_the_landing_page(self):
+        """A stale or mistyped link is not an error; it is just the front door."""
+        from labbook.sharing import route_for
+
+        assert route_for("https://host/repo/Nonsense", self.PAGES) is None
+        assert route_for("", self.PAGES) is None
+
+    def test_routing_ignores_case_and_trailing_slashes(self):
+        from labbook.sharing import route_for
+
+        assert route_for("https://host/repo/the_payload_question/", self.PAGES) == (
+            "pages/7_The_payload_question.py"
+        )
+
+    def test_settings_survive_the_hop_to_the_chapter(self):
+        """Streamlit clears the query string when it switches page.
+
+        So the landing page has to carry the reader's settings across by hand,
+        or a shared link arrives at the right chapter showing the wrong number.
+        """
+        from labbook.sharing import carry, collect
+
+        session: dict[str, object] = {}
+        carry(session, {"dry": "165"})
+        assert collect(session, {}) == {"dry": "165"}
+
+    def test_the_carried_settings_are_used_once_and_forgotten(self):
+        """Otherwise a stale link keeps overriding the reader on every rerun."""
+        from labbook.sharing import carry, collect
+
+        session: dict[str, object] = {}
+        carry(session, {"dry": "165"})
+        collect(session, {})
+        assert collect(session, {}) == {}
+
+    def test_a_live_url_beats_carried_settings(self):
+        from labbook.sharing import carry, collect
+
+        session: dict[str, object] = {}
+        carry(session, {"dry": "165"})
+        assert collect(session, {"dry": "200"}) == {"dry": "200"}
