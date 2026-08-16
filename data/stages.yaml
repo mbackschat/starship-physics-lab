@@ -177,22 +177,6 @@ falcon9_stage1_expendable:
   note: Same stage, nothing held back, so it stages about 2800 km/h faster.
   recovery: null
 
-ariane6_core:
-  name: Ariane 6 core stage plus four boosters
-  dry_mass_t: 14.7
-  propellant_t: 140.0
-  engine: vinci
-  engine_count: 1
-  diameter_m: 5.4
-  isp_ascent_s: 380.0
-  residual_propellant_t: 0.0
-  provenance: estimated
-  in_article: true
-  source: >
-    Simplified: the P120C solid boosters are folded into an equivalent core.
-    Adequate for comparing staging splits, not for modelling Ariane 6 in detail.
-  note: Included as a comparison point, not as a subject of study.
-  recovery: null
 
 
 # ---------------------------------------------------------------------------
@@ -380,3 +364,169 @@ shuttle_orbiter_et:
     mode: runway
     burns:
       - {delta_v: 100.0, isp: 313.0, label: deorbit burn}
+
+# ---------------------------------------------------------------------------
+# Further comparisons. Not discussed in the source article, included because
+# the data is public and the contrast is instructive.
+# ---------------------------------------------------------------------------
+
+saturn_v_s_ic:
+  name: Saturn V first stage (S-IC)
+  dry_mass_t: 137.0
+  propellant_t: 2077.0
+  engine: f_1
+  engine_count: 5
+  diameter_m: 10.1
+  isp_ascent_s: 275.0
+  residual_propellant_t: 0.0
+  provenance: published
+  source: NASA. Empty 137 t, gross 2,214 t.
+  note: Kerosene and brute force. Its specific impulse is worse than a Merlin's.
+  recovery: null
+
+saturn_v_s_ii:
+  name: Saturn V second stage (S-II)
+  dry_mass_t: 43.0
+  propellant_t: 427.0
+  engine: j_2
+  engine_count: 5
+  diameter_m: 10.1
+  isp_ascent_s: 421.0
+  residual_propellant_t: 0.0
+  provenance: published
+  source: NASA. Empty 43 t, gross 470 t.
+  note: A 9 % dry mass fraction on hydrogen, which is remarkable engineering.
+  recovery: null
+
+saturn_v_s_ivb:
+  name: Saturn V third stage (S-IVB)
+  dry_mass_t: 15.2
+  propellant_t: 105.3
+  engine: j_2
+  engine_count: 1
+  diameter_m: 6.6
+  isp_ascent_s: 421.0
+  residual_propellant_t: 0.0
+  provenance: published
+  source: NASA. Empty 15.2 t, gross 120.5 t.
+  note: >
+    The third stage the source article says Starship would have been excellent
+    as. Compare their jobs: this one is tiny relative to what lifted it.
+  recovery: null
+
+new_glenn_stage1:
+  name: New Glenn first stage
+  dry_mass_t: 85.0
+  propellant_t: 1200.0
+  engine: be_4
+  engine_count: 7
+  diameter_m: 7.0
+  isp_ascent_s: 320.0
+  residual_propellant_t: 0.0
+  provenance: estimated
+  source: >
+    Thrust 19,928 kN and a 190 s burn are published; the masses are derived from
+    them. Propellant from flow rate at Isp 310 s, dry mass scaled from Falcon 9's
+    first stage at this propellant load. Blue Origin has not published either.
+  note: Lands on a ship downrange, the cheaper recovery mode.
+  recovery:
+    mode: droneship
+    burns:
+      - {delta_v: 500.0, isp: 310.0, label: landing burn}
+      - {delta_v: 500.0, isp: 330.0, label: entry burn}
+
+new_glenn_stage2:
+  name: New Glenn second stage
+  dry_mass_t: 28.0
+  propellant_t: 150.0
+  engine: be_3u
+  engine_count: 2
+  diameter_m: 7.0
+  isp_ascent_s: 445.0
+  residual_propellant_t: 0.0
+  provenance: estimated
+  source: >
+    Solved so the vehicle reproduces Blue Origin's published 45 t to low Earth
+    orbit. Blue Origin has not published a stage mass.
+  note: Hydrogen upper stage, so its efficiency is far above any methane vehicle.
+  recovery: null
+
+long_march_10b_stage1:
+  name: Long March 10B first stage
+  dry_mass_t: 45.0
+  propellant_t: 640.0
+  engine: yf_100k
+  engine_count: 7
+  diameter_m: 5.0
+  isp_ascent_s: 315.0
+  residual_propellant_t: 0.0
+  provenance: estimated
+  source: >
+    Thrust 8,750 kN at sea level and a 227 s burn are published; masses derived
+    from them. CASC has not published stage masses.
+  note: >
+    Caught at sea on 10 July 2026 in a net of tensioned cables, using four hooks
+    and no landing legs. The first orbital-class booster recovered that way, and
+    a direct demonstration of the nautical return the source article argues for.
+  recovery:
+    mode: cable_net
+    burns:
+      - {delta_v: 450.0, isp: 300.0, label: landing burn}
+      - {delta_v: 500.0, isp: 330.0, label: entry burn}
+
+long_march_10b_stage2:
+  name: Long March 10B second stage
+  dry_mass_t: 14.8
+  propellant_t: 130.0
+  engine: yf_100k
+  engine_count: 2
+  diameter_m: 5.0
+  isp_ascent_s: 337.0
+  residual_propellant_t: 0.0
+  provenance: estimated
+  source: >
+    Solved so the vehicle reproduces the published 16 t to a 200 km orbit. CASC
+    has not published a stage mass.
+  note: Expended.
+  recovery: null
+
+ariane6_boosters:
+  name: Ariane 6 solid boosters (four P120C)
+  dry_mass_t: 44.0
+  propellant_t: 608.0
+  engine: p120c
+  engine_count: 4
+  diameter_m: 3.4
+  isp_ascent_s: 280.0
+  residual_propellant_t: 0.0
+  provenance: derived
+  source: >
+    Avio: four boosters, 142 t of propellant and 11 t of casing each, so 568 t
+    of solid. The extra 40 t is core propellant, and the 280 s is a blended
+    specific impulse.
+  note: >
+    Boosters and core burn together on Ariane 6, and a serial model of a
+    parallel burn always flatters the vehicle: it lets the core burn its
+    propellant at the low mass it only reaches after the boosters are gone.
+
+    The standard correction is applied here. The core's propellant is split
+    between the two phases in proportion to how long each lasts, and the
+    boosters' specific impulse is blended accordingly. Without it this vehicle
+    computes 10,700 m/s and a 35 t payload against a real 21.6 t.
+  recovery: null
+
+ariane6_core:
+  name: Ariane 6 core stage (LLPM)
+  dry_mass_t: 14.0
+  propellant_t: 110.0
+  engine: vulcain_2_1
+  engine_count: 1
+  diameter_m: 5.4
+  isp_ascent_s: 420.0
+  residual_propellant_t: 0.0
+  provenance: published
+  source: >
+    ArianeGroup: 150 t of LH2 and LOX in total, of which about 40 t is burnt
+    while the boosters are still attached and is accounted for there.
+  note: Lights on the pad and keeps burning long after the boosters have gone.
+  recovery: null

@@ -99,3 +99,98 @@ rs_25:
   provenance: published
   source: NASA
   note: Three flew on each Shuttle orbiter and were recovered with it.
+
+f_1:
+  name: F-1
+  propellants: RP-1/LOX
+  thrust_sl_tf: 690.0
+  thrust_vac_tf: 792.0
+  isp_sl_s: 263.0
+  isp_vac_s: 304.0
+  mass_kg: 8400.0
+  min_throttle: 1.0
+  provenance: published
+  source: NASA. Five flew on the Saturn V first stage.
+  note: >
+    Still the most powerful single-chamber liquid engine ever flown. Note the
+    modest specific impulse: kerosene buys thrust, not efficiency.
+
+j_2:
+  name: J-2
+  propellants: LH2/LOX
+  thrust_sl_tf: null
+  thrust_vac_tf: 105.0
+  isp_sl_s: null
+  isp_vac_s: 421.0
+  mass_kg: 1788.0
+  min_throttle: 1.0
+  provenance: published
+  source: NASA. Five on the Saturn V second stage, one on the third.
+  note: Hydrogen, and the efficiency that comes with it.
+
+be_4:
+  name: BE-4
+  propellants: CH4/LOX
+  thrust_sl_tf: 290.0
+  thrust_vac_tf: 320.0
+  isp_sl_s: 310.0
+  isp_vac_s: 340.0
+  mass_kg: 5400.0
+  min_throttle: 0.40
+  provenance: published
+  source: Blue Origin. 2,846 kN at sea level in the uprated version.
+  note: Seven fly on New Glenn's reusable first stage.
+
+be_3u:
+  name: BE-3U
+  propellants: LH2/LOX
+  thrust_sl_tf: null
+  thrust_vac_tf: 72.4
+  isp_sl_s: null
+  isp_vac_s: 445.0
+  mass_kg: 1500.0
+  min_throttle: 0.45
+  provenance: published
+  source: Blue Origin. 710 kN in vacuum. Two fly on New Glenn's upper stage.
+  note: Mass is estimated; Blue Origin has not published it.
+
+yf_100k:
+  name: YF-100K
+  propellants: RP-1/LOX
+  thrust_sl_tf: 127.5
+  thrust_vac_tf: 142.3
+  isp_sl_s: 301.6
+  isp_vac_s: 337.0
+  mass_kg: 2000.0
+  min_throttle: 0.50
+  provenance: published
+  source: CASC. Seven fly on the Long March 10B first stage.
+  note: Powers the first orbital-class booster ever caught in a net at sea.
+
+p120c:
+  name: P120C solid rocket motor
+  propellants: HTPB solid
+  thrust_sl_tf: 355.0
+  thrust_vac_tf: 384.0
+  isp_sl_s: 260.0
+  isp_vac_s: 278.5
+  mass_kg: 11000.0
+  min_throttle: 1.0
+  provenance: published
+  source: Avio, ArianeGroup. 4,650 kN peak, 141 t of propellant each.
+  note: >
+    A solid motor: it cannot be throttled or shut down, which is why the
+    min_throttle is 1. Four strap on to an Ariane 64.
+
+vulcain_2_1:
+  name: Vulcain 2.1
+  propellants: LH2/LOX
+  thrust_sl_tf: 96.0
+  thrust_vac_tf: 137.0
+  isp_sl_s: 320.0
+  isp_vac_s: 431.0
+  mass_kg: 2100.0
+  min_throttle: 1.0
+  provenance: published
+  source: ArianeGroup. 1,340 kN in vacuum.
+  note: Powers the Ariane 6 core, which burns alongside the solid boosters.

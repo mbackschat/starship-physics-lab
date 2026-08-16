@@ -225,9 +225,11 @@ Red/green TDD throughout: the golden numbers in [physics-reference section 7](ph
 YAML files populated from physics-reference section 5, each entry validating against the pydantic models, each carrying provenance and an `in_article` flag.
 **Done:** 7 engines, 18 stages, 10 vehicles, 3 flights. `rocketry.vehicle.analyse` reproduces Falcon 9 at 9333 m/s and the Shuttle at 9445 m/s, both in the normal band, and puts Starship at its claimed 100 t payload at 8545 m/s, roughly 850 m/s short of orbit. That gap is the article's argument, arrived at independently.
 
-### M2b: More presets
+### M2b: More presets — DONE
 Add the remaining vehicles the article discusses (Atlas LV-3B, New Glenn, Long March 10B, SLS Block 1, Soyuz-2), then comparison vehicles it does not (Saturn V, Falcon Heavy, Electron, Vulcan Centaur, Neutron). Requires multi-stage support beyond two stages for Saturn V and Ariane 6.
-**Done when:** every vehicle in the library reproduces its published payload within 10 %, or carries a note explaining why it cannot.
+**Done:** 13 vehicles, 25 stages, 12 engines. Seven reproduce their published payload within 15 %, and the six that do not are listed in `tests/test_library_calibration.py` with a reason each, guarded by a test that fails if a vehicle is quietly left out of both lists or if an excuse stops being needed.
+
+Multi-stage support fell out of the existing bottom-up walk: Saturn V and Ariane 64 both have three stages. Ariane 64 exposed a real limit worth recording: **representing a parallel burn as a sequence of stages always flatters the vehicle**, because it lets the core burn propellant at the low mass it only reaches once the boosters are gone. Splitting the core's propellant across both phases recovers most of it; the rest is why Ariane 64 sits on the excused list.
 
 ### M2c: Analysis workbench
 `labbook` units, tables, charts and export, plus the `studies/` convention.

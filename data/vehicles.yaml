@@ -77,7 +77,7 @@ falcon9_expendable:
 ariane_64:
   name: Ariane 64
   operator: ArianeGroup
-  stages: [ariane6_core, ariane6_ulpm]
+  stages: [ariane6_boosters, ariane6_core, ariane6_ulpm]
   fairing_t: 2.5
   payload_leo_t: 21.6
   payload_claim_provenance: published
@@ -91,6 +91,11 @@ ariane_64:
   note: >
     Included for one reason: its upper stage has a worse dry-mass fraction than
     Starship's and lifts more, because it starts from a much higher speed.
+
+    Its computed payload runs about 50 % high, and that is a known limit of the
+    model rather than a claim about Ariane. Boosters and core burn together, and
+    representing a parallel burn as a sequence of stages always flatters the
+    vehicle. Trust this entry for the upper-stage comparison, not for payload.
 
 space_shuttle:
   name: Space Shuttle
@@ -189,3 +194,63 @@ raptor33_pessimistic:
   note: >
     The article stress-testing its own assumption. A booster 100 t heavier than
     planned still delivers 94 t, because a well split rocket is forgiving.
+
+# ---------------------------------------------------------------------------
+# Further comparisons, not from the article.
+# ---------------------------------------------------------------------------
+
+saturn_v:
+  name: Saturn V
+  operator: NASA
+  stages: [saturn_v_s_ic, saturn_v_s_ii, saturn_v_s_ivb]
+  fairing_t: 0.0
+  payload_leo_t: 140.0
+  payload_claim_provenance: published
+  launch_latitude_deg: 28.5
+  launch_site: Kennedy Space Center, Florida
+  staging_speed_kmh: 8600.0
+  category: historic
+  provenance: published
+  source: NASA. 140 t to a 185 km orbit.
+  note: >
+    Three stages, entirely expendable, and still the largest payload ever
+    delivered to orbit. Its first stage is barely more efficient than a Falcon 9
+    booster; what it has is an excellent split of the work.
+
+new_glenn:
+  name: New Glenn
+  operator: Blue Origin
+  stages: [new_glenn_stage1, new_glenn_stage2]
+  fairing_t: 3.0
+  payload_leo_t: 45.0
+  payload_claim_provenance: published
+  launch_latitude_deg: 28.5
+  launch_site: Cape Canaveral, Florida
+  staging_speed_kmh: 9000.0
+  category: flown
+  in_article: true
+  provenance: estimated
+  source: Blue Origin publishes 45 t to LEO; stage masses are derived.
+  note: >
+    The article cites it as an example of a nautical return: it lands on a ship
+    rather than flying back to the pad, and gives up far less payload for it.
+
+long_march_10b:
+  name: Long March 10B
+  operator: CASC
+  stages: [long_march_10b_stage1, long_march_10b_stage2]
+  fairing_t: 2.0
+  payload_leo_t: 16.0
+  payload_claim_provenance: published
+  launch_latitude_deg: 19.6
+  launch_site: Wenchang, Hainan
+  staging_speed_kmh: 8000.0
+  category: flown
+  in_article: true
+  provenance: estimated
+  source: CASC publishes at least 16 t to a 200 km orbit; stage masses are derived.
+  note: >
+    On 10 July 2026 its first stage was caught at sea in a pretensioned cable
+    net on the recovery ship Linghangzhe, with four hooks and no landing legs.
+    The second nation ever to recover an orbital-class booster, and the first
+    anywhere to do it with a net.
