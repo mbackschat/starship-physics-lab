@@ -18,12 +18,12 @@ This is not a general code review. The physics core is the one part of this proj
 The single question that matters. Run it, do not reason about it:
 
 ```sh
-uv run pytest -m golden          # documented numbers, 1 % tolerance
+uv run pytest -m golden          # the documented numbers
 uv run pytest tests/test_library_calibration.py
 uv run pytest tests/test_properties.py
 ```
 
-`test_library_calibration.py` is the one that decides whether anything else can be believed: the model must recover each vehicle's *published* payload. Seven do within 15 %; the rest are on an excused list with a stated reason each, and a test fails if a vehicle is quietly left out of both lists or if an excuse stops being needed.
+`test_library_calibration.py` is the one that decides whether anything else can be believed: the model must recover each vehicle's *published* payload. Vehicles that do not are on an excused list with a stated reason each, and the test fails if a vehicle is quietly left out of both lists, or if an excuse stops being needed. **Read those lists in the file rather than assuming who is on them**; which vehicles are excused, and how many, is exactly the sort of thing that changes between one review and the next.
 
 **If you change a golden number, you are either fixing a bug or breaking the model. Say which, explicitly.** There is no third option and no "small drift".
 
@@ -31,7 +31,7 @@ uv run pytest tests/test_properties.py
 
 The project's credibility comes from admitting what it cannot do. Look for anywhere the code produces a confident number for a case it does not really model:
 
-- **Parallel burns are not modelled.** A serial walk over strap-on boosters always *flatters* the vehicle, because it lets the core burn propellant at the low mass it only reaches after separation. Ariane 64 and the Space Shuttle are on the excused list for this. Anything else with parallel stages that is *not* excused is a defect.
+- **Parallel burns are not modelled.** A serial walk over strap-on boosters always *flatters* the vehicle, because it lets the core burn propellant at the low mass it only reaches after separation. Vehicles excused for this are named in `tests/test_library_calibration.py`. Any vehicle with parallel stages that is *not* on that list is a defect. If the list is empty, the limit has been fixed and this bullet should go.
 - Extrapolation past the range a correlation was fitted on.
 - A default that quietly decides something the caller should have chosen.
 
