@@ -59,18 +59,33 @@ for term in matches:
             st.caption(term.detail)
 
         # "See also" used to be plain text, which left the reader to scroll for
-        # the entry it named. These jump to it. Buttons rather than links
-        # because the destination is on this same page: a link would reload the
-        # whole browser runtime to arrive back where it started.
+        # the entry it named. These jump to it.
+        #
+        # Buttons rather than links because the destination is on this same
+        # page: a link would reload the whole browser runtime to arrive back
+        # where it started. Tertiary and packed onto one line so they read as
+        # the cross-references they are, rather than as a row of full-width
+        # buttons competing with the definition above them.
         related = [name for name in term.related if define(name) is not None]
         if related:
-            st.caption("See also")
-            for column, name in zip(st.columns(len(related)), related, strict=True):
-                column.button(
-                    name,
-                    key=f"see-{term.word}-{name}",
-                    width="stretch",
-                    on_click=lambda chosen=name: st.session_state.update({QUERY_KEY: chosen}),
-                )
+            with st.container(
+                horizontal=True,
+                horizontal_alignment="left",
+                vertical_alignment="center",
+                gap="small",
+            ):
+                # Content width, or the caption stretches and shoves the links
+                # to the far edge of the card, away from the words they follow.
+                st.caption("See also", width="content")
+                for name in related:
+                    st.button(
+                        name,
+                        key=f"see-{term.word}-{name}",
+                        type="tertiary",
+                        help=f"Jump to {name}",
+                        on_click=lambda chosen=name: st.session_state.update(
+                            {QUERY_KEY: chosen}
+                        ),
+                    )
 
 chapter_footer(11)
