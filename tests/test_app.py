@@ -18,6 +18,7 @@ import pytest
 from streamlit.testing.v1 import AppTest
 
 from labbook.units import UnitSystem
+from rocketry.library import load
 from rocketry.reuse import RecoveryProfile
 
 APP = Path(__file__).resolve().parents[1] / "app"
@@ -104,6 +105,31 @@ def test_rocket_equation_responds_to_its_sliders():
     app.slider[1].set_value(500.0).run()
     assert not app.exception
     assert app.metric[0].value != before, "more propellant must mean more speed"
+
+
+def test_launch_explains_a_vehicle_it_cannot_fly_rather_than_crashing():
+    """Design rule 5: no dead ends, never a stack trace.
+
+    The picker offers every vehicle in the library, and `simulate()` raises for
+    one that cannot leave the pad. The Space Shuttle is such a vehicle here: its
+    boosters are modelled with a placeholder engine and burn in parallel, which
+    the ascent model cannot represent, so it computes a thrust-to-weight below 1
+    and refuses. A reader who picks it was getting the traceback.
+    """
+    app = run(APP / "pages" / "3_Launch.py")
+    app.selectbox[0].set_value("space_shuttle").run()
+    assert not app.exception, "picking a vehicle must never show a traceback"
+    assert app.error, "an unflyable vehicle must be explained, not silently blank"
+
+
+@pytest.mark.parametrize(
+    "key",
+    [key for key, vehicle in load().vehicles.items() if vehicle.payload_leo_t is not None],
+)
+def test_every_vehicle_on_offer_can_be_selected_without_crashing(key: str):
+    app = run(APP / "pages" / "3_Launch.py")
+    app.selectbox[0].set_value(key).run()
+    assert not app.exception, f"{key} raised in the launch chapter: {app.exception}"
 
 
 def test_anatomy_switches_vehicle():

@@ -68,4 +68,4 @@ The returns diminish while the complexity does not: every separation is a chance
 
 ## Where this is modelled
 
-`src/rocketry/staging.py`, with the sweep and the optimum. A known limit: stages that burn **in parallel** cannot be represented honestly by a bottom-up walk, which is why [Ariane 64](../vehicles/ariane-6.md) and the Space Shuttle sit on the calibration excused list.
+`src/rocketry/staging.py`, with the sweep and the optimum. A known limit: stages that burn **in parallel** cannot be represented honestly by a bottom-up walk, which is why [Ariane 64](../vehicles/ariane-6.md) sits on the calibration excused list. The Space Shuttle has the same problem and is *not* excused: it reproduces its published payload closely enough to pass, while the ascent model refuses to fly it. Passing calibration and being honestly modelled are not the same thing.

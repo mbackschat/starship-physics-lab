@@ -40,8 +40,14 @@ chapter_link(1)
 
 
 @st.cache_data(show_spinner=False)
-def fly(key: str, turn_shape: float, drag: float, payload: float | None) -> AscentResult:
+def fly(key: str, turn_shape: float, drag: float, payload: float | None) -> AscentResult | str:
     """Simulate a launch, cached so sliders stay responsive.
+
+    The picker offers every vehicle in the library, and not all of them can be
+    flown by this model. A vehicle whose boosters burn in parallel is walked as
+    a sequence of stages, which computes a thrust-to-weight below 1 and makes
+    `simulate` refuse. That refusal is correct; showing the reader its traceback
+    is not.
 
     Args:
         key: Vehicle key.
@@ -50,10 +56,13 @@ def fly(key: str, turn_shape: float, drag: float, payload: float | None) -> Asce
         payload: Payload override in tonnes, or None for the published figure.
 
     Returns:
-        The ascent result.
+        The ascent result, or the reason it could not be simulated.
     """
     vehicle = analyse(library(), key, payload)
-    return simulate(vehicle, AscentSettings(turn_shape=turn_shape, drag_coefficient=drag))
+    try:
+        return simulate(vehicle, AscentSettings(turn_shape=turn_shape, drag_coefficient=drag))
+    except ValueError as refusal:
+        return str(refusal)
 
 
 controls, readout = st.columns([1, 2], gap="large")
@@ -84,6 +93,20 @@ with controls:
     )
 
 result = fly(key, turn_shape, drag, None)
+
+if isinstance(result, str):
+    with readout:
+        st.error(
+            f"**{vehicle.name} cannot be flown by this model.** {result}\n\n"
+            "This is a limit of the simulation rather than of the rocket. Its "
+            "boosters and core burn at the same time, and this model walks a "
+            "stack one stage after another, so it never sees them firing "
+            "together. The analytic chapters still handle it; only the flight "
+            "does not.",
+            icon="🧮",
+        )
+        chapter_link(4)
+    st.stop()
 
 with readout:
     if result.crashed:

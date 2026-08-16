@@ -48,6 +48,6 @@ The physics, in the order it builds. These back the chapters rather than the lib
 Gaps worth filling, in rough order of value to the app:
 
 - **Flight 14**, once it flies. The [prediction is already pre-registered](../../studies/flight-14-prediction/finding.md) and the page is ready to be written the day it happens.
-- **The Space Shuttle**, the other vehicle on the calibration excused list, for the same parallel-burn reason as Ariane 64.
+- **The Space Shuttle**, whose boosters burn in parallel like Ariane 64's but which is *not* excused: it reproduces its published payload and passes calibration, while the ascent model refuses to fly it at all.
 - **New Glenn and Long March 10B**, both discussed in the source article, neither yet given a page.
 - **Starship V4**, currently reasoned about only in [studies/v4-scaling](../../studies/v4-scaling/finding.md).

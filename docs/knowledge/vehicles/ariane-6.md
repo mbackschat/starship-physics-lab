@@ -91,4 +91,4 @@ Launching from Kourou at 5.2° latitude gives it more of Earth's rotation than a
 
 ## What would change this page
 
-A proper parallel-staging model, which would take Ariane 64 and the Space Shuttle off the excused list and is the most valuable outstanding improvement to the physics core. Until then, the 50 % overshoot is the honest state of things.
+A proper parallel-staging model, which would take Ariane 64 off the excused list and let the Space Shuttle be flown at all, and is the most valuable outstanding improvement to the physics core. Until then, the 50 % overshoot is the honest state of things.
