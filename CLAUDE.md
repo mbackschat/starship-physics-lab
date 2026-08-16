@@ -8,7 +8,7 @@ An interactive rocket physics explorer, served as a static site that runs Python
 
 ```sh
 uv sync                                          # install, including the dev group
-uv run pytest                                    # 332 tests
+uv run pytest                                    # the whole suite
 uv run pytest tests/test_golden.py               # one file
 uv run pytest tests/test_golden.py::test_name    # one test
 uv run pytest -k staging                         # by name
@@ -23,6 +23,29 @@ uv run playwright install chromium               # once, for the browser checks
 uv run python deploy/acceptance.py --local       # drive the built site in a real browser
 uv run python deploy/screenshot.py               # refresh the README images
 ```
+
+### When those commands will not run
+
+Start here rather than reviewing by reading. A judgement made without executing anything is worth very little in a repository whose whole claim is that its numbers were checked.
+
+**`Failed to spawn: pytest`, or any console script missing.** The `.venv` was copied, moved or renamed from another path, and every console script still carries an absolute shebang pointing at where it used to live. Venvs are not relocatable. `uv sync` repairs the editable install but **not** the shebangs, so the fix is:
+
+```sh
+rm -rf .venv && uv sync
+```
+
+`.venv` is gitignored and rebuilds in seconds from `uv.lock`. `uv run python -m pytest` works around it and should not be committed anywhere as though it were the normal form.
+
+**A fresh or sandboxed workspace.** There is no environment until `uv sync` has run, and a sandbox with no access to the global `uv` cache has to build one from `uv.lock` first. Do that before concluding anything is broken.
+
+## Commands and skills
+
+**Never add slash commands.** Reusable agent instructions go in `.claude/skills/<name>/SKILL.md`. Commands are a Claude Code feature that nothing else reads, and this repository is worked by other agents: `AGENTS.md` and `.codex` are symlinks so they see the same instructions.
+
+Two things about skills that break silently, both covered by `tests/test_agent_config.py`:
+
+- A skill is found by **description matching**, so its description must say *when* to use it and list triggers. A description that only says what the skill is will never be reached by the task that needs it.
+- Relative links inside a skill sit one level deeper than most files. Nothing about markdown instructions fails loudly, so a rotted link just sends the reader nowhere.
 
 ## Committing
 
