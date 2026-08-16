@@ -40,11 +40,11 @@ Units switch between metric and US customary anywhere, in the app and in generat
 
 *Chapter 9. Reshape either stage, choose how the booster comes home, and get scored against Falcon 9, Saturn V and New Glenn on the fairest single measure: how much of what left the pad turned out to be useful.*
 
-## Where this came from
+## Where the numbers come from
 
-In August 2026 a German article argued that Starship carries far less payload than claimed. Before building anything on it, every number in it was recomputed independently: **61 of 64 checkable numbers reproduce within 2 %**, and the three that do not are recorded as corrections rather than quietly fixed.
+The starting point is a German article arguing that Starship carries far less payload than claimed. Every number in it is recomputed here independently: **61 of 64 checkable numbers reproduce within 2 %**, and the three that do not are recorded as corrections rather than quietly fixed.
 
-Then the central claim was rebuilt from scratch rather than taken on trust. Sweeping the staging speed on the same 5,850 t rocket puts the payload optimum near 11,500 km/h against the 6,000 km/h Starship actually flies, **worth roughly 2.2x the payload**.
+Its central claim is rebuilt from scratch rather than taken on trust. Sweeping the staging speed on the same 5,850 t rocket puts the payload optimum near 11,500 km/h against the 6,000 km/h Starship actually flies, **worth roughly 2.2x the payload**.
 
 The full verification log, the corrections and the sources are in [docs/physics-reference.md](docs/physics-reference.md).
 
@@ -71,28 +71,11 @@ print(table(rows, [
 
 Each investigation lives in [`studies/`](studies/), one folder holding the script, the written finding and its figures, so understanding accumulates in the repository instead of evaporating in a chat log.
 
-## Status
-
-Every milestone in [docs/plan.md](docs/plan.md) is complete.
-
-| | |
-|---|---|
-| done | **M0-M2** Scaffold, physics core, rocket library |
-| done | **M2c** Analysis workbench: units, tables, charts, export |
-| done | **M3-M6** App shell, chapters 1-8, ascent simulation, the Starship case study |
-| done | **M8a** Live on GitHub Pages |
-| done | **M2b** More presets: Saturn V, New Glenn, Long March 10B, a properly modelled Ariane 64 |
-| done | **M7** The build-your-own sandbox |
-| done | **M8a** Fact check and glossary chapters |
-| done | **M8b** Guided tour, shareable links, dark mode locked by tests |
-
-332 tests, `ruff` and `mypy --strict` clean, all green in CI before anything deploys. Full plan in [docs/plan.md](docs/plan.md).
-
 ## How it runs in a browser
 
 GitHub Pages serves static files, and browsers only execute JavaScript and WebAssembly. Python works because **[Pyodide](https://pyodide.org) is CPython itself compiled to WebAssembly**, and [stlite](https://github.com/whitphx/stlite) packages Streamlit for it. Your browser downloads the interpreter once, then runs the very same `.py` files that run locally. Nothing is sent anywhere.
 
-That imposes one useful discipline: every runtime dependency is a wheel the reader has to download. `scipy` and `ambiance` were dropped in favour of a forty-line standard atmosphere and a hand-written RK4 integrator, which took about 15 MB out of the bundle.
+That imposes one useful discipline: every runtime dependency is a wheel the reader has to download, so there are four. The standard atmosphere is forty lines and the integrator is hand-written RK4, rather than pulling in `scipy` for either, which keeps about 15 MB out of the bundle.
 
 It also costs one piece of plumbing. Streamlit writes the current chapter into the address bar, but a static host has no route for those paths and the browser runtime never shows the path to Python: it reports its own mount point as the URL and forwards only the query string. So the build writes its page twice, as `index.html` and as the `404.html` that answers every unmatched path, and that page moves the chapter out of the path and into the query string before Python starts. Without it, every link the app produces answers with GitHub's error page: reload a chapter, bookmark one, or share one, and it dies.
 
@@ -117,8 +100,8 @@ Two rules that do not bend:
 
 ```sh
 uv sync                                          # install
-uv run pytest                                    # 332 tests
-uv run ruff check . && uv run mypy               # lint and types
+uv run pytest                                    # the whole suite
+uv run ruff check . && uv run mypy               # lint and types, both stay clean
 uv run streamlit run app/Home.py                 # the app, locally
 
 uv run python studies/staging-split/run.py       # answer a question
@@ -132,4 +115,4 @@ uv run python deploy/screenshot.py               # refresh the README images
 
 ## Provenance
 
-Analysis began from ["SpaceX: Wie das Starship den Kampf gegen die Physik verliert"](https://www.golem.de/news/spacex-wie-das-starship-den-kampf-gegen-die-physik-verliert-2608-211916.html), Golem.de, 14 August 2026. The article itself is not redistributed here; it is cited by link, and every number taken from it was verified first. See [docs/physics-reference.md](docs/physics-reference.md) section 3 for the claim-by-claim log and section 10 for sources.
+The source article is ["SpaceX: Wie das Starship den Kampf gegen die Physik verliert"](https://www.golem.de/news/spacex-wie-das-starship-den-kampf-gegen-die-physik-verliert-2608-211916.html), Golem.de, 14 August 2026. It is not redistributed here, only cited by link, and every number taken from it is verified independently. See [docs/physics-reference.md](docs/physics-reference.md) section 3 for the claim-by-claim log and section 10 for sources.
