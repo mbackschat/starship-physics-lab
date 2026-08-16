@@ -1,9 +1,9 @@
 """Write results to disk so an investigation leaves something behind.
 
-Analysis output goes to ``analysis/out/``. Figures are written as both PNG and
-interactive HTML: the PNG so it can be read back and looked at, embedded in a
-document or pasted into a conversation, the HTML so the numbers behind it stay
-inspectable.
+A study's output goes in an ``out/`` directory beside its own ``run.py``, which
+is what :func:`beside` returns. Figures are written as both PNG and interactive
+HTML: the PNG so it can be read back and looked at, embedded in a document or
+pasted into a conversation, the HTML so the numbers behind it stay inspectable.
 """
 
 import csv
@@ -50,7 +50,7 @@ def save_figure(
     Args:
         figure: The plotly figure.
         name: Base filename without extension, for example ``staging-sweep``.
-        out_dir: Destination directory. Defaults to ``analysis/out``.
+        out_dir: Destination directory. Pass ``beside(__file__)``.
         width: PNG width in pixels.
         height: PNG height in pixels.
         scale: PNG resolution multiplier. 2 gives a crisp image on a retina
@@ -73,7 +73,7 @@ def save_table(markdown: str, name: str, *, out_dir: Path | None = None) -> Path
     Args:
         markdown: Rendered markdown, typically from :func:`labbook.tables.table`.
         name: Base filename without extension.
-        out_dir: Destination directory. Defaults to ``analysis/out``.
+        out_dir: Destination directory. Pass ``beside(__file__)``.
 
     Returns:
         The path written.
@@ -90,7 +90,7 @@ def save_data(rows: list[dict[str, Any]], name: str, *, out_dir: Path | None = N
     Args:
         rows: Records to write. Keys of the first row define the columns.
         name: Base filename without extension.
-        out_dir: Destination directory. Defaults to ``analysis/out``.
+        out_dir: Destination directory. Pass ``beside(__file__)``.
 
     Returns:
         The path written.

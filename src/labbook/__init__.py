@@ -4,8 +4,8 @@ This is the half of the project that turns physics into something a human can
 read. It is used by two consumers that must never disagree with each other:
 
 1. The Streamlit application in ``app/``.
-2. Scripted analysis in ``analysis/``, written by a person or by a coding agent
-   to answer a one-off question.
+2. Scripted analysis in ``studies/``, one folder per question, written by a
+   person or by a coding agent.
 
 Both import the same formatters and the same chart builders, so an answer
 produced in a script looks and reads exactly like the same answer in the app.
