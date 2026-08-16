@@ -41,7 +41,7 @@ chapter_link(1)
 
 
 @st.cache_data(show_spinner=False)
-def fly(key: str, turn_shape: float, drag: float, payload: float | None) -> AscentResult | str:
+def fly(key: str, turn_shape: float, drag: float) -> AscentResult | str:
     """Simulate a launch, cached so sliders stay responsive.
 
     `simulate` refuses a rocket that cannot lift its own weight. Nothing in the
@@ -54,12 +54,11 @@ def fly(key: str, turn_shape: float, drag: float, payload: float | None) -> Asce
         key: Vehicle key.
         turn_shape: How eagerly the rocket pitches over.
         drag: Drag coefficient.
-        payload: Payload override in tonnes, or None for the published figure.
 
     Returns:
         The ascent result, or the reason it could not be simulated.
     """
-    vehicle = analyse(library(), key, payload)
+    vehicle = analyse(library(), key)
     try:
         return simulate(vehicle, AscentSettings(turn_shape=turn_shape, drag_coefficient=drag))
     except ValueError as refusal:
@@ -93,7 +92,7 @@ with controls:
         help="How slippery the rocket is. A blunter shape pushes more air aside.",
     )
 
-result = fly(key, turn_shape, drag, None)
+result = fly(key, turn_shape, drag)
 
 if isinstance(result, str):
     with readout:
