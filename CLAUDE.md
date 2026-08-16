@@ -151,11 +151,41 @@ One folder per question under `studies/<name>/`: `run.py`, `finding.md`, and a g
 
 ## Knowledge base
 
-Reference material the project has *looked up*, as opposed to `studies/` which holds what it has *worked out*. Follows the LLM-wiki pattern with pages in [Open Knowledge Format v0.2](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md), and one rule that matters more than the rest: a page's `feeds:` names the library entries it is evidence for, and its numbers must still agree with them.
+Reference material the project has *looked up*, as opposed to `studies/` which holds what it has *worked out*. `raw/` holds immutable captured sources, `docs/knowledge/` holds compiled pages, and this file is the schema. The design and its reasoning are in [docs/knowledge-base.md](docs/knowledge-base.md); open work is in [docs/knowledge-base-plan.md](docs/knowledge-base-plan.md).
 
-The design and its reasoning are in [docs/knowledge-base.md](docs/knowledge-base.md). Open work is in [docs/knowledge-base-plan.md](docs/knowledge-base-plan.md), which holds only what is unfinished.
+Pages are markdown with YAML front matter in [Open Knowledge Format v0.2](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md). Only `type` is required; OKF mandates that unknown keys be preserved, which is what makes this project's two extensions legal rather than a private fork.
 
-Not yet built. Until Phase 1 of that plan lands there is no `raw/` or `docs/knowledge/` to read.
+```yaml
+---
+type: Vehicle                     # OKF's one required field
+title: Starship / Super Heavy V3
+description: One sentence.
+tags: [starship, spacex]
+
+sources:                          # every page cites at least one, dated
+  - id: wiki-f13
+    resource: ../../../raw/2026-08-16-wikipedia-starship-flight-13.md
+    title: Starship flight test 13
+    last_modified: 2026-08-16
+
+generated: { by: claude-opus-5, at: 2026-08-16T00:00:00Z }
+verified:                         # optional; its absence is itself the signal
+  - { by: 'human:mbackschat', at: 2026-08-16T11:00:00Z }
+
+status: stable                    # draft | stable | deprecated
+stale_after: 2026-09-30           # absolute date, not a TTL
+
+provenance: contested             # extension: the Provenance vocabulary
+feeds:                            # extension: entries this page is evidence for
+  - data/vehicles.yaml#starship_v3
+---
+```
+
+**Trust and provenance are different axes and both are needed.** `verified` answers *did a person check this page*, and its tier is derived rather than stored: no `verified` key means unverified, machine actors only means machine-confirmed, any `human:` actor means human-reviewed. `provenance` answers *how much weight can this number bear*. A human-reviewed page can describe a contested number. Never collapse them into one field, and never replace either with a numeric score.
+
+**`feeds:` is the load-bearing extension.** It names the library entries a page stands behind, and `tests/test_knowledge.py` fails if a reference points at an entry that does not exist. The numeric-consistency check on top of it is Phase 2 and not built yet.
+
+`src/knowledge.py` reads and validates pages. It is authoring tooling, deliberately outside both shipped packages and outside `deploy/build.py`'s trees so it never becomes a wheel the reader downloads; a test in `tests/test_deploy.py` holds that. `raw/` is text only, never binaries, because the point of keeping a source is being able to diff it when it is recaptured.
 
 ## Reference
 

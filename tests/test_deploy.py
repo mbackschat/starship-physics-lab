@@ -71,6 +71,17 @@ def test_nothing_from_src_leaks_into_the_paths(files):
     assert not any(name.startswith("src/") for name in files)
 
 
+def test_authoring_tooling_is_not_shipped_to_the_reader(files):
+    """The knowledge base is written locally and never read by the app.
+
+    Every file here is downloaded into the browser before anything appears, so
+    tooling that only an author runs has no business being among them.
+    """
+    shipped = "\n".join(files)
+    assert "knowledge" not in shipped
+    assert "raw/" not in shipped
+
+
 def test_no_bytecode_is_shipped(files):
     assert not any("__pycache__" in name for name in files)
 
