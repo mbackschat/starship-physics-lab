@@ -7,6 +7,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import streamlit as st
 from components.shell import (
+    chapter_footer,
+    chapter_link,
     library,
     mode,
     page,
@@ -78,8 +80,9 @@ if any(analysis.recovery_reserve_t > 0 for analysis in stages):
     reserved = sum(analysis.recovery_reserve_t for analysis in stages)
     st.caption(
         f"{formatter.mass(reserved, digits=0)} of propellant is carried all the way up "
-        "purely so the rocket can come back down again. Chapter 5 is about what that costs."
+        "purely so the rocket can come back down again."
     )
+    chapter_link(5)
 
 st.divider()
 
@@ -133,15 +136,19 @@ Around **5 %** is excellent for an expendable stage. **12 %** sounds bad until y
 remember the stage is also carrying a heat shield, fins and a nose so it can come
 home again.
 
-Here is the trap, and it is worth carrying into chapter 4. The Ariane 6 upper
-stage has an empty mass fraction of about **16 %**, worse than Starship's, and it
-still delivers more payload. Build quality is not what separates them. Where the
-stages separate is.
+Here is the trap, and it is worth carrying into the chapter on staging. The
+Ariane 6 upper stage has an empty mass fraction of about **16 %**, worse than
+Starship's, and it still delivers more payload. Build quality is not what
+separates them. Where the stages separate is.
 """,
 )
+
+chapter_link(4)
 
 try_this(
     "Compare **Falcon 9 (droneship recovery)** with **Falcon 9 (expendable)**. Same "
     "rocket, same stages. The only difference is whether the first stage keeps "
     "propellant back to land, and it costs about a quarter of the payload."
 )
+
+chapter_footer(2)

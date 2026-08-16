@@ -6,7 +6,16 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import streamlit as st
-from components.shell import library, mode, page, sidebar, try_this, vehicle_picker, why
+from components.shell import (
+    chapter_footer,
+    library,
+    mode,
+    page,
+    sidebar,
+    try_this,
+    vehicle_picker,
+    why,
+)
 
 from labbook.breakdown import as_series, mass_components
 from labbook.charts import mass_breakdown
@@ -169,3 +178,5 @@ try_this(
     "site** and watch the yellow band grow. Then switch the rocket to Starship "
     "and see what the same choice costs a vehicle ten times the size."
 )
+
+chapter_footer(5)

@@ -6,7 +6,16 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import streamlit as st
-from components.shell import library, mode, page, sidebar, try_this, why
+from components.shell import (
+    chapter_footer,
+    chapter_link,
+    library,
+    mode,
+    page,
+    sidebar,
+    try_this,
+    why,
+)
 
 from labbook.charts import payload_against_dry_mass
 from labbook.tables import Col, table
@@ -23,8 +32,8 @@ st.markdown(
     """
 Starship V4, planned for 2027, keeps the same booster proportions and makes the
 ship much bigger: 2,300 tonnes of propellant on a 4,050 tonne booster. That
-pushes the split between the stages further in the direction chapter 4 showed to
-be expensive.
+pushes the split between the stages further in the direction the staging chapter
+showed to be expensive.
 
 How much it hurts depends almost entirely on one assumption nobody can settle:
 **does a bigger ship weigh proportionally more?**
@@ -153,13 +162,17 @@ around 0.8 on the slider is a fair guess, and that already helps a lot.
 efficient in vacuum, which is worth roughly 23 tonnes of payload by itself.
 
 Put both together and V4 looks survivable rather than good. What would actually
-help is the thing chapter 4 pointed at: separating the stages later, not making
-the upper stage bigger.
+help is the thing the staging chapter pointed at: separating the stages later,
+not making the upper stage bigger.
 """,
 )
+
+chapter_link(4)
 
 try_this(
     "Set the slider to 1.0 and then to 0.0. Same announced rocket, same physics, "
     "and the payload goes from about 12 tonnes to over 100. That gap is not "
     "uncertainty about rocketry. It is uncertainty about one company's welding."
 )
+
+chapter_footer(8)

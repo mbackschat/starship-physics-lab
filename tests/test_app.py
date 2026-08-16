@@ -3,8 +3,15 @@
 Uses Streamlit's own headless harness. These are smoke tests with teeth: they
 execute each page top to bottom the way a browser session would, so a broken
 widget or a bad library lookup fails here rather than in front of a reader.
+
+Every page is reached by starting the real app and navigating, rather than by
+running the page file on its own. A page run in isolation is the only page the
+app knows about, so its links to other chapters have nothing to resolve against
+and raise. That is an artefact of the harness and not of the product, and
+booting properly removes it while also covering the links themselves.
 """
 
+import ast
 from pathlib import Path
 
 import pytest
@@ -14,23 +21,68 @@ from labbook.units import UnitSystem
 from rocketry.reuse import RecoveryProfile
 
 APP = Path(__file__).resolve().parents[1] / "app"
+ENTRYPOINT = APP / "Home.py"
 PAGES = sorted(APP.glob("pages/*.py"))
 
 
+def boot(path: Path) -> AppTest:
+    """Start the app at a given chapter, without running it yet.
+
+    Args:
+        path: The page file to land on.
+
+    Returns:
+        The harness, ready for query parameters to be set before it runs.
+    """
+    app = AppTest.from_file(str(ENTRYPOINT), default_timeout=60)
+    if path != ENTRYPOINT:
+        app.switch_page(f"pages/{path.name}")
+    return app
+
+
 def run(path: Path) -> AppTest:
-    app = AppTest.from_file(str(path), default_timeout=60)
+    """Start the app at a given chapter and run it.
+
+    Args:
+        path: The page file to land on.
+
+    Returns:
+        The harness, having rendered that page.
+    """
+    app = boot(path)
     app.run()
     return app
 
 
 def test_home_runs():
-    app = run(APP / "Home.py")
+    app = run(ENTRYPOINT)
     assert not app.exception
     assert any("Starship Physics Lab" in block.value for block in app.title)
 
 
 def test_every_page_is_discovered():
     assert len(PAGES) >= 2
+
+
+@pytest.mark.parametrize("path", [*PAGES, ENTRYPOINT], ids=lambda p: p.stem)
+def test_no_page_prints_a_docstring_at_the_reader(path: Path):
+    """Streamlit's magic renders a bare string expression as page content.
+
+    The rest of the project documents a module-level constant with a docstring
+    underneath it, which is an expression statement and therefore lands on the
+    page as a stray paragraph. It reads as a bug to everyone except the person
+    who wrote it, and nothing else catches it: the page runs perfectly.
+    """
+    body = ast.parse(path.read_text()).body
+    stray = [
+        node.lineno
+        for index, node in enumerate(body)
+        if index != 0
+        and isinstance(node, ast.Expr)
+        and isinstance(node.value, ast.Constant)
+        and isinstance(node.value.value, str)
+    ]
+    assert not stray, f"{path.name} would print a bare string at lines {stray}; use #"
 
 
 @pytest.mark.parametrize("path", PAGES, ids=lambda p: p.stem)
@@ -153,7 +205,7 @@ def test_sandbox_shows_the_trap_when_a_smaller_stage_is_not_lighter():
 
 def test_payload_page_reads_its_state_from_the_url():
     """A shared link must land the next reader on the same number."""
-    app = AppTest.from_file(str(APP / "pages" / "7_The_payload_question.py"), default_timeout=60)
+    app = boot(APP / "pages" / "7_The_payload_question.py")
     app.query_params["dry"] = "165"
     app.run()
     assert not app.exception
@@ -163,9 +215,7 @@ def test_payload_page_reads_its_state_from_the_url():
 def test_payload_page_survives_a_hand_edited_url():
     """The URL is the one input a reader can type into. It must not break the page."""
     for junk in ("rubbish", "", "-40", "99999"):
-        app = AppTest.from_file(
-            str(APP / "pages" / "7_The_payload_question.py"), default_timeout=60
-        )
+        app = boot(APP / "pages" / "7_The_payload_question.py")
         app.query_params["dry"] = junk
         app.run()
         assert not app.exception, f"query dry={junk!r} broke the page"

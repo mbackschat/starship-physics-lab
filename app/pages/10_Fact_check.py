@@ -6,7 +6,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import streamlit as st
-from components.shell import page, sidebar, why
+from components.shell import (
+    chapter_footer,
+    chapter_link,
+    page,
+    sidebar,
+    why,
+)
 
 from labbook.factcheck import Verdict, check_all
 from labbook.tables import Col, table
@@ -99,10 +105,12 @@ has not published it since 2019, and the credible estimates span more than a
 factor of two.
 
 Feed the same equations a different weight and you get a different answer, with
-no error anywhere. That is why chapter 7 gives you the slider instead of a
-verdict.
+no error anywhere. That is why the payload chapter gives you the slider instead
+of a verdict.
 """,
 )
+
+chapter_link(7)
 
 why(
     "What would change these conclusions?",
@@ -122,3 +130,5 @@ st.caption(
     "docs/physics-reference.md section 3, with the corrections in section 4 and "
     "the sources in section 10."
 )
+
+chapter_footer(10)

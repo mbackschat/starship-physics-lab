@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import streamlit as st
-from components.shell import library, mode, page, sidebar, try_this, why
+from components.shell import chapter_footer, library, mode, page, sidebar, try_this, why
 
 from labbook.charts import staging_sweep
 from labbook.tables import Col, table
@@ -190,3 +190,5 @@ try_this(
     "shielding can stage later without paying for as much braking, and the whole "
     "curve shifts. This is the single change that would help Starship most."
 )
+
+chapter_footer(4)

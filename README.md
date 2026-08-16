@@ -84,7 +84,7 @@ Every milestone in [docs/plan.md](docs/plan.md) is complete.
 | done | **M8a** Fact check and glossary chapters |
 | done | **M8b** Guided tour, shareable links, dark mode locked by tests |
 
-262 tests, `ruff` and `mypy --strict` clean, all green in CI before anything deploys. Full plan in [docs/plan.md](docs/plan.md).
+332 tests, `ruff` and `mypy --strict` clean, all green in CI before anything deploys. Full plan in [docs/plan.md](docs/plan.md).
 
 ## How it runs in a browser
 
@@ -98,9 +98,10 @@ It also costs one piece of plumbing. Streamlit writes the current chapter into t
 
 ```
 src/rocketry/   physics core. SI throughout. no UI dependencies. fully tested
-src/labbook/    presentation: units, palette, tables, charts, export
+src/labbook/    presentation: units, palette, tables, charts, drawings, export
 app/            Streamlit front end, thin glue over the two above
 data/           the rocket library as editable YAML, every entry sourced
+assets/         the mark, as a plain SVG file
 studies/        one folder per question: script, finding, figures
 deploy/         static site build, browser acceptance checks, screenshots
 ```
@@ -114,7 +115,7 @@ Two rules that do not bend:
 
 ```sh
 uv sync                                          # install
-uv run pytest                                    # 262 tests
+uv run pytest                                    # 332 tests
 uv run ruff check . && uv run mypy               # lint and types
 uv run streamlit run app/Home.py                 # the app, locally
 

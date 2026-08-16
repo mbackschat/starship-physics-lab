@@ -6,7 +6,17 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import streamlit as st
-from components.shell import library, mode, page, sidebar, try_this, vehicle_picker, why
+from components.shell import (
+    chapter_footer,
+    chapter_link,
+    library,
+    mode,
+    page,
+    sidebar,
+    try_this,
+    vehicle_picker,
+    why,
+)
 
 from labbook.breakdown import as_series, mass_components
 from labbook.charts import mass_breakdown
@@ -182,8 +192,7 @@ elif payload <= 0:
 elif twr < 1.2:
     st.warning(
         f"It flies, but only just: a thrust-to-weight of {twr:.2f} means it "
-        "climbs slowly and hands a great deal of velocity to gravity. Chapter 3 "
-        "shows what that costs.",
+        "climbs slowly and hands a great deal of velocity to gravity.",
         icon="⚠️",
     )
 else:
@@ -256,10 +265,11 @@ why(
 Three things, in order.
 
 **Shrink the upper stage.** Take propellant out of it and put it into the first
-stage. This is chapter 4's lesson and it is the single biggest lever here.
+stage. This is the staging chapter's lesson and it is the single biggest lever
+here.
 
 **Then make the upper stage lighter.** Every tonne comes straight off the
-vehicle and lands on the payload, as chapter 7 showed.
+vehicle and lands on the payload, as the payload chapter showed.
 
 **Then change how the booster comes home.** Landing on a ship instead of flying
 back frees up a surprising amount, and costs nothing except a slower turnaround.
@@ -269,6 +279,12 @@ you are mostly carrying engines rather than cargo.
 """,
 )
 
+revisit_staging, revisit_payload = st.columns(2)
+with revisit_staging:
+    chapter_link(4)
+with revisit_payload:
+    chapter_link(7)
+
 try_this(
     "Start from Starship, cut the upper stage's propellant roughly in half, and "
     "add the same amount to the booster. That is the source article's whole "
@@ -276,3 +292,5 @@ try_this(
     "and watch the payload collapse: a smaller stage only helps if it is also a "
     "lighter one."
 )
+
+chapter_footer(9)

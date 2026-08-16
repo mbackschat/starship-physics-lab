@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import streamlit as st
-from components.shell import library, page, sidebar, try_this, why
+from components.shell import chapter_footer, library, page, sidebar, try_this, why
 
 from labbook.casestudy import weigh_from_burn
 from labbook.tables import Col, table
@@ -175,3 +175,5 @@ st.caption(
     "that is not, the propellant still in the tanks, is the one the next chapter "
     "turns into a slider."
 )
+
+chapter_footer(6)

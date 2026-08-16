@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import streamlit as st
-from components.shell import library, mode, page, sidebar, try_this, why
+from components.shell import chapter_footer, library, mode, page, sidebar, try_this, why
 
 from labbook.casestudy import ESTIMATES, PayloadPoint, payload_curve
 from labbook.charts import payload_against_dry_mass
@@ -199,3 +199,5 @@ try_this(
     "it to 220 t, the source article's estimate. The rocket did not change. Only "
     "what you believe about it did."
 )
+
+chapter_footer(7)

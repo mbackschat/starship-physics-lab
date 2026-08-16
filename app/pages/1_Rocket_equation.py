@@ -7,12 +7,23 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import plotly.graph_objects as go
 import streamlit as st
-from components.shell import formula_block, mode, page, sidebar, try_this, why
+from components.shell import (
+    chapter_footer,
+    chapter_link,
+    formula_block,
+    mode,
+    page,
+    sidebar,
+    try_this,
+    why,
+)
 
-from labbook.charts import base_layout
+from labbook.charts import base_layout, burn_animation, loading_curve
+from labbook.curves import burn_trace, loading_sweep
 from labbook.formula import Formula, Term
 from labbook.palette import SURFACE, Series, colour
 from labbook.units import Quantity
+from labbook.visuals import rocket_cutaway
 from rocketry.orbit import orbital_velocity
 from rocketry.tsiolkovsky import binary_velocity, delta_v, exhaust_velocity
 
@@ -28,7 +39,7 @@ throws** and **how much of the rocket was propellant to begin with.**
 """
 )
 
-left, right = st.columns([1, 1.4], gap="large")
+left, drawing, right = st.columns([1, 0.85, 1.25], gap="large")
 
 with left:
     st.markdown("#### Build a rocket")
@@ -75,6 +86,24 @@ with left:
         "needed to orbit",
     )
 
+with drawing:
+    st.markdown("#### What you built")
+    st.markdown(
+        rocket_cutaway(
+            dry_t=dry,
+            propellant_t=propellant,
+            mode=chart_mode,
+            formatter=formatter,
+            height=330,
+            uid="ch1",
+        ),
+        unsafe_allow_html=True,
+    )
+    st.caption(
+        "Drawn to scale by mass. Push the propellant slider and watch the orange "
+        "take over: a real launcher is about 95 % propellant on the pad."
+    )
+
 with right:
     st.markdown("#### The equation, with your numbers in it")
     formula_block(
@@ -112,6 +141,73 @@ ratio.
         "the last few tonnes buy you. Then raise the engine efficiency by 30 s "
         "instead, and compare."
     )
+
+st.divider()
+
+st.subheader("Two questions that sound identical, and bend opposite ways")
+st.markdown(
+    """
+Almost everyone fuses these into one wrong intuition, so it is worth separating
+them deliberately. **Press play on the left.**
+"""
+)
+
+during, before = st.columns(2, gap="large")
+
+with during:
+    st.plotly_chart(
+        burn_animation(
+            burn_trace(dry_t=dry, propellant_t=propellant, isp_s=isp),
+            formatter=formatter,
+            mode=chart_mode,
+            title="While it burns",
+            subtitle="Equal chunks of propellant. The line gets steeper.",
+        ),
+        width="stretch",
+    )
+    st.caption(
+        "**Speeding up.** Each tonne burnt leaves a lighter rocket, so the next "
+        "tonne pushes harder. The final tonne is worth many times the first, "
+        "which is why crews are pressed hardest into their seats just before the "
+        "engines cut."
+    )
+
+with before:
+    st.plotly_chart(
+        loading_curve(
+            loading_sweep(dry_t=dry, isp_s=isp, up_to_t=900.0),
+            formatter=formatter,
+            mode=chart_mode,
+            at_t=propellant,
+            title="Before it flies",
+            subtitle="Equal chunks of propellant. The line flattens out.",
+        ),
+        width="stretch",
+    )
+    st.caption(
+        "**Slowing down.** Every tonne you add on the pad has to be carried and "
+        "accelerated by all the propellant beneath it. Load twice as much and "
+        "you do not go twice as fast. This is the wall the whole subject runs "
+        "into."
+    )
+
+why(
+    "How can both be true at once?",
+    """
+Because they are answers to different questions.
+
+The left chart follows **one rocket through one burn**. Its mass is falling, so
+its acceleration is rising. Nothing is being added.
+
+The right chart compares **different rockets on the launch pad**, each loaded
+with more propellant than the last. The extra propellant has to lift itself, and
+that self-carrying cost is what flattens the curve.
+
+Same equation. The left one moves along a fixed curve; the right one asks what
+happens when you change the rocket. Chapter 4 is what you do about the wall on
+the right, and the answer is not "more propellant".
+""",
+)
 
 st.divider()
 
@@ -195,3 +291,7 @@ with and the mass ratio resets. It is a crude trick and it is the only reason
 orbit is reachable at all.
 """,
 )
+
+chapter_link(4, question=True)
+
+chapter_footer(1)

@@ -5,12 +5,13 @@ can be tested without a browser.
 """
 
 from collections.abc import Sequence
-from pathlib import Path
 
 import streamlit as st
 
 from labbook.catalog import Group, browse, describe_provenance
 from labbook.formula import Formula
+from labbook.logo import mark
+from labbook.navigation import CHAPTERS, REPOSITORY_URL, Chapter, chapter, page_files
 from labbook.palette import Mode
 from labbook.units import METRIC, US, Formatter, UnitSystem
 from rocketry.library import Library, load
@@ -55,8 +56,21 @@ def sidebar() -> Formatter:
         The formatter every number on the page should go through.
     """
     with st.sidebar:
-        st.markdown(f"### {TITLE}")
+        badge, wordmark = st.columns([1, 3], vertical_alignment="center")
+        with badge:
+            st.markdown(mark(mode=mode(), height=52, uid="side"), unsafe_allow_html=True)
+        with wordmark:
+            st.markdown(f"### {TITLE}")
         st.caption(SLOGAN)
+        st.page_link("Home.py", label="The tour", icon=":material/home:")
+        st.link_button(
+            "Source on GitHub",
+            REPOSITORY_URL,
+            icon=":material/code:",
+            width="stretch",
+        )
+        st.caption("Every number here is computed by code you can read.")
+        st.divider()
         choice = st.radio(
             "Units",
             options=[UnitSystem.METRIC, UnitSystem.US],
@@ -76,16 +90,74 @@ def sidebar() -> Formatter:
 
 
 def chapter_pages() -> list[str]:
-    """Every chapter page, as Streamlit refers to them.
+    """Every chapter page, as Streamlit refers to them, in chapter order.
 
-    Globbed rather than listed so a renamed chapter cannot leave a stale entry
-    behind.
+    Delegated to :mod:`labbook.navigation`, which is the one place the tour is
+    described. Globbing the directory instead would sort 10 and 11 ahead of 2,
+    and would let the landing page's list drift away from the files on disk.
 
     Returns:
         Page paths relative to the entrypoint, in chapter order.
     """
-    folder = Path(__file__).resolve().parent.parent / "pages"
-    return [f"pages/{path.name}" for path in sorted(folder.glob("*.py"))]
+    return page_files()
+
+
+def chapter_link(number: int, *, question: bool = False) -> None:
+    """A link to another chapter, for prose that refers to one.
+
+    Chapters used to cite each other in plain text, which left the reader to
+    find them by hand.
+
+    Args:
+        number: Which chapter to point at.
+        question: Show the chapter's question rather than its title.
+    """
+    entry = chapter(number)
+    st.page_link(
+        entry.page_file,
+        label=entry.question if question else entry.label,
+        icon=":material/arrow_forward:",
+    )
+
+
+def chapter_footer(number: int) -> None:
+    """Move the reader on, which is what makes a set of pages a tour.
+
+    Args:
+        number: The chapter currently being read.
+    """
+    entry = chapter(number)
+    st.divider()
+    back, forward = st.columns(2)
+    with back:
+        if entry.number > CHAPTERS[0].number:
+            previous = chapter(entry.number - 1)
+            st.caption("Previous")
+            st.page_link(
+                previous.page_file,
+                label=previous.label,
+                icon=":material/arrow_back:",
+            )
+    with forward:
+        if entry.number < CHAPTERS[-1].number:
+            following = chapter(entry.number + 1)
+            st.caption("Next")
+            st.page_link(
+                following.page_file,
+                label=following.label,
+                icon=":material/arrow_forward:",
+            )
+
+
+def chapter_card(entry: Chapter) -> None:
+    """One chapter on the landing page, as something the reader can click.
+
+    Args:
+        entry: The chapter to offer.
+    """
+    with st.container(border=True):
+        st.page_link(entry.page_file, label=f"**{entry.label}**", icon=":material/play_arrow:")
+        st.caption(entry.question if not entry.tag else f"{entry.question} · :grey[{entry.tag}]")
 
 
 def mode() -> Mode:

@@ -7,6 +7,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import streamlit as st
 from components.shell import (
+    chapter_footer,
+    chapter_link,
     library,
     mode,
     page,
@@ -27,11 +29,14 @@ lib = library()
 
 st.markdown(
     """
-Chapter 1 gave the ideal: what the engines could do in empty space. A real launch
-is fought against gravity and air the whole way up, and the difference is not
-small. Roughly a fifth of everything the engines produce never becomes speed.
+The rocket equation gave the ideal: what the engines could do in empty space. A
+real launch is fought against gravity and air the whole way up, and the
+difference is not small. Roughly a fifth of everything the engines produce never
+becomes speed.
 """
 )
+
+chapter_link(1)
 
 
 @st.cache_data(show_spinner=False)
@@ -181,3 +186,5 @@ st.caption(
     "Good enough to be right about the size and ordering of the losses, not a "
     "trajectory design tool."
 )
+
+chapter_footer(3)
