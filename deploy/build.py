@@ -148,9 +148,13 @@ def _index(virtual_paths: list[str]) -> str:
         justify-items: center; text-align: center; gap: 0.75rem; padding: 2rem;
         background: #fcfcfb; color: #0b0b0b; --ship-gap: #fcfcfb; z-index: 9;
       }}
-      /* The mark paints its body in currentColor, so it follows #boot's own
-         colour and needs no separate dark-mode artwork. */
-      #boot svg {{ height: 132px; width: auto; }}
+      /* The mark carries a default colour per scheme so it stands up as a
+         plain image. Here it should take this screen's own, so override it;
+         an id beats the one-class rules inside the file. */
+      #boot svg {{
+        height: 132px; width: auto;
+        color: inherit; --ship-gap: inherit;
+      }}
       #boot h1 {{ font-size: 1.4rem; margin: 0; }}
       #boot p {{ margin: 0; color: #52514e; max-width: 34rem; line-height: 1.5; }}
       @media (prefers-color-scheme: dark) {{

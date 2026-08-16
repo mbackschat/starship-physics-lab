@@ -12,7 +12,7 @@ import xml.etree.ElementTree as ET
 import pytest
 
 from labbook.logo import ASSET_NAME, mark, source
-from labbook.palette import SURFACE, Mode, Series, colour
+from labbook.palette import INK_PRIMARY, SURFACE, Mode, Series, colour
 from labbook.visuals import MassSplit, inline, rocket_cutaway
 
 
@@ -95,15 +95,36 @@ def test_the_mark_is_well_formed_xml():
     assert root.get("viewBox")
 
 
-def test_the_mark_follows_the_theme_without_being_told_which():
-    # The body inherits the surrounding text colour. That is the whole reason
-    # this can be one file rather than a light copy and a dark copy.
+def test_the_mark_takes_its_body_colour_from_whatever_holds_it():
+    # The body inherits rather than hard-coding a colour. That is the whole
+    # reason this can be one file rather than a light copy and a dark copy.
     assert "currentColor" in source()
 
 
+def test_the_mark_still_reads_as_a_plain_image():
+    # In the README it is an <img>, so there is no page to inherit from and
+    # currentColor would come out black against a dark theme. The file has to
+    # name a colour for that case, in both schemes.
+    assert "prefers-color-scheme: dark" in source()
+    assert "#0b0b0b" in source() and "#ffffff" in source()
+
+
 @pytest.mark.parametrize("mode", list(Mode))
-def test_the_marks_hairline_gap_matches_the_paper(mode: Mode):
-    assert f"--ship-gap:{SURFACE[mode]}" in mark(mode=mode)
+def test_the_app_overrides_that_default_rather_than_inheriting(mode: Mode):
+    # A declared value blocks inheritance, so the app has to state both. It
+    # knows better than the file does: Streamlit's theme is the reader's own
+    # choice and need not agree with what the operating system reports.
+    styled = mark(mode=mode)
+    assert f"color:{INK_PRIMARY[mode]}" in styled
+    assert f"--ship-gap:{SURFACE[mode]}" in styled
+
+
+@pytest.mark.parametrize("mode", list(Mode))
+def test_the_override_is_specific_enough_to_win(mode: Mode):
+    # The file styles itself through `.ship-mark`, one class deep. The app's
+    # rule has to be deeper or the mark ignores it and follows the OS instead.
+    assert f".ship-mark-{'mark'} svg{{" in mark(mode=mode)
+    assert ".ship-mark {" in source()
 
 
 def test_two_marks_at_different_sizes_keep_their_own_dimensions():

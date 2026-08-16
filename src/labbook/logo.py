@@ -13,7 +13,7 @@ read and inlined into the page instead.
 from functools import lru_cache
 from pathlib import Path
 
-from labbook.palette import SURFACE, Mode
+from labbook.palette import INK_PRIMARY, SURFACE, Mode
 from labbook.visuals import inline
 
 ASSET_NAME = "logo.svg"
@@ -59,13 +59,15 @@ def source() -> str:
 def mark(*, mode: Mode = Mode.LIGHT, height: int = 96, uid: str = "mark") -> str:
     """The mark, sized and ready for ``st.markdown(..., unsafe_allow_html=True)``.
 
-    The body colour is not set here. The file paints it in ``currentColor``, so
-    it inherits the surrounding text colour and follows the reader's theme
-    without this having to know which theme that is.
+    Colour is stated here rather than left to inheritance. The file carries a
+    default for each colour scheme so that it stands up as a plain image, and a
+    declared value blocks inheritance, so the app has to say what it wants. It
+    knows better anyway: Streamlit's theme is the reader's actual choice, and it
+    need not agree with what the operating system reports.
 
     Args:
-        mode: Light or dark surface. Used only for the hairline gap between the
-            mark's parts, which has to match the paper it sits on.
+        mode: Light or dark surface. Decides the body's ink and the hairline gap
+            between the mark's parts, which has to match the paper it sits on.
         height: Rendered height in pixels.
         uid: Class suffix, so two marks at different sizes on one page do not
             take each other's dimensions.
@@ -73,7 +75,11 @@ def mark(*, mode: Mode = Mode.LIGHT, height: int = 96, uid: str = "mark") -> str
     Returns:
         A sized ``<span>`` wrapping the inlined SVG.
     """
+    # One class deeper than the file's own rules, which is what makes this win.
     return inline(
-        f"<style>.ship-mark-{uid} svg{{height:{height}px;width:auto;display:block}}</style>"
-        f'<span class="ship-mark-{uid}" style="--ship-gap:{SURFACE[mode]}">{source()}</span>'
+        f"<style>.ship-mark-{uid} svg{{"
+        f"height:{height}px;width:auto;display:block;"
+        f"color:{INK_PRIMARY[mode]};--ship-gap:{SURFACE[mode]}"
+        f"}}</style>"
+        f'<span class="ship-mark-{uid}">{source()}</span>'
     )
