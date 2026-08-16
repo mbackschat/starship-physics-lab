@@ -378,3 +378,84 @@ def loss_waterfall(
         mode=mode,
         bottom_margin=120,
     )
+
+
+def payload_against_dry_mass(
+    points: Sequence[tuple[float, float]],
+    *,
+    arriving: Sequence[tuple[float, float]] = (),
+    markers: Sequence[tuple[str, float, float]] = (),
+    formatter: Formatter = METRIC,
+    mode: Mode = Mode.LIGHT,
+    title: str = "Payload against how heavy the ship is",
+    subtitle: str = "",
+) -> go.Figure:
+    """Payload as a function of an assumed dry mass, with the total that arrives.
+
+    Two lines, and the relationship between them is the entire argument: the
+    total arriving in orbit is flat, so every tonne saved on the vehicle becomes
+    a tonne of cargo.
+
+    Args:
+        points: Pairs of dry mass and payload, both tonnes.
+        arriving: Pairs of dry mass and total mass reaching orbit, both tonnes.
+        markers: Published estimates to label, as (label, dry mass, payload).
+        formatter: Unit system to display in.
+        mode: Light or dark surface.
+        title: Chart title.
+        subtitle: Optional second line under the title.
+
+    Returns:
+        The figure.
+    """
+    figure = go.Figure()
+    if arriving:
+        figure.add_trace(
+            go.Scatter(
+                x=formatter.values([point[0] for point in arriving], Quantity.MASS),
+                y=formatter.values([point[1] for point in arriving], Quantity.MASS),
+                mode="lines",
+                name="Total reaching orbit",
+                line={"color": colour(Series.OTHER, mode), "width": 2, "dash": "dot"},
+                hovertemplate="%{y:,.0f} arrives<extra></extra>",
+            )
+        )
+    figure.add_trace(
+        go.Scatter(
+            x=formatter.values([point[0] for point in points], Quantity.MASS),
+            y=formatter.values([point[1] for point in points], Quantity.MASS),
+            mode="lines",
+            name="Payload",
+            line={"color": colour(Series.PAYLOAD, mode), "width": 3},
+            hovertemplate="%{y:,.0f} of cargo<extra></extra>",
+        )
+    )
+    for label, dry_mass, payload in markers:
+        figure.add_trace(
+            go.Scatter(
+                x=[formatter.value(dry_mass, Quantity.MASS)],
+                y=[formatter.value(payload, Quantity.MASS)],
+                mode="markers+text",
+                marker={
+                    "color": HIGHLIGHT,
+                    "size": 10,
+                    "symbol": "diamond",
+                    "line": {"color": SURFACE[mode], "width": 2},
+                },
+                text=[f"  {label}"],
+                textposition="middle right",
+                textfont={"color": INK_SECONDARY[mode], "size": 11},
+                showlegend=False,
+                hoverinfo="skip",
+            )
+        )
+    figure.add_hline(y=0, line={"color": AXIS[mode], "width": 1})
+    return base_layout(
+        figure,
+        title=title,
+        subtitle=subtitle,
+        x_label=formatter.axis_label("Assumed ship dry mass", Quantity.MASS),
+        y_label=formatter.axis_label("Mass", Quantity.MASS),
+        mode=mode,
+        bottom_margin=120,
+    )
