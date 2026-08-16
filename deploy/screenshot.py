@@ -76,6 +76,12 @@ SHOTS = (
         height=1150,
     ),
     Shot(
+        name="sandbox",
+        page_label="Build your own",
+        description="the sandbox, scoring your rocket against the real ones",
+        height=1150,
+    ),
+    Shot(
         name="anatomy",
         page_label="Anatomy",
         description="what a rocket is made of, and how little of it is cargo",

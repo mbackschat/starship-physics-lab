@@ -34,6 +34,10 @@ No install, no sign-up, no server. The whole thing runs in your browser.
 
 Units switch between metric and US customary anywhere, in the app and in generated reports.
 
+[![The sandbox](docs/images/sandbox.png)](https://mbackschat.github.io/starship-physics-lab/)
+
+*Chapter 9. Reshape either stage, choose how the booster comes home, and get scored against Falcon 9, Saturn V and New Glenn on the fairest single measure: how much of what left the pad turned out to be useful.*
+
 ## Where this came from
 
 In August 2026 a German article argued that Starship carries far less payload than claimed. Before building anything on it, every number in it was recomputed independently: **61 of 64 checkable numbers reproduce within 2 %**, and the three that do not are recorded as corrections rather than quietly fixed.
