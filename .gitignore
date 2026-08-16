@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.DS_Store
+
+# Generated analysis output. Regenerate with: uv run python analysis/<script>.py
+analysis/out/
+
+# The source article is copyrighted and is deliberately NOT part of this repo.
+# It is cited by URL in docs/physics-reference.md.
+starship-article.md
+*-article.md
