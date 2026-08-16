@@ -271,13 +271,22 @@ def chapter_card(entry: Chapter) -> None:
 
 
 def mode() -> Mode:
-    """Chart surface matching the reader's Streamlit theme.
+    """Chart surface matching the theme the reader is actually looking at.
+
+    Asked of the browser, not of the configuration. `theme.base` is a server
+    setting and says nothing about the reader: a browser set to dark takes
+    Streamlit's own chrome dark without touching that option, which left every
+    chart drawn in light colours and pasted onto a dark page. `st.context.theme`
+    reports what the page actually rendered as.
+
+    It is unset for a moment while a theme is changing, and the configured base
+    is the right answer to fall back on there.
 
     Returns:
         Light or dark.
     """
-    base = st.get_option("theme.base")
-    return Mode.DARK if base == "dark" else Mode.LIGHT
+    seen = st.context.theme.type or st.get_option("theme.base")
+    return Mode.DARK if seen == "dark" else Mode.LIGHT
 
 
 def provenance_badge(provenance: Provenance, *, inline: bool = False) -> None:
