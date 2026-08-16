@@ -1,15 +1,15 @@
 ---
-description: Audit the physics core in src/rocketry for correctness, calibration and honesty about its limits.
-argument-hint: "[module or topic, e.g. staging, reuse, ascent]"
+name: review-physics
+description: Audit the physics core for correctness, calibration and honesty about its limits. Use before trusting a change to src/rocketry, when a golden number or a calibration test moves, when adding a vehicle or stage that might not be modelled honestly, when asked to review the physics or the model, and before publishing any number the app will show a reader. Also use when a result looks plausible but unverified.
 ---
 
 # Review the physics engine
 
-Audit `src/rocketry/`$ARGUMENTS.
+Audit `src/rocketry/`. If a module or topic was named, scope the audit to it and say so; otherwise cover the whole core.
 
 This is not a general code review. The physics core is the one part of this project that other people's arguments will be built on, and a plausible-looking wrong number here is worse than a crash: it propagates into every chapter, every study and every claim the app makes, silently and with a confident badge next to it.
 
-**Read [docs/physics-reference.md](../../docs/physics-reference.md) first.** It is the source of truth. Section 2 derives the physics, section 3 is the claim-by-claim verification log, section 4 records known corrections, section 6 specifies the models the app must implement, and section 7 holds the golden numbers. A finding that contradicts that document is either a real defect or a misreading of it, and you must say which.
+**Read [docs/physics-reference.md](../../../docs/physics-reference.md) first.** It is the source of truth. Section 2 derives the physics, section 3 is the claim-by-claim verification log, section 4 records known corrections, section 6 specifies the models the app must implement, and section 7 holds the golden numbers. A finding that contradicts that document is either a real defect or a misreading of it, and you must say which.
 
 ## What to check, hardest first
 
