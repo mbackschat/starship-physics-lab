@@ -35,7 +35,7 @@ starship_v3:
   engine_count: 6
   diameter_m: 9.0
   isp_ascent_s: 365.0
-  residual_propellant_t: 40.0
+  residual_propellant_t: 0.0
   provenance: contested
   in_article: true
   source: >
@@ -46,10 +46,17 @@ starship_v3:
   note: >
     THE contested number. See docs/physics-reference.md correction C15. Treat as
     a parameter, never as a fact.
+
+    The header tanks hold the propellant for deorbit and landing. That is
+    recorded here as recovery burns rather than as a flat residual, so it is
+    counted exactly once and scales with the ship's mass the way real propellant
+    does. On a 220 t ship the two burns come to about 38 t, which is the roughly
+    40 t the source article assumes.
   recovery:
     mode: tower_catch
     burns:
-      - {delta_v: 300.0, isp: 300.0, label: landing burn}
+      - {delta_v: 350.0, isp: 300.0, label: landing burn}
+      - {delta_v: 140.0, isp: 350.0, label: deorbit burn}
 
 falcon9_stage1:
   name: Falcon 9 first stage (Block 5)
@@ -138,7 +145,7 @@ starship_v4:
   engine_count: 9
   diameter_m: 9.0
   isp_ascent_s: 365.0
-  residual_propellant_t: 57.5
+  residual_propellant_t: 0.0
   provenance: contested
   in_article: true
   source: >
@@ -152,7 +159,8 @@ starship_v4:
   recovery:
     mode: tower_catch
     burns:
-      - {delta_v: 300.0, isp: 300.0, label: landing burn}
+      - {delta_v: 350.0, isp: 300.0, label: landing burn}
+      - {delta_v: 140.0, isp: 350.0, label: deorbit burn}
 
 falcon9_stage1_expendable:
   name: Falcon 9 first stage (expendable)
@@ -226,7 +234,7 @@ raptor4_ship:
   engine_count: 4
   diameter_m: 9.0
   isp_ascent_s: 365.0
-  residual_propellant_t: 20.0
+  residual_propellant_t: 0.0
   provenance: derived
   in_article: true
   source: Article section "Ein kleines Starship mit über 100 Tonnen Nutzlast".

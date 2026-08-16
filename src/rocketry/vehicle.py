@@ -5,6 +5,7 @@ vehicle key and a payload, it walks the stack bottom-up and reports what every
 stage does, including what a reusable stage spends on coming home.
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from rocketry.library import Library
@@ -198,6 +199,130 @@ def _recovery_reserve(stage: Stage) -> float:
     if stage.recovery is None:
         return 0.0
     return recovery_propellant(stage.dry_mass_t, list(stage.recovery.burns))
+
+
+LEO_MISSION_DELTA_V = 9404.0
+"""Velocity a stack must produce to reach low Earth orbit, m/s.
+
+Calibrated in docs/physics-reference.md section 3.3 and cross-checked against
+Falcon 9 and the Space Shuttle, both of which land inside the normal 9300 to
+9600 m/s band at their published payloads.
+"""
+
+
+@dataclass(frozen=True, slots=True)
+class Scenario:
+    """A vehicle with some of its stages altered, ready to be asked questions.
+
+    Two different questions get asked of the same vehicle and they are not
+    interchangeable:
+
+    - *What velocity does it produce carrying this payload?* Use `at_payload`.
+    - *What payload can it carry on this mission?* Use `solve_payload`.
+
+    Confusing the two is easy and produces answers that look plausible, so they
+    are separate methods rather than one function with a flag.
+
+    Attributes:
+        vehicle: The vehicle being modelled.
+        stages: Its stages in launch order, already resolved and possibly
+            altered.
+    """
+
+    vehicle: Vehicle
+    stages: tuple[Stage, ...]
+
+    def at_payload(self, payload_t: float) -> VehicleAnalysis:
+        """Analyse this vehicle carrying a given payload.
+
+        Args:
+            payload_t: Payload, tonnes.
+
+        Returns:
+            The stage-by-stage analysis.
+        """
+        return _analyse_stages(self.vehicle, list(self.stages), payload_t)
+
+    def solve_payload(self, target_delta_v: float = LEO_MISSION_DELTA_V) -> float:
+        """Find the payload this vehicle can carry on a given mission.
+
+        Args:
+            target_delta_v: Velocity the whole stack must produce, m/s.
+
+        Returns:
+            Payload, tonnes. A negative result is meaningful and is returned
+            rather than clamped: it says the vehicle falls short of this mission
+            even with an empty payload bay, and by how much.
+        """
+        low, high = self._lightest_payload(), 10_000.0
+        if self.at_payload(high).total_delta_v > target_delta_v:
+            return high
+        for _ in range(200):
+            mid = 0.5 * (low + high)
+            if self.at_payload(mid).total_delta_v > target_delta_v:
+                low = mid
+            else:
+                high = mid
+            if high - low < 1e-6:
+                break
+        return 0.5 * (low + high)
+
+    def reaches(self, target_delta_v: float = LEO_MISSION_DELTA_V) -> bool:
+        """Whether this vehicle can do the mission at all, carrying nothing.
+
+        Args:
+            target_delta_v: Velocity the whole stack must produce, m/s.
+
+        Returns:
+            True if an empty payload bay is enough.
+        """
+        return self.at_payload(0.0).total_delta_v >= target_delta_v
+
+    def _lightest_payload(self) -> float:
+        """Most negative payload the mass bookkeeping still stays positive at.
+
+        A payload cannot really be negative. Allowing it here is a modelling
+        convenience that lets the solver express "short by this much" instead of
+        silently bottoming out at zero.
+
+        Returns:
+            Lower bound for the payload search, tonnes.
+        """
+        last = self.stages[-1]
+        floor = last.dry_mass_t + last.residual_propellant_t + last.recovery_reserve_t
+        return -floor + 0.001
+
+
+def scenario(
+    library: Library, vehicle_key: str, **overrides: Mapping[str, object]
+) -> Scenario:
+    """Build a scenario from the library, optionally altering some stages.
+
+    Args:
+        library: The rocket library.
+        vehicle_key: Vehicle to model.
+        **overrides: Stage key to the fields to change on it.
+
+    Returns:
+        The scenario.
+
+    Raises:
+        ValueError: If a named stage is not part of this vehicle.
+    """
+    vehicle = library.vehicle(vehicle_key)
+    for stage_key in overrides:
+        if stage_key not in vehicle.stages:
+            flying = ", ".join(vehicle.stages)
+            raise ValueError(
+                f"stage {stage_key!r} does not fly on {vehicle_key!r}. It has: {flying}"
+            )
+    stages = tuple(
+        library.stage(key).model_copy(update=dict(overrides[key]))
+        if key in overrides
+        else library.stage(key)
+        for key in vehicle.stages
+    )
+    return Scenario(vehicle=vehicle, stages=stages)
 
 
 def with_stage(
