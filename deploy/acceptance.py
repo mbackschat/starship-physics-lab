@@ -289,6 +289,54 @@ def check_hostile_urls(page: Page, base: str, failures: list[str]) -> None:
             print(f"   ok       {hostile} -> {_heading(page)}")
 
 
+def check_drawings(page: Page, base: str, failures: list[str]) -> None:
+    """The drawn parts must arrive as drawings, not as their own source code.
+
+    Streamlit parses markdown before it honours ``unsafe_allow_html``, and takes
+    an indented line for a code block, so multi-line SVG reaches the page as
+    literal text. Every unit test still passes when that happens, because the
+    string handed over was perfectly good SVG. Only a browser can tell the
+    difference, and this is the browser.
+
+    Args:
+        page: The browser page.
+        base: Site root.
+        failures: Collects what went wrong.
+    """
+    print("5. the drawn parts actually draw")
+    boot(page, base + "Rocket_equation")
+    drawings = {
+        "the mark": "svg.ship-mark",
+        "the cutaway": "svg.ch1-svg",
+        "the burn animation": ".js-plotly-plot",
+    }
+    for name, selector in drawings.items():
+        if page.locator(selector).count():
+            print(f"   ok       {name}")
+        else:
+            failures.append(f"{name} did not render ({selector} not found)")
+            print(f"   MISSING  {name}")
+
+    # The giveaway when markdown wins: the SVG source shown as words.
+    if page.get_by_text("viewBox", exact=False).count():
+        failures.append("SVG source is being displayed as text")
+        print("   ERROR    SVG source is on the page as text")
+
+    play = page.get_by_text("Burn it")
+    if not play.count():
+        failures.append("the burn animation has no play button")
+        print("   MISSING  the play button")
+        return
+    before = page.locator(".js-plotly-plot .scatterlayer").first.inner_html()
+    play.first.click()
+    page.wait_for_timeout(2_500)
+    if page.locator(".js-plotly-plot .scatterlayer").first.inner_html() == before:
+        failures.append("pressing play did not move the burn animation")
+        print("   ERROR    play did nothing")
+    else:
+        print("   ok       play runs the burn")
+
+
 def main() -> int:
     """Run every check against a local build or the deployed site.
 
@@ -314,7 +362,13 @@ def main() -> int:
         with sync_playwright() as play:
             browser = play.chromium.launch()
             page = browser.new_page(viewport={"width": 1600, "height": 1100})
-            for check in (check_chapters, check_shared_link, check_reload, check_hostile_urls):
+            for check in (
+                check_chapters,
+                check_shared_link,
+                check_reload,
+                check_hostile_urls,
+                check_drawings,
+            ):
                 check(page, base, failures)
                 print()
             browser.close()
