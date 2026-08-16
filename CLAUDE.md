@@ -13,6 +13,7 @@ uv run pytest tests/test_golden.py               # one file
 uv run pytest tests/test_golden.py::test_name    # one test
 uv run pytest -k staging                         # by name
 uv run pytest -m golden                          # only the documented-number tests
+uv run pytest -m freshness                       # knowledge pages due a recheck
 uv run ruff check . && uv run mypy               # lint and types, both must be clean
 uv run streamlit run app/Home.py                 # the app, locally
 
@@ -190,6 +191,8 @@ feeds:                            # extension: entries this page is evidence for
 Prose is deliberately never scanned for numbers. It is unreliable and it fails silently, so a page states what it stands behind explicitly. The corollary is that `asserts` should carry every value a page displays in a table, because anything left out is unguarded.
 
 There is no separate lint step. The checks are tests, so `uv run pytest` and therefore CI already run them.
+
+**Except freshness, which is deselected by default.** Every page carries a `stale_after` date, and `uv run pytest -m freshness` reports the ones past it. It is kept out of the default run because it fails as a *date* passes rather than as a *change* lands, and a check that reddens an unrelated commit on a Tuesday morning is a check people learn to ignore. Nothing runs it automatically, so it needs either a habit or a scheduled agent.
 
 `src/knowledge.py` reads and validates pages. It is authoring tooling, deliberately outside both shipped packages and outside `deploy/build.py`'s trees so it never becomes a wheel the reader downloads; a test in `tests/test_deploy.py` holds that. `raw/` is text only, never binaries, because the point of keeping a source is being able to diff it when it is recaptured.
 

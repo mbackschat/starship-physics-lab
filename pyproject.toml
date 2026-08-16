@@ -35,9 +35,14 @@ packages = ["src/rocketry", "src/labbook"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q --strict-markers"
+# Freshness is deselected by default on purpose. It fails as a date passes
+# rather than as a change lands, so leaving it in would break an unrelated
+# commit on a Tuesday and train everyone to ignore it. Run it deliberately:
+#   uv run pytest -m freshness
+addopts = '-q --strict-markers -m "not freshness"'
 markers = [
     "golden: reproduces a documented number from docs/physics-reference.md section 7",
+    "freshness: knowledge pages past their stale_after date. Time-dependent, so not in the default run",
 ]
 
 [tool.ruff]

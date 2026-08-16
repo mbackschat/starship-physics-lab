@@ -53,6 +53,14 @@ No skill needed, it is one command:
 uv run pytest tests/test_knowledge.py
 ```
 
-It checks that pages parse, declare a `type`, cite a dated source, have not passed `stale_after`, carry a `provenance`, are listed in the index, point at library entries that exist, and **do not contradict the values they assert**. CI runs it with everything else.
+It checks that pages parse, declare a `type`, cite a dated source, declare a `stale_after`, carry a `provenance`, are listed in the index, point at library entries that exist, and **do not contradict the values they assert**. CI runs it with everything else.
 
-What it cannot check is whether a page's prose agrees with its own `asserts`. That is why step 4 of ingest matters: the assertion is the contract, so it has to be complete.
+Freshness is separate and deselected by default, because it fails on a date rather than on a change:
+
+```sh
+uv run pytest -m freshness
+```
+
+Run it when picking up the corpus after a gap. Anything it names needs its sources recaptured and its `asserts` rechecked, then a new `stale_after`.
+
+What no check can catch is whether a page's prose agrees with its own `asserts`. That is why step 4 of ingest matters: the assertion is the contract, so it has to cover every value the page states.

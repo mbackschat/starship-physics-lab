@@ -188,9 +188,22 @@ class TestTheLibraryPages:
                     "how old it is"
                 )
 
+    @pytest.mark.freshness
     def test_no_page_has_gone_stale(self, pages):
+        """Deselected by default, because it fails on a date rather than a change.
+
+        Left in the default run it would redden an unrelated commit the morning
+        a page expired, which is the fastest way to teach everyone to ignore a
+        check. Run it deliberately with ``-m freshness``.
+        """
         stale = [entry.path.name for entry in pages if entry.is_stale(dt.date.today())]
         assert not stale, f"past their stale_after date and need rechecking: {stale}"
+
+    def test_every_page_says_when_it_should_be_rechecked(self, pages):
+        # This one is deterministic and does belong in the default run: a page
+        # with no expiry can never be reported as stale by anything.
+        for entry in pages:
+            assert entry.stale_after, f"{entry.path} has no stale_after, so it never expires"
 
     def test_every_page_states_how_much_weight_its_numbers_bear(self, pages):
         for entry in pages:
