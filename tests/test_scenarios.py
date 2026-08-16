@@ -79,11 +79,32 @@ class TestWhatReuseCosts:
             payloads.append(vehicle.total_delta_v)
         assert payloads == sorted(payloads, reverse=True)
 
-    def test_droneship_recovery_costs_falcon9_about_a_fifth_of_its_orbital_mass(self, lib):
-        """Published figures: 22.8 t expendable against 17.5 t recovered."""
-        expendable = analyse(lib, "falcon9_expendable")
-        recovered = analyse(lib, "falcon9_droneship")
-        assert expendable.payload_t / recovered.payload_t == pytest.approx(1.30, rel=0.05)
+    def test_the_model_charges_far_less_for_recovery_than_falcon9_really_pays(self, lib):
+        """A characterisation test, pinning a gap rather than endorsing it.
+
+        This assertion used to compare `analyse()` results, whose `payload_t` is
+        the published claim copied straight out of the YAML. It therefore
+        asserted 22.8 / 17.5 and would have passed against any physics at all.
+
+        Solving for payload instead asks the model the question, and the model
+        says a droneship recovery costs 7 % where the published pair says 23 %.
+        The reason is that the stage walk burns every stage to depletion less its
+        reserve, so holding propellant back is the only thing recovery can cost;
+        the larger real cost is separating at 8,000 km/h instead of 10,800, which
+        `staging_speed_kmh` records and the walk never reads. Finding 7 in
+        docs/physics-review-plan.md. When it is fixed this test goes red, which
+        is the point of it.
+        """
+        modelled = 1 - (
+            scenario(lib, "falcon9_droneship").solve_payload()
+            / scenario(lib, "falcon9_expendable").solve_payload()
+        )
+        published = 1 - (
+            (lib.vehicle("falcon9_droneship").payload_leo_t or 0)
+            / (lib.vehicle("falcon9_expendable").payload_leo_t or 1)
+        )
+        assert modelled == pytest.approx(0.07, abs=0.01)
+        assert published == pytest.approx(0.23, abs=0.01)
 
 
 class TestOverridesAreValidated:
