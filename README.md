@@ -1,6 +1,6 @@
 # Starship Physics Lab
 
-### Understand the rocket. Then build a better one.
+### Understand Starship. Then build a better one.
 
 **Rocket science, minus the reputation.** Almost everything that matters follows from one equation written down in 1903, and one uncomfortable fact: the propellant you need grows *exponentially* with the speed you want.
 

@@ -16,7 +16,7 @@ from rocketry.library import Library, load
 from rocketry.models import Provenance
 
 TITLE = "Starship Physics Lab"
-SLOGAN = "Understand the rocket. Then build a better one."
+SLOGAN = "Understand Starship. Then build a better one."
 
 
 def page(title: str, teaser: str, *, icon: str = "🚀") -> None:

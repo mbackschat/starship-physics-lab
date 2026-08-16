@@ -109,7 +109,7 @@ def _index(virtual_paths: list[str]) -> str:
     <title>Starship Physics Lab</title>
     <meta
       name="description"
-      content="Understand the rocket. Then build a better one. An interactive rocket physics explorer that runs entirely in your browser."
+      content="Understand Starship. Then build a better one. An interactive rocket physics explorer that runs entirely in your browser."
     />
     <link
       rel="stylesheet"

@@ -17,7 +17,7 @@ formatter = sidebar()
 st.set_page_config(page_title="Starship Physics Lab", page_icon="🚀", layout="wide")
 
 st.title("Starship Physics Lab")
-st.markdown("##### Understand the rocket. Then build a better one.")
+st.markdown("##### Understand Starship. Then build a better one.")
 st.caption("Why rockets perform the way they do, worked out by moving the numbers yourself.")
 
 st.markdown(
