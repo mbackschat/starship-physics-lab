@@ -30,8 +30,17 @@ A page here is something the project **looked up**. Something it **worked out** 
 
 ## Concepts
 
+The physics, in the order it builds. These back the chapters rather than the library, so most carry no `feeds`.
+
 | Page | What it covers | Feeds |
 |---|---|---|
+| [concepts/the-rocket-equation.md](concepts/the-rocket-equation.md) | Tsiolkovsky, the logarithm, and the two questions that sound identical | |
+| [concepts/mass-fractions.md](concepts/mass-fractions.md) | Dry-mass and payload fraction, and the trap in comparing them | |
+| [concepts/ascent-losses.md](concepts/ascent-losses.md) | Where a fifth of the engines' work goes, and why gravity beats drag | |
+| [concepts/staging.md](concepts/staging.md) | Why rockets throw themselves away, and what the split is worth | |
+| [concepts/reuse.md](concepts/reuse.md) | What coming home costs, paid uphill | |
+| [concepts/propellant-choices.md](concepts/propellant-choices.md) | Kerolox, methalox, hydrolox, and why the most efficient loses | |
+| [concepts/reentry-and-scaling.md](concepts/reentry-and-scaling.md) | The square-cube law, and the exponent that swings V4 by nine | |
 | [concepts/starlink-v3.md](concepts/starlink-v3.md) | The 1.705 t unit mass that turns a satellite count into a payload figure | `flights.yaml#12`, `flights.yaml#13` |
 
 ## Not yet covered

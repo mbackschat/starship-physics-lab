@@ -23,3 +23,15 @@ Compiled four pages: `vehicles/starship-v3.md`, `engines/raptor-3.md`, `flights/
 ## [2026-08-16] ingest | Flight 14 pre-registration
 
 Pre-registered the model's Flight 14 prediction in `studies/flight-14-prediction/` before the flight, committed as `6d6acb4`. The falsifiable claim is the 296 to 298 t total reaching orbit, which moves by 0.8 % across a 135 t range of dry-mass assumptions, not the payload split, which moves by a factor of five.
+
+## [2026-08-16] ingest | Vehicles, engines and the physics concepts
+
+Added `vehicles/falcon-9.md`, `vehicles/super-heavy-v3.md`, `vehicles/ariane-6.md`, `vehicles/saturn-v.md`, `engines/merlin-1d.md` and `concepts/starlink-v3.md`, all migrated from `docs/physics-reference.md` section 5 and the library rather than researched fresh.
+
+Then seven concept pages: the rocket equation, mass fractions, ascent losses, staging, reuse, propellant choices, and reentry with the scaling exponent.
+
+**Corrected a scoping mistake.** The original rule was that a page earns its place only by backing an entry in `data/`. That produced an index of the library rather than a knowledge base, and left every piece of physics the app teaches unwritten. Concept pages carry no `feeds` and are none the worse for it; the schema already allowed this and nothing needed changing.
+
+**Recorded a model limit prominently.** Ariane 64's page states that the computed payload runs about 50 % high because a serial model of a parallel burn always flatters the vehicle, and that the entry is trustworthy for the upper-stage comparison and not for payload. That limit was already in `tests/test_library_calibration.py`; it was not anywhere a reader would find it.
+
+**Fixed a bug the ingest exposed.** An unquoted colon in a `description` broke YAML parsing, and the error named the offending line but not the file it was in. `Page.read` now wraps parse failures with the path.
