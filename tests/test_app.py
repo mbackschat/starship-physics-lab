@@ -109,3 +109,43 @@ def test_flying_back_costs_more_than_landing_on_a_ship():
     app.radio[0].set_value(RecoveryProfile.RTLS).run()
     home = float(app.metric[0].value.split()[0].replace(",", ""))
     assert home > ship
+
+
+def test_sandbox_builds_a_working_rocket_by_default():
+    app = run(APP / "pages" / "9_Build_your_own.py")
+    assert not app.exception
+    twr = float(app.metric[2].value)
+    assert twr > 1.0
+
+
+def test_sandbox_refuses_a_rocket_that_cannot_leave_the_pad():
+    """Cutting the engines down must produce a clear refusal, not a silent number."""
+    app = run(APP / "pages" / "9_Build_your_own.py")
+    app.slider[2].set_value(11).run()
+    assert not app.exception
+    assert float(app.metric[2].value) < 1.0
+    assert app.error, "a rocket with too little thrust must say so"
+
+
+def test_sandbox_rewards_shrinking_the_upper_stage():
+    """The article's whole argument, reachable in two slider drags.
+
+    Only true because a smaller stage is also allowed to be a lighter one. That
+    is the default, and this test is what guarantees it stays the default.
+    """
+    app = run(APP / "pages" / "9_Build_your_own.py")
+    before = float(app.metric[4].value.split()[0].replace(",", ""))
+    app.slider[3].set_value(900.0).run()   # upper stage propellant
+    app.slider[0].set_value(4300.0).run()  # booster propellant
+    after = float(app.metric[4].value.split()[0].replace(",", ""))
+    assert after > before, "shrinking the upper stage should pay off"
+
+
+def test_sandbox_shows_the_trap_when_a_smaller_stage_is_not_lighter():
+    """Untick the scaling and the same change becomes a bad one."""
+    app = run(APP / "pages" / "9_Build_your_own.py")
+    app.checkbox[0].set_value(False).run()
+    before = float(app.metric[4].value.split()[0].replace(",", ""))
+    app.slider[3].set_value(900.0).run()   # upper stage propellant
+    after = float(app.metric[4].value.split()[0].replace(",", ""))
+    assert after < before

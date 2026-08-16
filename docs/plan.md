@@ -251,9 +251,11 @@ Streamlit multipage app, shared components, the formula renderer, the three-colo
 The weighing reconstruction, the payload question and the V4 scaling chapter, with contested inputs visibly marked.
 **Done when:** a user can set ship dry mass to 160 t, see 100 t of payload appear, read why that number is disputed in both directions, and separately drive the V4 payload from 12 t to 108 t with the scaling-exponent slider. All three must reproduce physics-reference sections 3.8, 4/C15 and 7.
 
-### M7: The sandbox, chapter 8
+### M7: The sandbox, chapter 9 — DONE
 Free-form builder with validation, scoring and comparison against the library.
-**Done when:** a user can build a two-stage vehicle from scratch, fly it, and see where it sits against Falcon 9 and Starship.
+**Done:** a reader can reshape either stage, change how the booster comes home, and see the result scored against Falcon 9, Saturn V and New Glenn on payload fraction.
+
+Building it caught a teaching bug worth recording. Shrinking a stage while holding its dry mass fixed makes the rocket *worse*, so the obvious instruction, "cut the upper stage in half", taught the opposite of the truth. A smaller stage is genuinely a lighter one, so the sandbox scales dry mass with propellant by default and offers a checkbox to turn that off, which turns the trap into the lesson. Two tests hold both directions in place.
 
 ### M8: Polish
 Fact-check page, glossary complete, guided tour, shareable URL state, responsive layout, light and dark themes, accessibility pass on the palette.

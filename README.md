@@ -74,9 +74,10 @@ Each investigation lives in [`studies/`](studies/), one folder holding the scrip
 | done | **M3-M6** App shell, chapters 1-8, ascent simulation, the Starship case study |
 | done | **M8a** Live on GitHub Pages |
 | done | **M2b** More presets: Saturn V, New Glenn, Long March 10B, a properly modelled Ariane 64 |
-| next | **M7** The build-your-own sandbox |
+| done | **M7** The build-your-own sandbox |
+| next | **M8** Polish: glossary, guided tour, shareable state |
 
-197 tests, `ruff` and `mypy --strict` clean, all green in CI before anything deploys. Full plan in [docs/plan.md](docs/plan.md).
+203 tests, `ruff` and `mypy --strict` clean, all green in CI before anything deploys. Full plan in [docs/plan.md](docs/plan.md).
 
 ## How it runs in a browser
 
@@ -104,7 +105,7 @@ Two rules that do not bend:
 
 ```sh
 uv sync                                          # install
-uv run pytest                                    # 197 tests
+uv run pytest                                    # 203 tests
 uv run ruff check . && uv run mypy               # lint and types
 uv run streamlit run app/Home.py                 # the app, locally
 
