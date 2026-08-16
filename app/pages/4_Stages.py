@@ -6,7 +6,16 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import streamlit as st
-from components.shell import chapter_footer, library, mode, page, sidebar, try_this, why
+from components.shell import (
+    chapter_footer,
+    library,
+    mode,
+    page,
+    reset_button,
+    sidebar,
+    try_this,
+    why,
+)
 
 from labbook.charts import staging_sweep
 from labbook.tables import Col, table
@@ -75,6 +84,7 @@ with controls:
     )
     inert = st.slider(
         "Upper stage weight",
+        key="c4.inert",
         min_value=0.10,
         max_value=0.22,
         value=250.0 / 1600.0,
@@ -87,6 +97,7 @@ with controls:
     )
     entry_speed = st.slider(
         "Speed the booster can survive reentry at",
+        key="c4.entry",
         min_value=4000.0,
         max_value=9000.0,
         value=5300.0,
@@ -97,6 +108,7 @@ with controls:
             "stage later. Better heat shielding buys this directly."
         ),
     )
+    reset_button("c4.inert", "c4.entry")
 
 curve = sweep(inert, entry_speed)
 model = StagingModel(ship_inert_per_propellant=inert, entry_speed=from_kmh(entry_speed))

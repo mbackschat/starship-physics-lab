@@ -11,6 +11,7 @@ from components.shell import (
     library,
     mode,
     page,
+    reset_button,
     sidebar,
     try_this,
     vehicle_picker,
@@ -51,7 +52,12 @@ with picker:
         index=1,
         key="recovery_profile",
         label_visibility="collapsed",
+        help=(
+            "How the first stage gets back. Each one asks more of it than the "
+            "last, and every metre per second of that is paid for on the way up."
+        ),
     )
+    reset_button("reuse_vehicle", "recovery_profile")
     described = profile_for(profile)
     st.caption(described.explanation)
 

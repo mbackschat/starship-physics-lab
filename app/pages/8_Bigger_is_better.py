@@ -12,6 +12,7 @@ from components.shell import (
     library,
     mode,
     page,
+    reset_button,
     sidebar,
     try_this,
     why,
@@ -42,6 +43,7 @@ How much it hurts depends almost entirely on one assumption nobody can settle:
 
 exponent = st.slider(
     "How much heavier does a bigger ship get?",
+    key="c8.scaling",
     min_value=0.0,
     max_value=1.0,
     value=REALISTIC,
@@ -52,6 +54,7 @@ exponent = st.slider(
         "tanks scale with size while engines, nose and fins largely do not."
     ),
 )
+reset_button("c8.scaling")
 
 v4 = two_stage_payload(booster_propellant=4050, ship_propellant=2300, scaling_exponent=exponent)
 v3 = two_stage_payload(booster_propellant=3650, ship_propellant=1600, scaling_exponent=exponent)

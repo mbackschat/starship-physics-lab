@@ -13,6 +13,7 @@ from components.shell import (
     mode,
     modelling_note,
     page,
+    reset_button,
     sidebar,
     try_this,
     why,
@@ -84,11 +85,13 @@ by_text, by_group = st.columns([1, 1.4], gap="large")
 with by_text:
     query = st.text_input(
         "Filter",
+        key="c12.filter",
         placeholder="falcon, nasa, concept, starship…",
         help="Matches the name, the operator, the kind, and the library key.",
     )
     everything = st.toggle(
         "Show every column",
+        key="c12.columns",
         help=(
             "The full ascent breakdown: where the velocity went, how high it "
             "staged, what the air did to it, and what the model cannot "
@@ -99,9 +102,11 @@ with by_text:
 with by_group:
     chosen = st.multiselect(
         "Groups",
+        key="c12.groups",
         options=[group.name for group in GROUPS],
         help="The same grouping the vehicle pickers use. None ticked means all of them.",
     )
+    reset_button("c12.filter", "c12.columns", "c12.groups", "c12.vehicle")
     for group in GROUPS:
         if group.name in chosen and group.hint:
             st.caption(group.hint)
@@ -173,7 +178,9 @@ st.subheader("One of them, close up")
 if shown:
     picked = st.selectbox(
         "Vehicle",
+        key="c12.vehicle",
         options=[row.key for row in shown],
+        help="Which vehicle the flight path and mass breakdown below describe.",
         format_func=lambda key: lib.vehicle(key).name,
         label_visibility="collapsed",
     )

@@ -285,3 +285,66 @@ def test_the_url_and_the_slider_never_disagree():
         app.slider[0].set_value(value).run()
         assert _param(app, "dry") == str(value)
         assert app.metric[1].value.startswith(str(value))
+
+
+def test_reset_puts_a_moved_control_back():
+    """A reader who has moved four sliders had no way back except reloading.
+
+    Reloading also loses the chapter, so people were cautious with the controls,
+    which is the opposite of what this app is for.
+    """
+    app = run(APP / "pages" / "1_Rocket_equation.py")
+    before = app.slider[0].value
+    app.slider[0].set_value(before + 20.0).run()
+    assert app.slider[0].value != before
+
+    reset = [b for b in app.button if "Reset" in b.label]
+    assert reset, "every page with controls needs a reset"
+    reset[0].click().run()
+    assert app.slider[0].value == before
+
+
+def test_reset_leaves_the_unit_choice_alone():
+    """It resets the page's controls, not the reader's settings."""
+    app = run(APP / "pages" / "1_Rocket_equation.py")
+    app.radio[0].set_value(UnitSystem.US).run()
+    next(b for b in app.button if "Reset" in b.label).click().run()
+    assert app.radio[0].value is UnitSystem.US
+
+
+NO_RESET = {"2_Anatomy", "10_Fact_check", "11_Glossary"}
+"""Pages where a general reset would be noise.
+
+Chapter 2 has only the vehicle picker and chapter 10 has no controls at all. A
+button to undo a single dropdown is clutter, not a kindness. The glossary has
+one control and already offers "Show all" beside it, which is the same idea
+worded for what it actually does.
+"""
+
+
+@pytest.mark.parametrize("path", [p for p in PAGES if p.stem not in NO_RESET], ids=lambda p: p.stem)
+def test_every_page_with_controls_offers_a_reset(path: Path):
+    assert "reset_button(" in path.read_text(), f"{path.stem} has controls but no way back"
+
+
+@pytest.mark.parametrize("path", PAGES, ids=lambda p: p.stem)
+def test_every_control_explains_itself(path: Path):
+    """The (?) tooltip is the only place a control can say what it means.
+
+    A slider labelled "Propellant" tells a beginner nothing about what moving it
+    will do, and the page has no room to explain each one in prose.
+    """
+    widgets = {
+        "slider", "select_slider", "selectbox", "radio", "checkbox", "toggle",
+        "multiselect", "text_input", "number_input",
+    }
+    tree = ast.parse(path.read_text())
+    missing = [
+        f"line {node.lineno}"
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr in widgets
+        and "help" not in {kw.arg for kw in node.keywords}
+    ]
+    assert missing == [], f"{path.stem} has controls with no tooltip: {missing}"

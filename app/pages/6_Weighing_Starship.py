@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import streamlit as st
-from components.shell import chapter_footer, library, page, sidebar, try_this, why
+from components.shell import chapter_footer, library, page, reset_button, sidebar, try_this, why
 
 from labbook.casestudy import weigh_from_burn
 from labbook.navigation import ARTICLE_URL
@@ -47,6 +47,7 @@ controls, result_column = st.columns([1, 1.6], gap="large")
 with controls:
     seconds = st.slider(
         "How long the engine ran",
+        key="c6.seconds",
         min_value=8.0,
         max_value=20.0,
         value=14.0,
@@ -56,6 +57,7 @@ with controls:
     )
     thrust = st.slider(
         "Engine thrust",
+        key="c6.thrust",
         min_value=200.0,
         max_value=280.0,
         value=250.0,
@@ -65,6 +67,7 @@ with controls:
     )
     speed_change = st.slider(
         "How much it slowed down",
+        key="c6.slowdown",
         min_value=100.0,
         max_value=180.0,
         value=138.9,
@@ -72,6 +75,7 @@ with controls:
         format="%.0f m/s",
         help="Reported as 500 km/h, which is 139 m/s.",
     )
+    reset_button("c6.seconds", "c6.thrust", "c6.slowdown", "c6.residual")
     engine_isp = 327.0
     vacuum_isp = 350.0
     propellant = thrust / engine_isp * seconds
@@ -102,6 +106,7 @@ st.warning(
 
 residual = st.slider(
     "Assume this much propellant was still aboard",
+    key="c6.residual",
     min_value=0.0,
     max_value=80.0,
     value=40.0,

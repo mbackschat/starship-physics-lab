@@ -6,7 +6,16 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import streamlit as st
-from components.shell import chapter_footer, library, mode, page, sidebar, try_this, why
+from components.shell import (
+    chapter_footer,
+    library,
+    mode,
+    page,
+    reset_button,
+    sidebar,
+    try_this,
+    why,
+)
 
 from labbook.casestudy import ESTIMATES, PayloadPoint, payload_curve
 from labbook.charts import payload_against_dry_mass
@@ -71,6 +80,7 @@ chosen = st.slider(
     key="dry_mass",
     help="Nobody outside SpaceX knows. Published views span this whole range.",
 )
+reset_button("dry_mass", label="Back to the article's estimate")
 # Only write when it actually changed. Rewriting the URL on every run churns
 # the address bar and, in Streamlit, can leave it a step behind the control.
 _shared = write_state({"dry": float(chosen)})

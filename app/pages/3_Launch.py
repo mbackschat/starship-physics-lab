@@ -13,6 +13,7 @@ from components.shell import (
     mode,
     modelling_note,
     page,
+    reset_button,
     sidebar,
     try_this,
     vehicle_picker,
@@ -73,6 +74,7 @@ with controls:
     st.markdown("#### How to fly it")
     turn_shape = st.slider(
         "Pitch-over",
+        key="c3.turn",
         min_value=0.5,
         max_value=1.3,
         value=1.0,
@@ -85,12 +87,14 @@ with controls:
     )
     drag = st.slider(
         "Drag coefficient",
+        key="c3.drag",
         min_value=0.2,
         max_value=0.9,
         value=0.5,
         step=0.05,
         help="How slippery the rocket is. A blunter shape pushes more air aside.",
     )
+    reset_button("c3.turn", "c3.drag", "vehicle")
 
 result = fly(key, turn_shape, drag)
 

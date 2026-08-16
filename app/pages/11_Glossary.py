@@ -32,6 +32,7 @@ query = st.text_input(
     placeholder="delta-v, staging, why is it in seconds...",
     label_visibility="collapsed",
     key=QUERY_KEY,
+    help="Matches the word and its definition, so you can search by meaning too.",
 )
 matches = search(query) if query else list(TERMS)
 

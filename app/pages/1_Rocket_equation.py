@@ -13,6 +13,7 @@ from components.shell import (
     formula_block,
     mode,
     page,
+    reset_button,
     sidebar,
     try_this,
     why,
@@ -45,6 +46,7 @@ with left:
     st.markdown("#### Build a rocket")
     dry = st.slider(
         "Empty rocket",
+        key="c1.dry",
         min_value=1.0,
         max_value=100.0,
         value=10.0,
@@ -54,6 +56,7 @@ with left:
     )
     propellant = st.slider(
         "Propellant",
+        key="c1.prop",
         min_value=1.0,
         max_value=900.0,
         value=90.0,
@@ -63,6 +66,7 @@ with left:
     )
     isp = st.slider(
         "Engine efficiency (specific impulse)",
+        key="c1.isp",
         min_value=200,
         max_value=460,
         value=350,
@@ -73,6 +77,7 @@ with left:
         ),
         format="%d s",
     )
+    reset_button("c1.dry", "c1.prop", "c1.isp")
 
     wet = dry + propellant
     ratio = wet / dry

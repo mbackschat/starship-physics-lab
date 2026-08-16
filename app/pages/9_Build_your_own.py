@@ -12,6 +12,7 @@ from components.shell import (
     library,
     mode,
     page,
+    reset_button,
     sidebar,
     try_this,
     vehicle_picker,
@@ -61,6 +62,10 @@ with first:
         step=10.0,
         format="%.0f t",
         key="sb_bp",
+        help=(
+            "How much the booster burns. More propellant means a better mass "
+            "ratio, but the tanks and the stack get heavier with it."
+        ),
     )
     booster_dry = st.slider(
         "Empty weight",
@@ -70,6 +75,10 @@ with first:
         step=5.0,
         format="%.0f t",
         key="sb_bd",
+        help=(
+            "What the booster weighs with empty tanks. Every tonne here is a "
+            "tonne that has to be accelerated and then brought home again."
+        ),
     )
     engines = st.slider(
         "Engines",
@@ -78,6 +87,11 @@ with first:
         value=booster.engine_count,
         step=1,
         key="sb_be",
+        help=(
+            "Decides whether it can leave the pad at all, and how fast it "
+            "climbs out of the thickest air. It does not change the velocity "
+            "budget, which comes from the mass ratio."
+        ),
     )
     profile = st.selectbox(
         "How it comes home",
@@ -85,6 +99,10 @@ with first:
         format_func=lambda item: profile_for(item).label,
         index=list(RecoveryProfile).index(RecoveryProfile.TOWER_CATCH),
         key="sb_rec",
+        help=(
+            "Every way back costs propellant carried uphill first. Expendable "
+            "costs nothing and throws the stage away."
+        ),
     )
 
 with second:
@@ -97,6 +115,10 @@ with second:
         step=10.0,
         format="%.0f t",
         key="sb_sp",
+        help=(
+            "The upper stage does the expensive half of the work, so its size "
+            "is the single biggest lever on this page."
+        ),
     )
     # Without this, shrinking a stage keeps all its weight and makes the rocket
     # worse, which teaches the opposite of the truth. A smaller stage really is
@@ -126,6 +148,10 @@ with second:
         format="%.0f t",
         key="sb_sd" if not auto_scale else f"sb_sd_{round(scaled)}",
         disabled=auto_scale,
+        help=(
+            "What the ship weighs empty. This is the contested number the "
+            "whole case study turns on, and here it is yours to set."
+        ),
     )
     if auto_scale:
         st.caption(
@@ -148,6 +174,13 @@ with mission:
         ),
         key="sb_budget",
     )
+
+# Below the three columns, not inside one of them: it puts all of them back.
+reset_button(
+    "sandbox_base", "sb_bp", "sb_bd", "sb_be", "sb_rec",
+    "sb_sp", "sb_scale", "sb_sd", "sb_budget",
+    label="Reset the design",
+)
 
 design = scenario(
     lib,

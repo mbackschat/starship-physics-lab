@@ -102,6 +102,38 @@ def sidebar() -> Formatter:
     return METRIC if choice is UnitSystem.METRIC else US
 
 
+def reset_button(*keys: str, label: str = "Reset the controls") -> None:
+    """Put this page's controls back where they started.
+
+    A reader who has moved four sliders to see what happens has no way back
+    short of reloading, which also throws away the chapter they were on. That
+    makes people cautious with the controls, which is the opposite of the point.
+
+    Streamlit gives a widget its declared default again as soon as its key
+    leaves session state, so clearing the keys is the whole mechanism.
+
+    Args:
+        *keys: The ``key=`` of every control to clear. A widget with no key
+            cannot be reset, which is why they all have one. Each is also
+            treated as a prefix, so a control whose key varies with another
+            control still gets cleared.
+        label: Button text.
+    """
+
+    def clear() -> None:
+        for name in list(st.session_state):
+            if any(name == key or name.startswith(f"{key}_") for key in keys):
+                del st.session_state[name]
+
+    st.button(
+        label,
+        on_click=clear,
+        type="tertiary",
+        icon=":material/restart_alt:",
+        help="Put every control on this page back to the value it started at.",
+    )
+
+
 def _chapter_nav() -> None:
     """List every chapter in the sidebar, in order, with none hidden.
 
@@ -319,6 +351,17 @@ def vehicle_picker(
         return f"{marker}{vehicle.name}"
 
     index = options.index(default) if default in options else 0
-    chosen = st.selectbox(label, options, index=index, format_func=render, key=key)
+    chosen = st.selectbox(
+        label,
+        options,
+        index=index,
+        format_func=render,
+        key=key,
+        help=(
+            "Every rocket in the library, grouped so the ones the source article "
+            "discusses come first. A ★ marks those. Thought experiments never "
+            "flew and are kept apart from vehicles that did."
+        ),
+    )
     st.caption(f"{captions[chosen]} · ★ marks rockets the source article analyses")
     return chosen
