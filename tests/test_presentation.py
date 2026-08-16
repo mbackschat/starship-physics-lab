@@ -118,3 +118,45 @@ class TestGroupModel:
         group = Group(name="Test", keys=("no_such_vehicle",))
         with pytest.raises(KeyError, match="no vehicle"):
             group.label(lib, "no_such_vehicle")
+
+
+class TestMassBreakdown:
+    """Splitting a vehicle into propellant, structure, recovery and payload.
+
+    Regression guard: the payload was once attached to the booster row, which
+    made the chart quietly say the opposite of what it meant.
+    """
+
+    @pytest.fixture
+    def rows(self):
+        from labbook.breakdown import mass_components
+        from rocketry.vehicle import analyse
+
+        return mass_components(analyse(load(), "starship_v3"))
+
+    def test_rows_are_top_down(self, rows):
+        assert rows[0].label == "Starship V3"
+        assert rows[-1].label == "Super Heavy V3"
+
+    def test_payload_rides_on_the_stage_that_reaches_orbit(self, rows):
+        assert rows[0].payload > 0
+        assert all(row.payload == 0.0 for row in rows[1:])
+
+    @pytest.mark.parametrize(
+        "key", ["starship_v3", "falcon9_droneship", "space_shuttle", "raptor33_raptor4"]
+    )
+    def test_every_tonne_is_accounted_for(self, key):
+        """Including the fairing, which is easy to drop and hard to notice."""
+        from labbook.breakdown import mass_components
+        from rocketry.vehicle import analyse
+
+        result = analyse(load(), key)
+        rows = mass_components(result)
+        assert sum(row.total for row in rows) == pytest.approx(result.liftoff_mass_t, rel=1e-9)
+
+    def test_recovery_is_separated_from_ascent_propellant(self, rows):
+        booster = rows[-1]
+        assert booster.recovery > 0
+        assert booster.propellant + booster.recovery == pytest.approx(
+            booster.stage.propellant_t, rel=1e-9
+        )

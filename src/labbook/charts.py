@@ -58,7 +58,7 @@ def base_layout(
         font={"color": INK_SECONDARY[mode], "size": 13},
         margin={"l": 70, "r": 30, "t": 110 if subtitle else 80, "b": 60},
         showlegend=show_legend,
-        legend={"orientation": "h", "yanchor": "top", "y": -0.16, "x": 0},
+        legend={"orientation": "h", "yanchor": "top", "y": -0.22, "x": 0},
         hovermode="x unified",
     )
     axis_style = {
@@ -177,8 +177,9 @@ def mass_breakdown(
 
     Args:
         labels: One label per vehicle, top to bottom.
-        components: Series to per-vehicle values in tonnes. Drawn in the fixed
-            categorical order, not in dictionary order.
+        components: Series to per-vehicle values in tonnes. Stacked in the order
+            given, so the caller controls reading order; colours always come
+            from the fixed categorical assignment in :mod:`labbook.palette`.
         formatter: Unit system to display in.
         mode: Light or dark surface.
         title: Chart title.
@@ -188,10 +189,7 @@ def mass_breakdown(
         The figure.
     """
     figure = go.Figure()
-    for series in Series:
-        values = components.get(series)
-        if values is None:
-            continue
+    for series, values in components.items():
         figure.add_trace(
             go.Bar(
                 y=list(labels),
@@ -205,7 +203,7 @@ def mass_breakdown(
                 hovertemplate=f"{series.label}: %{{x:,.0f}}<extra></extra>",
             )
         )
-    figure.update_layout(barmode="stack", bargap=0.35)
+    figure.update_layout(barmode="stack", bargap=0.35, margin={"b": 110})
     return base_layout(
         figure,
         title=title,

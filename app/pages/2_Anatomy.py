@@ -17,8 +17,8 @@ from components.shell import (
     why,
 )
 
+from labbook.breakdown import as_series, mass_components
 from labbook.charts import mass_breakdown
-from labbook.palette import Series
 from labbook.tables import Col, table
 from labbook.units import Quantity
 from rocketry.models import Provenance
@@ -60,13 +60,9 @@ st.divider()
 st.subheader("Where the mass goes")
 
 stages = list(result.stages)
-labels = [analysis.stage.name for analysis in reversed(stages)]
-components = {
-    Series.PROPELLANT: [analysis.ascent_propellant_t for analysis in reversed(stages)],
-    Series.RECOVERY: [analysis.recovery_reserve_t for analysis in reversed(stages)],
-    Series.STRUCTURE: [analysis.stage.dry_mass_t for analysis in reversed(stages)],
-    Series.PAYLOAD: [0.0] * (len(stages) - 1) + [result.payload_t],
-}
+rows_by_mass = mass_components(result)
+labels = [row.label for row in rows_by_mass]
+components = as_series(rows_by_mass)
 
 figure = mass_breakdown(
     labels,

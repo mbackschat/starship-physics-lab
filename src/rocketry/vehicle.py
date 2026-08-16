@@ -50,12 +50,14 @@ class VehicleAnalysis:
         key: Vehicle key.
         name: Vehicle name.
         payload_t: Payload carried, tonnes.
+        fairing_t: Payload fairing mass, tonnes. Zero when the vehicle has none.
         stages: Per-stage results, bottom-up.
     """
 
     key: str
     name: str
     payload_t: float
+    fairing_t: float
     stages: tuple[StageAnalysis, ...]
 
     @property
@@ -133,7 +135,11 @@ def analyse(library: Library, vehicle_key: str, payload_t: float | None = None) 
             )
         )
     return VehicleAnalysis(
-        key=vehicle.key, name=vehicle.name, payload_t=payload, stages=tuple(results)
+        key=vehicle.key,
+        name=vehicle.name,
+        payload_t=payload,
+        fairing_t=vehicle.fairing_t,
+        stages=tuple(results),
     )
 
 
@@ -174,5 +180,5 @@ def _recovery_reserve(stage: Stage) -> float:
         Reserved propellant, tonnes. Zero for expendable stages.
     """
     if stage.recovery is None:
-        return stage.residual_propellant_t * 0.0
+        return 0.0
     return recovery_propellant(stage.dry_mass_t, list(stage.recovery.burns))
