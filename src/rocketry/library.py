@@ -21,7 +21,26 @@ import yaml
 
 from rocketry.models import Engine, Flight, Stage, Vehicle
 
-DATA_DIR = Path(__file__).resolve().parents[2] / "data"
+
+def _find_data_dir() -> Path:
+    """Locate the YAML library by searching upward from this module.
+
+    The repository has it at ``<root>/data``, but a WebAssembly build mounts the
+    packages at a different root, so a fixed number of parent hops is fragile.
+    Searching for the directory that actually contains the data works in both.
+
+    Returns:
+        The data directory.
+    """
+    here = Path(__file__).resolve()
+    for parent in [here.parent, *here.parents]:
+        candidate = parent / "data"
+        if (candidate / "engines.yaml").is_file():
+            return candidate
+    return here.parents[2] / "data"
+
+
+DATA_DIR = _find_data_dir()
 
 
 class Library:

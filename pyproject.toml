@@ -63,6 +63,7 @@ ignore = [
 # importing local components, so module-level imports cannot all come first.
 # RUF001: the multiplication sign and Streamlit's icon glyphs are intentional.
 "app/*" = ["E402", "RUF001"]
+"deploy/*" = ["E501"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

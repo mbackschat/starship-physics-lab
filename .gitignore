@@ -6,6 +6,9 @@ __pycache__/
 .ruff_cache/
 .DS_Store
 
+# Generated static site. Rebuild with: uv run python deploy/build.py
+deploy/site/
+
 # Generated study output. Regenerate with: uv run python studies/<name>/run.py
 studies/*/out/
 studies/out/
