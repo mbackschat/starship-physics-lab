@@ -8,7 +8,9 @@ A page here is something the project **looked up**. Something it **worked out** 
 
 | Page | What it covers | Feeds |
 |---|---|---|
-| [vehicles/starship-v3.md](vehicles/starship-v3.md) | Starship / Super Heavy Block 3, and the contested dry mass everything turns on | `vehicles.yaml#starship_v3`, `stages.yaml#starship_v3` |
+| [vehicles/starship-v3.md](vehicles/starship-v3.md) | Starship Block 3, and the contested dry mass everything turns on | `vehicles.yaml#starship_v3`, `stages.yaml#starship_v3` |
+| [vehicles/super-heavy-v3.md](vehicles/super-heavy-v3.md) | The booster, its recovery budget, and why the staging split sits where it does | `stages.yaml#super_heavy_v3` |
+| [vehicles/falcon-9.md](vehicles/falcon-9.md) | The calibration reference. Published numbers the model has to reproduce | `stages.yaml#falcon9_stage1`, `stages.yaml#falcon9_stage2`, `vehicles.yaml#falcon9_droneship` |
 
 ## Engines
 
@@ -23,12 +25,17 @@ A page here is something the project **looked up**. Something it **worked out** 
 | [flights/flight-12.md](flights/flight-12.md) | First Block 3 flight. First working satellites, and a source conflict about them | `flights.yaml#12` |
 | [flights/flight-13.md](flights/flight-13.md) | First operational deployment. The relight that weighs the ship | `flights.yaml#13` |
 
+## Concepts
+
+| Page | What it covers | Feeds |
+|---|---|---|
+| [concepts/starlink-v3.md](concepts/starlink-v3.md) | The 1.705 t unit mass that turns a satellite count into a payload figure | `flights.yaml#12`, `flights.yaml#13` |
+
 ## Not yet covered
 
 Gaps worth filling, in rough order of value to the app:
 
-- **Super Heavy V3** booster, to pair with the ship page.
-- **Flight 14**, once it flies. This is the one that matters.
-- **Ariane 6**, whose upper stage is the instructive counter-example: a worse mass fraction that still delivers more payload.
-- **Falcon 9**, the calibration reference the whole model is checked against.
-- **Starlink V3**, whose 1.705 t unit mass is currently derived in two flight pages rather than stated once.
+- **Flight 14**, once it flies. This is the one that matters, and the [prediction is already pre-registered](../../studies/flight-14-prediction/finding.md).
+- **Ariane 6**, whose upper stage is the instructive counter-example: a worse mass fraction that still delivers more payload. It is also the vehicle whose parallel boosters the model cannot represent honestly.
+- **Merlin 1D**, to pair with the Falcon 9 page the way Raptor pairs with Starship.
+- **Saturn V**, the only flown vehicle that beats everything modern on payload fraction, and a useful antidote to assuming newer means better.
