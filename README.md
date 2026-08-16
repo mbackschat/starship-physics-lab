@@ -20,6 +20,10 @@ No install, no sign-up, no server. The whole thing runs in your browser.
 
 *Chapter 4. The same 5,850 tonne rocket every time; only the speed at which the two stages separate changes. The payload optimum sits near 11,500 km/h. Starship separates at 6,000 km/h, which costs it 69 tonnes.*
 
+[![The payload question](docs/images/payload-question.png)](https://mbackschat.github.io/starship-physics-lab/)
+
+*Chapter 7, the one the app was built for. The dotted line is the mass reaching orbit: it barely moves, because the rocket equation fixes it. The falling line is how much of that is cargo. Every published estimate of Starship's empty weight is marked, and they disagree by enough to change the answer from 37 tonnes to 180. The app hands you the slider rather than a verdict.*
+
 ## What you can work out for yourself
 
 - **Why going fast is so expensive.** One tonne of rocket needs 1, 3, 7 then 15 tonnes of propellant for 1x, 2x, 3x and 4x the speed. The speed climbs in equal steps; the propellant doubles every time.

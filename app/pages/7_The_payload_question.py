@@ -55,7 +55,9 @@ chosen = st.slider(
     format="%d t",
     help="Nobody outside SpaceX knows. Published views span this whole range.",
 )
-nearest = min(points, key=lambda point: abs(point.dry_mass_t - chosen))
+# Solve the reader's exact value rather than snapping to the nearest sampled
+# point, or the metrics disagree with the slider they were just dragged from.
+nearest = payload_curve(library(), "starship_v3", [float(chosen)])[0]
 
 one, two, three, four = st.columns(4)
 one.metric("Reaches orbit", formatter.mass(nearest.mass_in_orbit_t, digits=0))
