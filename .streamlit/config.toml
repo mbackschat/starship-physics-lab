@@ -1,0 +1,6 @@
+# The sidebar navigation is drawn by hand in app/components/shell.py, so that
+# the project mark sits above it and every chapter is listed at once. Streamlit's
+# own navigation collapses past ten entries behind a "View N more" toggle, which
+# hides the last chapters from a reader who never clicks it.
+[client]
+showSidebarNavigation = false

@@ -42,23 +42,13 @@ class Chapter:
         return f"pages/{self.number}_{self.slug}.py"
 
     @property
-    def nav_label(self) -> str:
-        """What Streamlit calls this page in its own navigation.
-
-        Streamlit builds the sidebar link text from the *file name*, not from
-        anything the page says about itself, so this is the slug with its
-        underscores opened out: ``8_Bigger_is_better.py`` becomes ``8 Bigger is
-        better``. Anything driving the app from outside, such as the browser
-        acceptance check, has to find links by this rather than by `title`.
-
-        Returns:
-            For example ``Bigger is better``.
-        """
-        return self.slug.replace("_", " ")
-
-    @property
     def label(self) -> str:
         """Numbered title, the way chapters are named on screen.
+
+        This is also the text of the sidebar link, because the sidebar
+        navigation is drawn by hand in `components.shell`. Anything driving the
+        app from outside, such as the browser acceptance check, finds a chapter
+        by this.
 
         Returns:
             For example ``4 · Stages``.
@@ -113,7 +103,7 @@ def chapter(number: int) -> Chapter:
     """Look up a chapter by its number.
 
     Args:
-        number: Chapter number, 1 to 11.
+        number: Chapter number.
 
     Returns:
         The chapter.

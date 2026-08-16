@@ -102,10 +102,26 @@ def test_the_browser_check_asks_the_registry_which_chapters_exist():
     source = (Path(__file__).resolve().parents[1] / "deploy" / "acceptance.py").read_text()
     assert "from labbook.navigation import" in source
     for entry in CHAPTERS:
-        assert f'"{entry.nav_label}"' not in source, "the list is hard-coded again"
+        assert f'"{entry.label}"' not in source, "the list is hard-coded again"
 
 
-def test_nav_labels_match_the_page_files_streamlit_names_them_from():
-    for entry in CHAPTERS:
-        stem = Path(entry.page_file).stem
-        assert stem == f"{entry.number}_{entry.nav_label.replace(' ', '_')}"
+def test_every_chapter_is_listed_in_the_sidebar_with_no_collapse():
+    """Streamlit's own navigation hides everything past the tenth chapter.
+
+    It collapses the tail behind a "View N more" toggle, which meant the last
+    three chapters did not exist for a reader who never clicked it. The sidebar
+    is drawn by hand instead, and `.streamlit/config.toml` turns the built-in one
+    off so there are not two. Both halves are load-bearing: without the config
+    there would be two navigations, without the shell code there would be none.
+    """
+    root = Path(__file__).resolve().parents[1]
+    config = (root / ".streamlit" / "config.toml").read_text()
+    assert "showSidebarNavigation = false" in config
+
+    shell = (root / "app" / "components" / "shell.py").read_text()
+    assert "def _chapter_nav" in shell
+    assert "foundations()" in shell and "applications()" in shell
+
+    # And the build has to ship the config, or the deployed site keeps the toggle.
+    build = (root / "deploy" / "build.py").read_text()
+    assert '".streamlit"' in build

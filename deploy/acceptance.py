@@ -49,13 +49,12 @@ BOOT_TIMEOUT_MS = 240_000
 
 SETTLE_MS = 5_000
 
-CHAPTERS = tuple(entry.nav_label for entry in REGISTRY)
+CHAPTERS = tuple(entry.label for entry in REGISTRY)
 """Derived, never listed.
 
 A hand-kept copy here silently stopped checking chapter 12 the day it was added,
-which is the exact failure this whole script exists to catch. Streamlit names its
-own navigation links after the page files, so `nav_label` is what the browser
-will actually see."""
+which is the exact failure this whole script exists to catch. The sidebar is drawn by hand in
+`components.shell`, so `label` is exactly the text the browser will see."""
 
 SHARED_LINK = "The_payload_question?dry=165"
 """A chapter deep link carrying a setting, which is the whole point of sharing."""

@@ -48,6 +48,7 @@ app's own package on the path.
 """
 
 TREES = {
+    ".streamlit": ROOT / ".streamlit",
     "app": ROOT / "app",
     "rocketry": ROOT / "src" / "rocketry",
     "labbook": ROOT / "src" / "labbook",
@@ -57,7 +58,7 @@ TREES = {
 """Source tree to destination. The packages are flattened out of ``src/`` so
 they sit at the mount root and import without any path juggling."""
 
-SUFFIXES = {".py", ".yaml", ".yml", ".svg"}
+SUFFIXES = {".py", ".yaml", ".yml", ".svg", ".toml"}
 
 
 def collect() -> dict[str, Path]:

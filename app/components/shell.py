@@ -11,7 +11,16 @@ import streamlit as st
 from labbook.catalog import Group, browse, describe_provenance
 from labbook.formula import Formula
 from labbook.logo import mark
-from labbook.navigation import CHAPTERS, REPOSITORY_URL, Chapter, chapter, page_files
+from labbook.navigation import (
+    CHAPTERS,
+    FOUNDATIONS,
+    REPOSITORY_URL,
+    Chapter,
+    applications,
+    chapter,
+    foundations,
+    page_files,
+)
 from labbook.palette import Mode
 from labbook.units import METRIC, US, Formatter, UnitSystem
 from rocketry.library import Library, load
@@ -64,6 +73,7 @@ def sidebar() -> Formatter:
             st.markdown(f"### {TITLE}")
         st.caption(SLOGAN)
         st.page_link("Home.py", label="The tour", icon=":material/home:")
+        _chapter_nav()
         st.link_button(
             "Source on GitHub",
             REPOSITORY_URL,
@@ -88,6 +98,27 @@ def sidebar() -> Formatter:
         )
         st.divider()
     return METRIC if choice is UnitSystem.METRIC else US
+
+
+def _chapter_nav() -> None:
+    """List every chapter in the sidebar, in order, with none hidden.
+
+    Drawn by hand rather than left to Streamlit, for two reasons. Streamlit's
+    own navigation collapses past ten entries behind a "View N more" toggle, so
+    the last chapters were invisible to a reader who never clicked it. And it is
+    always rendered above anything a page writes, which put the project mark
+    underneath its own table of contents.
+
+    `.streamlit/config.toml` turns the built-in one off. Both halves are needed:
+    without the config there would be two navigations, without this there would
+    be none.
+    """
+    st.caption(f"**The physics.** Chapters 1 to {FOUNDATIONS}, in order.")
+    for entry in foundations():
+        st.page_link(entry.page_file, label=entry.label)
+    st.caption("**Applied to Starship**, and reference.")
+    for entry in applications():
+        st.page_link(entry.page_file, label=entry.label)
 
 
 def chapter_pages() -> list[str]:
