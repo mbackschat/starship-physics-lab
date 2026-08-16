@@ -12,7 +12,7 @@ A **physics workbench** with two consumers that must never disagree with each ot
 
 **Consumer 1: the web application.** Lets a curious beginner understand why rockets perform the way they do, by playing with them. Not a slideshow with sliders bolted on. The user grabs any number in the model, moves it, and watches the consequences propagate through a real physics engine.
 
-**Consumer 2: scripted analysis.** A person or a coding agent answers a one-off question by writing a short script against the same tested core, and gets back a markdown table, a chart and a CSV. An investigation leaves an artefact in `docs/findings/`, so understanding accumulates in the repository rather than evaporating in a chat log.
+**Consumer 2: scripted analysis.** A person or a coding agent answers a one-off question by writing a short script against the same tested core, and gets back a markdown table, a chart and a CSV. An investigation leaves a folder in `studies/`, holding the script, the written conclusion and the figures together, so understanding accumulates in the repository rather than evaporating in a chat log.
 
 The two share everything below the presentation layer: the same physics, the same rocket library, the same validated palette, the same unit system. A figure produced in a script is indistinguishable from the same figure in the app, which is the point. If they could drift apart, the app would eventually be showing something the analysis no longer supports.
 
@@ -114,12 +114,10 @@ starship-viz/
     tables.py                 markdown tables with per-column units
     charts.py                 plotly builders used by both consumers
     export.py                 save figures as PNG + HTML, tables as MD, data as CSV
-  analysis/                   one script per question. Committed, re-runnable.
-    verify_article.py         reproduces all 64 checkable numbers in the article
-    verify_v4_scaling.py      the V4 stretch and the scaling-exponent sweep
-    staging_split.py          where should a two-stage rocket separate?
-    out/                      generated figures and tables, gitignored
-  docs/findings/              the writeup for each investigation, linking its script
+  studies/                    one folder per question. method and result together.
+    <name>/run.py             the script. imports the same core the app uses
+    <name>/finding.md         question, answer, assumptions, how to reproduce
+    <name>/out/               generated figures and tables, gitignored
   app/
     Home.py                   entry point, guided tour launcher
     pages/                    one file per chapter, numbered for ordering
@@ -232,7 +230,7 @@ Add the remaining vehicles the article discusses (Atlas LV-3B, New Glenn, Long M
 **Done when:** every vehicle in the library reproduces its published payload within 10 %, or carries a note explaining why it cannot.
 
 ### M2c: Analysis workbench
-`labbook` units, tables, charts and export, plus the `analysis/` and `docs/findings/` convention.
+`labbook` units, tables, charts and export, plus the `studies/` convention.
 **Done:** a question can be answered in a 40-line script that emits a markdown table, a PNG, an interactive HTML chart and a CSV, in either unit system.
 
 ### M3: App shell plus chapters 1 and 2
@@ -356,4 +354,4 @@ M0, M1, M2 and M2c are done. Next, in order:
 3. **M2b more presets**, which can proceed in parallel since it is data entry plus research.
 4. **M8 hosting**, which is worth doing early and cheaply so there is a live URL to look at while building.
 
-Each analysis question answered along the way gets a script in `analysis/` and a short writeup in `docs/findings/`.
+Each question answered along the way gets a folder in `studies/`.

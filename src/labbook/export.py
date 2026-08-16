@@ -13,8 +13,27 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:  # pragma: no cover
     from plotly.graph_objects import Figure
 
-OUT_DIR = Path(__file__).resolve().parents[2] / "analysis" / "out"
-"""Where generated figures and tables land."""
+OUT_DIR = Path(__file__).resolve().parents[2] / "studies" / "out"
+"""Fallback output directory, used when a caller does not say where to write.
+
+Prefer :func:`beside`, so each study's output lands next to the script that
+produced it.
+"""
+
+
+def beside(script: str) -> Path:
+    """Output directory for a study, next to the script that produces it.
+
+    Call as ``beside(__file__)`` from a study's ``run.py``. Keeps the method,
+    the result and the generated figures in one folder.
+
+    Args:
+        script: The calling module's ``__file__``.
+
+    Returns:
+        The ``out`` directory beside that script.
+    """
+    return Path(script).resolve().parent / "out"
 
 
 def save_figure(

@@ -54,7 +54,9 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["D100", "D101", "D102", "D103", "ANN001", "ANN201", "ANN202"]
-"analysis/*" = ["ALL"]
+# Study scripts are exploratory: no docstring or annotation ceremony, but they
+# still have to be correct and readable.
+"studies/*/run.py" = ["D", "ANN", "E501", "F541", "N8"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

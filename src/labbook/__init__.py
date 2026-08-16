@@ -14,7 +14,7 @@ Unlike :mod:`rocketry`, this package may depend on plotly and pandas. The
 dependency never points the other way.
 """
 
-from labbook.export import OUT_DIR, save_data, save_figure, save_table
+from labbook.export import OUT_DIR, beside, save_data, save_figure, save_table
 from labbook.tables import Align, Col, key_values, table
 from labbook.units import METRIC, US, Formatter, Measurement, Quantity, UnitSystem, convert
 
@@ -28,6 +28,7 @@ __all__ = [
     "Measurement",
     "Quantity",
     "UnitSystem",
+    "beside",
     "convert",
     "key_values",
     "save_data",

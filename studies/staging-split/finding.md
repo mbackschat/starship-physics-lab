@@ -13,7 +13,7 @@
 | 12 000 km/h (article's Raptor 33 + 3) | 125 t |
 | 16 000 km/h | 64 t |
 
-![Payload against staging speed](../../analysis/out/staging-split.png)
+![Payload against staging speed](out/staging-split.png)
 
 The curve is flat near its peak, which supports the article's own remark that the split does not need to be perfect, only better. Anywhere between 9 500 and 13 500 km/h delivers more than twice what 6 000 km/h does.
 
@@ -35,6 +35,6 @@ Falcon 9 and the Shuttle land in the normal 9 300 to 9 600 m/s band for LEO, whi
 - Booster dry mass held at 300 t across the whole sweep, and it brakes to 5300 km/h before reentry and lands on 500 m/s.
 - Payloads in the second table are the operators' claims, not computed values. The point of the table is to test those claims, not to use them.
 
-**Reproduce.** `uv run python analysis/staging_split.py`
+**Reproduce.** `uv run python studies/staging-split/run.py`
 
-**Related.** [physics-reference.md section 3.7](../physics-reference.md#37-independent-check-of-the-central-thesis) for the verification, [section 2.6](../physics-reference.md#26-staging-why-and-how-to-split-it) for the theory, [correction C15](../physics-reference.md#c15-the-one-input-that-decides-everything) for why the dry mass is the load-bearing input.
+**Related.** [physics-reference.md section 3.7](../../docs/physics-reference.md#37-independent-check-of-the-central-thesis) for the verification, [section 2.6](../../docs/physics-reference.md#26-staging-why-and-how-to-split-it) for the theory, [correction C15](../../docs/physics-reference.md#c15-the-one-input-that-decides-everything) for why the dry mass is the load-bearing input.

@@ -777,7 +777,7 @@ Every claim attributed to "the article" in this document traces to that piece. A
 
 Verification scripts, kept in the repo as the seed of the test suite and as the audit trail for every number above:
 
-- `analysis/verify_article.py` — reproduces all 64 checkable numbers in the article, sections 3.1 to 3.7
-- `analysis/verify_v4_scaling.py` — the V4 stretch analysis and the scaling-exponent sweep, section 3.8
+- `studies/article-verification/run.py` — reproduces all 64 checkable numbers in the article, sections 3.1 to 3.7
+- `studies/v4-scaling/run.py` — the V4 stretch analysis and the scaling-exponent sweep, section 3.8
 
-Both are dependency-free (standard library only) and print a pass/fail line per claim. Run with `python3 analysis/verify_article.py`.
+Both are dependency-free (standard library only) and print a pass/fail line per claim. Run with `uv run python studies/article-verification/run.py`.

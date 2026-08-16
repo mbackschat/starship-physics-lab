@@ -1,5 +1,6 @@
 """Does Starship V4 make the staging split worse? The article says yes. Check it."""
-from math import exp, log
+from math import log
+
 
 def brentq(f, a, b, tol=1e-9):
     fa, fb = f(a), f(b)
@@ -87,9 +88,9 @@ for ss_prop in range(600, 2601, 100):
     ret = RETURN_RATIO * (300 * 4050 / 3650)
     burned = 4050 - ret
 
-    def residual(m_orbit, _sp=ss_prop, _sd=ss_dry):
+    def residual(m_orbit, _sp=ss_prop, _sd=ss_dry, _burned=burned):
         glow = 4050 + 300 * 4050 / 3650 + _sp + m_orbit
-        dv1 = ve(SH_ISP) * log(glow / (glow - burned))
+        dv1 = ve(SH_ISP) * log(glow / (glow - _burned))
         dv2 = ve(SS_ISP) * log((m_orbit + _sp) / m_orbit)
         return dv1 + dv2 - TOTAL_DV
 

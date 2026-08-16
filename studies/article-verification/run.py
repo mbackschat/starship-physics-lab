@@ -2,7 +2,7 @@
 
 Convention: mass in tonnes, velocity in m/s, ISP in seconds.
 """
-from math import exp, log, log2, sqrt, cos, sin, radians, pi
+from math import cos, exp, log, radians, sqrt
 
 G0 = 9.81          # article uses 9.81, not 9.80665
 KMH = 1 / 3.6      # km/h -> m/s

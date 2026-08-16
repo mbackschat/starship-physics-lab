@@ -55,8 +55,7 @@ src/rocketry/   physics core. SI throughout. zero UI dependencies. fully tested
 src/labbook/    presentation: units, palette, tables, charts, export
 app/            Streamlit front end
 data/           rocket library as human-editable YAML, every entry sourced
-analysis/       one script per question, committed and re-runnable
-docs/findings/  the writeup for each investigation
+studies/        one folder per question: script, finding and its figures
 tests/          golden numbers and property tests
 ```
 
@@ -72,7 +71,7 @@ uv sync                                  # install
 uv run pytest                            # tests
 uv run ruff check . && uv run mypy       # lint and types
 uv run streamlit run app/Home.py         # the app (from M3 onwards)
-python3 analysis/verify_article.py       # reproduce the source article's numbers
+uv run python studies/staging-split/run.py   # answer a question, get a table and a chart
 ```
 
 ## Provenance

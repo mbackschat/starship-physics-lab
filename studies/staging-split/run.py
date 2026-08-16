@@ -4,15 +4,16 @@ Answers the source article's central claim without taking its word for anything:
 builds the model from the library, sweeps the staging speed, and marks where the
 real vehicles and the article's redesigns land.
 
-Run:  uv run python analysis/staging_split.py
-Out:  analysis/out/staging-split.{png,html}, staging-split.md, staging-split.csv
+Run:  uv run python studies/staging-split/run.py
+Out:  studies/staging-split/out/staging-split.{png,html,md,csv}
 """
 
-from labbook import US, Col, Quantity, save_data, save_figure, save_table, table
+from labbook import US, Col, Quantity, beside, save_data, save_figure, save_table, table
 from labbook.charts import staging_sweep
 from labbook.units import METRIC
 from rocketry.library import load
-from rocketry.staging import StagingModel, optimal_staging_speed, staging_sweep as sweep_model
+from rocketry.staging import StagingModel, optimal_staging_speed
+from rocketry.staging import staging_sweep as sweep_model
 from rocketry.vehicle import analyse
 
 FORMATTER = METRIC  # swap for US to produce the same report in pounds and mph
@@ -103,8 +104,13 @@ figure = staging_sweep(
     ),
 )
 
-paths = save_figure(figure, "staging-split")
-save_table(report, "staging-split")
-save_data([{k: ("" if v is None else v) for k, v in row.items()} for row in rows], "staging-split")
+OUT = beside(__file__)
+paths = save_figure(figure, "staging-split", out_dir=OUT)
+save_table(report, "staging-split", out_dir=OUT)
+save_data(
+    [{k: ("" if v is None else v) for k, v in row.items()} for row in rows],
+    "staging-split",
+    out_dir=OUT,
+)
 print()
 print("wrote:", ", ".join(str(p.name) for p in paths), "staging-split.md, staging-split.csv")
