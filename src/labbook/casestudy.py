@@ -191,12 +191,15 @@ def payload_curve(
         case = scenario(library, vehicle_key, **{upper_stage_key: {"dry_mass_t": dry_mass}})
         payload = case.solve_payload(target_delta_v)
         analysis = case.at_payload(payload)
-        last = analysis.stages[-1]
         points.append(
             PayloadPoint(
                 dry_mass_t=dry_mass,
                 payload_t=payload,
-                mass_in_orbit_t=last.burnout_mass_t,
+                # Read from the core rather than recomputed here. This used to
+                # take burnout_mass_t to route around a bug in the property,
+                # which left the same idea implemented twice with one of them
+                # wrong.
+                mass_in_orbit_t=analysis.mass_to_orbit_t,
                 analysis=analysis,
             )
         )

@@ -124,3 +124,64 @@ class TestOverridesAreValidated:
         # around it.
         with pytest.raises(ValueError, match="propellant"):
             scenario(lib, "starship_v3", starship_v3={"propellant_t": 1.0})
+
+
+class TestWhatArrivesInOrbit:
+    """One concept, one implementation.
+
+    `VehicleAnalysis.mass_to_orbit_t` promised "everything that arrives" and
+    left out the propellant a returning stage still has aboard, which is 38 t on
+    Starship and is unambiguously in orbit. `PayloadPoint.mass_in_orbit_t`
+    computed the same idea correctly from the burnout mass, so the concept had
+    two implementations and the wrong one was the public accessor.
+    """
+
+    def test_everything_that_arrives_includes_the_propellant_for_coming_home(self, lib):
+        result = scenario(lib, "starship_v3").at_payload(37.7)
+        last = result.stages[-1]
+        assert last.recovery_reserve_t > 0, "this vehicle should be holding propellant back"
+        assert result.mass_to_orbit_t == pytest.approx(
+            result.payload_t
+            + last.stage.dry_mass_t
+            + last.stage.residual_propellant_t
+            + last.recovery_reserve_t
+        )
+
+    def test_a_stage_that_keeps_nothing_back_is_unaffected(self, lib):
+        result = analyse(lib, "falcon9_droneship")
+        last = result.stages[-1]
+        assert last.recovery_reserve_t == 0
+        assert result.mass_to_orbit_t == pytest.approx(
+            result.payload_t + last.stage.dry_mass_t + last.stage.residual_propellant_t
+        )
+
+    def test_the_fairing_is_not_counted_as_arriving(self, lib):
+        """Where this property and `burnout_mass_t` legitimately disagree.
+
+        `burnout_mass_t` is what the stage weighs when its engines stop, and the
+        model still has the fairing attached at that point because there is no
+        jettison event. A fairing does not reach orbit, so what arrives is the
+        burnout mass less the fairing. The gap is finding 1 in
+        docs/physics-review-plan.md; when that is fixed the two converge and
+        this test should be replaced by an equality.
+        """
+        result = analyse(lib, "falcon9_droneship")
+        assert result.fairing_t > 0
+        assert result.stages[-1].burnout_mass_t - result.mass_to_orbit_t == pytest.approx(
+            result.fairing_t
+        )
+
+    def test_the_case_study_and_the_core_agree(self, lib):
+        # The payload chapter read burnout_mass_t directly to route around the
+        # bug. Both routes must now give the same answer.
+        from labbook.casestudy import payload_curve
+
+        point = payload_curve(lib, "starship_v3", [220.0])[0]
+        assert point.mass_in_orbit_t == pytest.approx(point.analysis.mass_to_orbit_t)
+
+    def test_what_arrives_barely_moves_across_the_dry_mass_range(self, lib):
+        # The claim the whole case study rests on, asserted on the fixed accessor.
+        from labbook.casestudy import payload_curve
+
+        arriving = [p.mass_in_orbit_t for p in payload_curve(lib, "starship_v3", [85.0, 220.0])]
+        assert max(arriving) - min(arriving) < 5.0

@@ -89,11 +89,28 @@ class VehicleAnalysis:
 
     @property
     def mass_to_orbit_t(self) -> float:
-        """Everything that arrives, payload plus the last stage and its residuals."""
+        """Everything that arrives: payload, the last stage, and what it still holds.
+
+        The recovery reserve counts. A stage that comes home carries the
+        propellant for its deorbit and landing burns all the way to orbit and
+        arrives with it aboard, which is 38 t on Starship. Leaving it out
+        understated what arrives by that much, and this property is the one
+        place the claim "the mass reaching orbit barely moves" is expressed.
+
+        The fairing does not count, because it is released on the way up.
+
+        Returns:
+            Mass reaching orbit, tonnes.
+        """
         if not self.stages:
             return 0.0
         last = self.stages[-1]
-        return self.payload_t + last.stage.dry_mass_t + last.stage.residual_propellant_t
+        return (
+            self.payload_t
+            + last.stage.dry_mass_t
+            + last.stage.residual_propellant_t
+            + last.recovery_reserve_t
+        )
 
 
 def analyse(library: Library, vehicle_key: str, payload_t: float | None = None) -> VehicleAnalysis:
