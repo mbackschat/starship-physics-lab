@@ -16,6 +16,7 @@ uv run pytest -m golden                          # only the documented-number te
 uv run pytest -m freshness                       # knowledge pages due a recheck
 uv run ruff check . && uv run mypy               # lint and types, both must be clean
 uv run streamlit run app/Home.py                 # the app, locally
+uv run streamlit run app/Home.py --theme.base dark   # the app as a dark-mode reader sees it
 
 uv run python studies/staging-split/run.py       # answer a question
 uv run python deploy/build.py                    # build the static site into deploy/site/
@@ -96,6 +97,14 @@ Each chapter answers one question, has one primary interaction, and ends with on
 6. **Presets before parameters.** Every page opens on a real vehicle with sensible values, via `vehicle_picker()`.
 7. **Nudges, not instructions.** `try_this()` beats a paragraph explaining what would have happened.
 8. **Every control carries a `help=` tooltip and a `key=`.** The tooltip is the only place a control can say what moving it will do; "Propellant" tells a beginner nothing. The key is what makes it resettable, and `reset_button(*keys)` puts a page back to where it started so nobody is afraid to drag anything. `tests/test_app.py` enforces both, and names the pages exempt from the reset with the reason.
+
+9. **A control has to show its effect, and an interaction has to announce itself.** Both halves failed silently and in every chapter at once, which is what makes this a rule rather than a bug report.
+
+Where a chart sweeps a value one of the page's own controls sets, **mark the reader's position on it**, through the `at_t` argument the sweep charts take. Chapters 7 and 8 put a slider directly above a curve swept across exactly what that slider changes, and marked every published estimate on it except the reader's own. The metrics moved and the picture did not, so the two stopped looking like they were about the same thing. Sweeps are the only charts this applies to: where the chart *is* the reader's configuration, as on the launch page or in the sandbox, the whole figure is already the answer.
+
+Anything drawn takes its colours from `labbook.palette` for **both** themes. A colour left to a library default is a dark-mode bug that nobody in light mode will ever see: Plotly's own legend background is near-white, invisible on the light surface and a glaring slab across the dark one, and it shipped exactly that way. Checking this needs `--theme.base dark`, because emulating the browser's `prefers-color-scheme` does not reach Streamlit's theme and quietly gives you a light page to inspect.
+
+And **an interaction nobody can see is not an interaction**. Clicking a name in a Plotly legend hides that series, which is genuinely useful when the point of a chart is one line against another, and nothing on screen suggests it is possible. Four coloured squares in a row read as a key, not as controls. That hint is set once in `charts.base_layout`, never chart by chart, because a per-figure convention is missed exactly once per figure. Hold anything of this kind in the shared layer and test it across the builders, as `tests/test_charts.py` does.
 
 Keys are namespaced per chapter, `c4.inert`, except where one already carries meaning elsewhere: chapter 7's `dry_mass` is in every shared URL, and the sandbox's `sb_*` predate the convention. `reset_button` treats each key as a prefix too, which is what covers the sandbox's slider whose key changes with the checkbox above it. It has to be drawn *after* every control it names; see the Streamlit traps below for why.
 
