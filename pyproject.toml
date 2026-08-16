@@ -1,7 +1,7 @@
 [project]
 name = "starship-physics-lab"
 version = "0.1.0"
-description = "Interactive rocket physics explorer: understand why rockets perform the way they do, by playing with them"
+description = "Understand the rocket. Then build a better one. An interactive rocket physics explorer."
 readme = "README.md"
 requires-python = ">=3.12"
 # Runtime dependencies are deliberately minimal: this app is served as a static
