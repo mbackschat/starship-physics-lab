@@ -8,7 +8,7 @@ import pytest
 
 from rocketry.library import load
 from rocketry.reuse import RECOVERY_PROFILES, RecoveryProfile, profile_for
-from rocketry.vehicle import analyse, with_stage
+from rocketry.vehicle import analyse, scenario, with_stage
 
 
 @pytest.fixture(scope="module")
@@ -84,3 +84,43 @@ class TestWhatReuseCosts:
         expendable = analyse(lib, "falcon9_expendable")
         recovered = analyse(lib, "falcon9_droneship")
         assert expendable.payload_t / recovered.payload_t == pytest.approx(1.30, rel=0.05)
+
+
+class TestOverridesAreValidated:
+    """The what-if seam must reject nonsense rather than answer it confidently.
+
+    `model_copy(update=...)` does not validate, so this seam accepted anything:
+    a negative dry mass produced a confident payload, and a misspelled field was
+    silently ignored and returned the baseline unchanged. The second is the
+    worse of the two, because nothing about the answer looks wrong.
+    """
+
+    def test_a_negative_dry_mass_is_rejected(self, lib):
+        with pytest.raises(ValueError):
+            scenario(lib, "starship_v3", starship_v3={"dry_mass_t": -100.0})
+
+    def test_a_zero_specific_impulse_is_rejected(self, lib):
+        with pytest.raises(ValueError):
+            scenario(lib, "starship_v3", starship_v3={"isp_ascent_s": 0.0})
+
+    def test_a_misspelled_field_is_rejected_rather_than_ignored(self, lib):
+        # Silently returning the baseline is the failure mode that hides.
+        with pytest.raises(ValueError, match="dry_mass"):
+            scenario(lib, "starship_v3", starship_v3={"dry_mass": 165.0})
+
+    def test_with_stage_validates_the_same_way(self, lib):
+        with pytest.raises(ValueError):
+            with_stage(lib, "starship_v3", "starship_v3", dry_mass_t=-1.0)
+        with pytest.raises(ValueError, match="dry_mass"):
+            with_stage(lib, "starship_v3", "starship_v3", dry_mass=165.0)
+
+    def test_a_valid_override_still_works(self, lib):
+        case = scenario(lib, "starship_v3", starship_v3={"dry_mass_t": 165.0})
+        assert case.stages[-1].dry_mass_t == pytest.approx(165.0)
+        assert case.solve_payload() > 0
+
+    def test_an_override_that_over_commits_propellant_is_caught(self, lib):
+        # Stage already validates this at load time; the seam must not be a way
+        # around it.
+        with pytest.raises(ValueError, match="propellant"):
+            scenario(lib, "starship_v3", starship_v3={"propellant_t": 1.0})

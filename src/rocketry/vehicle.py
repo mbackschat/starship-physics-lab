@@ -187,6 +187,30 @@ def solve_payload(
     return 0.5 * (low + high)
 
 
+def altered(stage: Stage, changes: Mapping[str, object]) -> Stage:
+    """A copy of a stage with some fields changed, validated as if newly loaded.
+
+    Rebuilt rather than copied. ``model_copy(update=...)`` writes fields without
+    validating them, which let this seam accept a negative dry mass, a zero
+    specific impulse, and worst of all a misspelled field name, which was
+    silently ignored so the caller got the unchanged baseline back and nothing
+    about the answer looked wrong.
+
+    Args:
+        stage: The stage to base the copy on.
+        changes: Fields to change.
+
+    Returns:
+        The altered stage.
+
+    Raises:
+        ValueError: If the result is not a valid stage, including when a field
+            name is not one a stage has. `Stage` forbids extra fields, so a typo
+            is rejected here rather than quietly doing nothing.
+    """
+    return Stage(**{**stage.model_dump(), **changes})
+
+
 def _recovery_reserve(stage: Stage) -> float:
     """Propellant a stage must hold back for its recovery burns.
 
@@ -317,9 +341,7 @@ def scenario(
                 f"stage {stage_key!r} does not fly on {vehicle_key!r}. It has: {flying}"
             )
     stages = tuple(
-        library.stage(key).model_copy(update=dict(overrides[key]))
-        if key in overrides
-        else library.stage(key)
+        altered(library.stage(key), overrides[key]) if key in overrides else library.stage(key)
         for key in vehicle.stages
     )
     return Scenario(vehicle=vehicle, stages=stages)
@@ -352,6 +374,6 @@ def with_stage(
         flying = ", ".join(vehicle.stages)
         raise ValueError(f"stage {stage_key!r} does not fly on {vehicle_key!r}. It has: {flying}")
 
-    altered = library.stage(stage_key).model_copy(update=dict(changes))
-    stages = [altered if key == stage_key else library.stage(key) for key in vehicle.stages]
+    changed = altered(library.stage(stage_key), changes)
+    stages = [changed if key == stage_key else library.stage(key) for key in vehicle.stages]
     return _analyse_stages(vehicle, stages, vehicle.payload_leo_t or 0.0)
