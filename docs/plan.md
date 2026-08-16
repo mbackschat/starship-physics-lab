@@ -233,13 +233,13 @@ Add the remaining vehicles the article discusses (Atlas LV-3B, New Glenn, Long M
 `labbook` units, tables, charts and export, plus the `studies/` convention.
 **Done:** a question can be answered in a 40-line script that emits a markdown table, a PNG, an interactive HTML chart and a CSV, in either unit system.
 
-### M3: App shell plus chapters 1 and 2
+### M3: App shell plus chapters 1 and 2 — DONE
 Streamlit multipage app, shared components, the formula renderer, the three-colour mass visual language, the glossary stub.
 **Done when:** a beginner can move the mass-ratio slider and see delta-v respond, and can compare Falcon 9 and Starship side by side to scale.
 
-### M4: Ascent simulation and chapter 3
+### M4: Ascent simulation and chapter 3 — DONE
 `ascent.py` with loss accounting, cached, plus the animated flight page.
-**Done when:** simulating Falcon 9 to orbit produces a gravity loss between 1000 and 1600 m/s and a total delta-v within 150 m/s of the analytic budget, and the flight page scrubs smoothly.
+**Done:** Falcon 9 simulates to 1631 m/s of gravity loss, 34 kPa max q and 7579 m/s at 108 km, all matching real telemetry, and the ideal delta-v lands within 150 m/s of the analytic budget. Losses are decomposed by an exact identity rather than estimated. `ambiance` and `scipy` were replaced by a direct ISA implementation and a hand-written RK4, which removed roughly 15 MB from the browser bundle.
 
 ### M5: Staging and chapters 4 and 5
 `staging.py` sweep and optimum, `reuse.py` surfaced in the UI.

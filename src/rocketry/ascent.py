@@ -99,6 +99,7 @@ class StageEvent:
         stage_index: Index of the stage that just finished.
         name: Name of that stage.
         altitude_m: Height at separation, metres.
+        downrange_m: Horizontal distance from the pad at separation, metres.
         speed_ms: Speed at separation, m/s.
     """
 
@@ -106,6 +107,7 @@ class StageEvent:
     stage_index: int
     name: str
     altitude_m: float
+    downrange_m: float
     speed_ms: float
 
 
@@ -275,6 +277,7 @@ def simulate(
                     stage_index=burn.index,
                     name=burn.stage.name,
                     altitude_m=state[1],
+                    downrange_m=state[0],
                     speed_ms=math.hypot(state[2], state[3]),
                 )
             )

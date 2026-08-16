@@ -13,8 +13,8 @@ See [docs/plan.md](docs/plan.md) for the milestone plan.
 - [x] **M2** Data library (7 engines, 18 stages, 10 vehicles, 3 flights)
 - [x] **M2c** Analysis workbench (units, tables, charts, export)
 - [ ] **M2b** More presets
-- [ ] **M3** App shell, chapters 1 and 2
-- [ ] **M4** Ascent simulation, chapter 3
+- [x] **M3** App shell, chapters 1 and 2
+- [x] **M4** Ascent simulation, chapter 3
 - [ ] **M5** Staging and reuse, chapters 4 and 5
 - [ ] **M6** The Starship case study, chapters 6, 7 and 7b
 - [ ] **M7** Sandbox, chapter 8

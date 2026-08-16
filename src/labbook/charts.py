@@ -23,6 +23,7 @@ from labbook.palette import (
     colour,
 )
 from labbook.units import METRIC, Formatter, Quantity
+from rocketry.ascent import AscentSample
 
 
 def base_layout(
@@ -34,6 +35,7 @@ def base_layout(
     mode: Mode = Mode.LIGHT,
     subtitle: str = "",
     show_legend: bool = True,
+    bottom_margin: int = 60,
 ) -> go.Figure:
     """Apply the project's shared chart styling.
 
@@ -46,6 +48,8 @@ def base_layout(
         subtitle: Optional second line under the title, in secondary ink.
         show_legend: Whether to draw a legend. A single series carries its
             identity in the title and needs none; two or more always do.
+        bottom_margin: Space below the plot, pixels. Charts with a legend need
+            more, or it lands on top of the axis title.
 
     Returns:
         The same figure, styled.
@@ -56,9 +60,18 @@ def base_layout(
         paper_bgcolor=SURFACE[mode],
         plot_bgcolor=SURFACE[mode],
         font={"color": INK_SECONDARY[mode], "size": 13},
-        margin={"l": 70, "r": 30, "t": 110 if subtitle else 80, "b": 60},
+        margin={"l": 70, "r": 30, "t": 110 if subtitle else 80, "b": bottom_margin},
         showlegend=show_legend,
-        legend={"orientation": "h", "yanchor": "top", "y": -0.22, "x": 0},
+        # Anchored to the figure container, not the plot area: a fraction of
+        # plot height moves with chart size and lands on the axis title.
+        legend={
+            "orientation": "h",
+            "yanchor": "bottom",
+            "y": 0.0,
+            "yref": "container",
+            "x": 0.0,
+            "xref": "container",
+        },
         hovermode="x unified",
     )
     axis_style = {
@@ -203,7 +216,7 @@ def mass_breakdown(
                 hovertemplate=f"{series.label}: %{{x:,.0f}}<extra></extra>",
             )
         )
-    figure.update_layout(barmode="stack", bargap=0.35, margin={"b": 110})
+    figure.update_layout(barmode="stack", bargap=0.35)
     return base_layout(
         figure,
         title=title,
@@ -211,4 +224,157 @@ def mass_breakdown(
         x_label=formatter.axis_label("Mass", Quantity.MASS),
         y_label="",
         mode=mode,
+        bottom_margin=120,
+    )
+
+
+def trajectory(
+    samples: Sequence[AscentSample],
+    *,
+    events: Sequence[tuple[str, float, float]] = (),
+    formatter: Formatter = METRIC,
+    mode: Mode = Mode.LIGHT,
+    title: str = "Flight path",
+    subtitle: str = "",
+    up_to_seconds: float | None = None,
+) -> go.Figure:
+    """Altitude against downrange distance, with stage separations marked.
+
+    Args:
+        samples: Ascent samples, each with downrange_m, altitude_m and time_s.
+        events: Points to mark, as (label, downrange_m, altitude_m).
+        formatter: Unit system to display in.
+        mode: Light or dark surface.
+        title: Chart title.
+        subtitle: Optional second line under the title.
+        up_to_seconds: Draw only up to this time, for scrubbing through a flight.
+
+    Returns:
+        The figure.
+    """
+    shown = [
+        sample for sample in samples if up_to_seconds is None or sample.time_s <= up_to_seconds
+    ]
+    figure = go.Figure()
+    figure.add_trace(
+        go.Scatter(
+            x=[formatter.value(sample.downrange_m / 1000.0, Quantity.DISTANCE) for sample in shown],
+            y=[formatter.value(sample.altitude_m / 1000.0, Quantity.DISTANCE) for sample in shown],
+            mode="lines",
+            line={"color": colour(Series.PAYLOAD, mode), "width": 2},
+            showlegend=False,
+            hovertemplate="%{x:,.0f} downrange, %{y:,.0f} up<extra></extra>",
+        )
+    )
+    if shown:
+        last = shown[-1]
+        figure.add_trace(
+            go.Scatter(
+                x=[formatter.value(last.downrange_m / 1000.0, Quantity.DISTANCE)],
+                y=[formatter.value(last.altitude_m / 1000.0, Quantity.DISTANCE)],
+                mode="markers",
+                marker={
+                    "color": HIGHLIGHT,
+                    "size": 12,
+                    "line": {"color": SURFACE[mode], "width": 2},
+                },
+                showlegend=False,
+                hoverinfo="skip",
+            )
+        )
+    for label, downrange_m, altitude_m in events:
+        figure.add_trace(
+            go.Scatter(
+                x=[formatter.value(downrange_m / 1000.0, Quantity.DISTANCE)],
+                y=[formatter.value(altitude_m / 1000.0, Quantity.DISTANCE)],
+                mode="markers+text",
+                marker={"color": INK_MUTED[mode], "size": 9, "symbol": "x"},
+                text=[f"  {label}"],
+                textposition="middle right",
+                textfont={"color": INK_SECONDARY[mode], "size": 11},
+                showlegend=False,
+                hoverinfo="skip",
+            )
+        )
+    return base_layout(
+        figure,
+        title=title,
+        subtitle=subtitle,
+        x_label=formatter.axis_label("Downrange distance", Quantity.DISTANCE),
+        y_label=formatter.axis_label("Altitude", Quantity.DISTANCE),
+        mode=mode,
+        show_legend=False,
+    )
+
+
+def _share(value: float, total: float) -> str:
+    """Format a share, never rounding a real contribution down to zero.
+
+    Args:
+        value: The part.
+        total: The whole.
+
+    Returns:
+        A percentage string.
+    """
+    fraction = value / total if total else 0.0
+    return f"{fraction:.1%}" if 0 < fraction < 0.01 else f"{fraction:.0%}"
+
+
+def loss_waterfall(
+    breakdown: dict[str, float],
+    *,
+    formatter: Formatter = METRIC,
+    mode: Mode = Mode.LIGHT,
+    title: str = "Where the engines' work went",
+    subtitle: str = "",
+) -> go.Figure:
+    """One stacked bar splitting the engines' total output into speed and losses.
+
+    The single most illuminating picture in the whole subject: it shows that a
+    launch spends roughly a fifth of everything it produces just holding itself
+    up against gravity.
+
+    Args:
+        breakdown: Label to velocity in m/s, in stacking order.
+        formatter: Unit system to display in.
+        mode: Light or dark surface.
+        title: Chart title.
+        subtitle: Optional second line under the title.
+
+    Returns:
+        The figure.
+    """
+    palette = {
+        "Speed gained": colour(Series.PAYLOAD, mode),
+        "Gravity loss": colour(Series.PROPELLANT, mode),
+        "Drag loss": colour(Series.STRUCTURE, mode),
+        "Steering loss": colour(Series.RECOVERY, mode),
+    }
+    total = sum(breakdown.values()) or 1.0
+    figure = go.Figure()
+    for label, value in breakdown.items():
+        figure.add_trace(
+            go.Bar(
+                y=["budget"],
+                x=[formatter.value(value, Quantity.VELOCITY)],
+                name=f"{label} ({_share(value, total)})",
+                orientation="h",
+                marker={
+                    "color": palette.get(label, colour(Series.OTHER, mode)),
+                    "line": {"color": SURFACE[mode], "width": 2},
+                },
+                hovertemplate=f"{label}: %{{x:,.0f}}<extra></extra>",
+            )
+        )
+    figure.update_layout(barmode="stack", bargap=0.55)
+    figure.update_yaxes(showticklabels=False)
+    return base_layout(
+        figure,
+        title=title,
+        subtitle=subtitle,
+        x_label=formatter.axis_label("Velocity the engines produced", Quantity.VELOCITY),
+        y_label="",
+        mode=mode,
+        bottom_margin=120,
     )
