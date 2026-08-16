@@ -125,6 +125,36 @@ def capture(page: Page, shot: Shot, base_url: str) -> Path:
     return path
 
 
+def _capture_with_retries(page: Page, shot: Shot, base_url: str, retries: int) -> Path:
+    """Capture a shot, retrying transient failures.
+
+    A freshly deployed page can serve a stale cache for a minute or two, and a
+    cold Pyodide boot occasionally overruns. Neither is worth failing a run for.
+
+    Args:
+        page: The browser page.
+        shot: What to capture.
+        base_url: Where the app is served from.
+        retries: Extra attempts after the first.
+
+    Returns:
+        The file written.
+
+    Raises:
+        RuntimeError: If every attempt failed, carrying the last error.
+    """
+    last: RuntimeError | None = None
+    for attempt in range(retries + 1):
+        try:
+            return capture(page, shot, base_url)
+        except RuntimeError as error:
+            last = error
+            if attempt < retries:
+                print(f"  retry {shot.name} ({attempt + 1}/{retries})", file=sys.stderr)
+                page.wait_for_timeout(10_000)
+    raise last if last else RuntimeError(f"{shot.name} failed for no recorded reason")
+
+
 def main() -> int:
     """Capture every requested screenshot.
 
@@ -136,6 +166,9 @@ def main() -> int:
     parser.add_argument("--url", default="", help="override the URL entirely")
     parser.add_argument("--shot", default="", help="capture only this one, by name")
     parser.add_argument("--headed", action="store_true", help="watch it happen")
+    parser.add_argument(
+        "--retries", type=int, default=2, help="attempts per shot before giving up"
+    )
     arguments = parser.parse_args()
 
     base_url = arguments.url or (LOCAL_URL if arguments.local else LIVE_URL)
@@ -158,9 +191,12 @@ def main() -> int:
                 )
                 page = context.new_page()
                 try:
-                    path = capture(page, shot, base_url)
+                    path = _capture_with_retries(page, shot, base_url, arguments.retries)
                     size_kb = path.stat().st_size / 1024
-                    print(f"  ok   {path.relative_to(ROOT)}  ({size_kb:,.0f} kB) - {shot.description}")
+                    print(
+                        f"  ok   {path.relative_to(ROOT)}  ({size_kb:,.0f} kB) "
+                        f"- {shot.description}"
+                    )
                 except RuntimeError as error:
                     failures += 1
                     print(f"  FAIL {shot.name}: {error}", file=sys.stderr)
