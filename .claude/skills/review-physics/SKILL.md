@@ -18,10 +18,13 @@ This is not a general code review. The physics core is the one part of this proj
 The single question that matters. Run it, do not reason about it:
 
 ```sh
+uv sync                          # a fresh workspace has no environment yet
 uv run pytest -m golden          # the documented numbers
 uv run pytest tests/test_library_calibration.py
 uv run pytest tests/test_properties.py
 ```
+
+**If those will not run, stop and say so rather than reviewing by reading.** An environment that cannot be built is itself a finding, and a review of the physics that never executed the physics is worth very little. Two failures are worth recognising: a sandbox with no access to the global `uv` cache, and a `.venv` copied or moved from another path, whose console scripts still carry absolute shebangs pointing at where it used to live. The second is repaired by deleting `.venv` and running `uv sync` again, not by `uv sync` alone.
 
 `test_library_calibration.py` is the one that decides whether anything else can be believed: the model must recover each vehicle's *published* payload. Vehicles that do not are on an excused list with a stated reason each, and the test fails if a vehicle is quietly left out of both lists, or if an excuse stops being needed. **Read those lists in the file rather than assuming who is on them**; which vehicles are excused, and how many, is exactly the sort of thing that changes between one review and the next.
 
