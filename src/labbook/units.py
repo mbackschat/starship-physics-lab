@@ -327,6 +327,21 @@ class Formatter:
         """
         return self.format(metres, Quantity.ALTITUDE, digits)
 
+    def altitude_km(self, metres: float, digits: int | None = None) -> str:
+        """Format an altitude in kilometres or miles rather than metres or feet.
+
+        Above a few kilometres, metres stop being readable: "107,557 m" is a
+        number to decode, "108 km" is a fact.
+
+        Args:
+            metres: Altitude, m.
+            digits: Decimal places, or None to choose automatically.
+
+        Returns:
+            A display string.
+        """
+        return self.format(metres / 1000.0, Quantity.DISTANCE, digits)
+
     def percent(self, fraction: float, digits: int = 1) -> str:
         """Format a fraction as a percentage.
 

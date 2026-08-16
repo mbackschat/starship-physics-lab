@@ -23,6 +23,7 @@ dev = [
     "mypy>=1.13",
     "types-PyYAML>=6.0",
     "kaleido>=0.2.1",   # PNG export for analysis scripts only, never needed by the app
+    "playwright>=1.62.0",
 ]
 
 [build-system]

@@ -91,7 +91,7 @@ with readout:
         )
     one, two, three, four = st.columns(4)
     one.metric("Speed at cutoff", formatter.velocity(result.final_speed, digits=0))
-    two.metric("Altitude", formatter.altitude(result.final_altitude_m, digits=0))
+    two.metric("Altitude", formatter.altitude_km(result.final_altitude_m, digits=0))
     three.metric("Max q", f"{result.max_dynamic_pressure_pa / 1000:,.0f} kPa")
     four.metric("Lost to losses", formatter.percent(result.loss_fraction))
 
