@@ -6,24 +6,9 @@ Open work only, for the knowledge base described in [knowledge-base.md](knowledg
 
 When everything here is gone, delete the file.
 
+Phase numbers are stable identifiers, not positions. A completed phase is removed and the rest keep their numbers, so a reference to "Phase 2" elsewhere does not rot.
+
 ---
-
-## Phase 0: before Flight 14 flies
-
-Time-boxed. Flight 14 is targeting late August 2026 and has not launched, so this window closes in roughly two weeks. Nothing else here depends on Phase 0, and Phase 0 depends on nothing, so it goes first purely because it expires.
-
-- [ ] **Pre-register the payload prediction.** `studies/flight-14-prediction/` with `run.py` and `finding.md`: what the model says Starship delivers to a real orbit, under which dry-mass assumption, with the uncertainty band. Commit before launch. After the flight this cannot be created honestly.
-- [ ] **Correct the Flight 12 record.** `data/flights.yaml` says `2026-05-01` with `date_precision: month`; it flew **22 May 2026**. The payload description says "22 Starlink V3 mass simulators"; it was 20 simulators plus 2 functional V3 satellites, which matters because it was the first time a ship deployed working hardware. One YAML edit.
-
-## Phase 1: the schema
-
-Nothing downstream works until pages have a shape and something checks it.
-
-- [ ] **`raw/` and its rule.** Text-only captures, each with source URL and retrieval date. Add to `.gitignore` whatever the rule excludes.
-- [ ] **`docs/knowledge/` skeleton.** `index.md` and `log.md`, both with their format documented in place.
-- [ ] **Record the frontmatter convention in [CLAUDE.md](../CLAUDE.md).** OKF v0.2 core fields plus the `provenance` and `feeds` extensions. This is the schema layer of the pattern, so it belongs there rather than here.
-- [ ] **Two seed pages**, migrated from [physics-reference.md](physics-reference.md) section 5 rather than researched fresh: `engines/raptor-3.md` and `vehicles/starship-v3.md`. Migrating proves the format carries real content before any effort goes into gathering more.
-- [ ] **`tests/test_knowledge.py`**: every page parses, has `type`, has at least one dated source, is not past `stale_after`, and every `feeds:` target exists in `data/`.
 
 ## Phase 2: the guarantee
 
@@ -39,6 +24,10 @@ Only worth building once there is a corpus to operate on.
 - [ ] **`ingest`** as a skill: capture a source, write or revise pages, update `index.md`, append to `log.md`.
 - [ ] **`query`** as a skill: answer from compiled pages, and file good answers back as pages.
 - [ ] **`lint`** as a skill: wrap the tests above and report what needs human judgement rather than auto-fixing it.
+
+## Corpus backlog
+
+Pages worth writing, kept in [docs/knowledge/index.md](knowledge/index.md) under "Not yet covered" so the gap list sits beside the pages themselves rather than here. Super Heavy V3 and Falcon 9 are the two that would most improve the app, the first to pair with the ship page and the second because it is the calibration reference the whole model is checked against.
 
 ## Phase 4: close the loop on Flight 14
 
