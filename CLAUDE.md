@@ -194,6 +194,8 @@ One folder per question under `studies/<name>/`: `run.py`, `finding.md`, and a g
 
 Reference material the project has *looked up*, as opposed to `studies/` which holds what it has *worked out*. `raw/` holds immutable captured sources, `docs/knowledge/` holds compiled pages, and this file is the schema. The design and its reasoning are in [docs/knowledge-base.md](docs/knowledge-base.md); open work is in [docs/knowledge-base-plan.md](docs/knowledge-base-plan.md).
 
+**When you need a fact you do not have, search the web for it rather than reasoning from memory, and then consider whether what you found belongs here.** A model recalled from training is exactly the kind of thing this repository exists to check. The test for whether a lookup earns a page: would the next person, agent or human, need to look it up again? If so it is corpus, with its sources captured in `raw/` and dated. A one-off number used once and cited inline is not.
+
 Pages are markdown with YAML front matter in [Open Knowledge Format v0.2](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md). Only `type` is required; OKF mandates that unknown keys be preserved, which is what makes this project's two extensions legal rather than a private fork.
 
 ```yaml
