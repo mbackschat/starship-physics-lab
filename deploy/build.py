@@ -14,15 +14,19 @@ Run:  uv run python deploy/build.py
 Out:  deploy/site/
 """
 
-import json
 import shutil
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "deploy" / "site"
 
-STLITE_VERSION = "0.83.1"
-"""Pinned. An unpinned CDN import means the app can break without a commit."""
+STLITE_VERSION = "1.8.1"
+"""Pinned. An unpinned CDN import means the app can break without a commit.
+
+The 1.x line mounts declaratively through a ``<streamlit-app>`` custom element
+with ``<app-file>`` and ``<app-requirements>`` children, which is what this
+build emits.
+"""
 
 REQUIREMENTS = ["pyyaml", "pydantic", "plotly"]
 """Everything beyond what stlite already bundles. Streamlit itself comes with it.
@@ -73,20 +77,30 @@ def write_site(files: dict[str, Path]) -> None:
         destination = SITE / virtual
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(real, destination)
-    manifest = {virtual: {"url": f"./{virtual}"} for virtual in files}
-    (SITE / "index.html").write_text(_index(manifest))
+    (SITE / "index.html").write_text(_index(sorted(files)))
     (SITE / ".nojekyll").write_text("")
 
 
-def _index(manifest: dict[str, dict[str, str]]) -> str:
+def _index(virtual_paths: list[str]) -> str:
     """Render the bootstrap page.
 
     Args:
-        manifest: Virtual path to fetch instruction, as stlite expects.
+        virtual_paths: Every file to mount, in the virtual filesystem's terms.
 
     Returns:
         The HTML.
+
+    Raises:
+        ValueError: If the entrypoint is not among the files being mounted.
     """
+    if ENTRYPOINT not in virtual_paths:
+        raise ValueError(f"entrypoint {ENTRYPOINT!r} is not in the collected files")
+    app_files = "\n      ".join(
+        f'<app-file name="{path}" url="./{path}"'
+        f'{" entrypoint" if path == ENTRYPOINT else ""}></app-file>'
+        for path in virtual_paths
+    )
+    requirements = "\n        ".join(REQUIREMENTS)
     return f"""<!doctype html>
 <html lang="en">
   <head>
@@ -103,6 +117,7 @@ def _index(manifest: dict[str, dict[str, str]]) -> str:
     />
     <style>
       body {{ margin: 0; font-family: system-ui, sans-serif; }}
+      streamlit-app {{ display: block; min-height: 100vh; }}
       #boot {{
         position: fixed; inset: 0; display: grid; place-content: center;
         text-align: center; gap: 0.75rem; padding: 2rem;
@@ -115,6 +130,10 @@ def _index(manifest: dict[str, dict[str, str]]) -> str:
         #boot p {{ color: #c3c2b7; }}
       }}
     </style>
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/@stlite/browser@{STLITE_VERSION}/build/stlite.js"
+    ></script>
   </head>
   <body>
     <div id="boot">
@@ -125,24 +144,21 @@ def _index(manifest: dict[str, dict[str, str]]) -> str:
         offline. Nothing is sent to a server.
       </p>
     </div>
-    <div id="root"></div>
+    <streamlit-app>
+      <app-requirements>
+        {requirements}
+      </app-requirements>
+      {app_files}
+    </streamlit-app>
     <script type="module">
-      import {{ mount }} from "https://cdn.jsdelivr.net/npm/@stlite/browser@{STLITE_VERSION}/build/stlite.js";
-      mount(
-        {{
-          requirements: {json.dumps(REQUIREMENTS)},
-          entrypoint: {json.dumps(ENTRYPOINT)},
-          files: {json.dumps(manifest, indent=10)},
-        }},
-        document.getElementById("root"),
-      );
       const boot = document.getElementById("boot");
       new MutationObserver((_, observer) => {{
         if (document.querySelector('[data-testid="stAppViewContainer"]')) {{
           boot.remove();
           observer.disconnect();
         }}
-      }}).observe(document.getElementById("root"), {{ childList: true, subtree: true }});
+      }}).observe(document.body, {{ childList: true, subtree: true }});
+      setTimeout(() => boot?.remove(), 90000);
     </script>
   </body>
 </html>

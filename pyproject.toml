@@ -64,6 +64,7 @@ ignore = [
 # RUF001: the multiplication sign and Streamlit's icon glyphs are intentional.
 "app/*" = ["E402", "RUF001"]
 "deploy/*" = ["E501"]
+"tests/test_deploy.py" = ["SLF001"]  # the build script is ours; testing its internals is fine
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
