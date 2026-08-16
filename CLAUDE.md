@@ -97,7 +97,7 @@ Each chapter answers one question, has one primary interaction, and ends with on
 7. **Nudges, not instructions.** `try_this()` beats a paragraph explaining what would have happened.
 8. **Every control carries a `help=` tooltip and a `key=`.** The tooltip is the only place a control can say what moving it will do; "Propellant" tells a beginner nothing. The key is what makes it resettable, and `reset_button(*keys)` puts a page back to where it started so nobody is afraid to drag anything. `tests/test_app.py` enforces both, and names the pages exempt from the reset with the reason.
 
-Keys are namespaced per chapter, `c4.inert`, except where one already carries meaning elsewhere: chapter 7's `dry_mass` is in every shared URL, and the sandbox's `sb_*` predate the convention. `reset_button` treats each key as a prefix too, which is what clears the sandbox's slider whose key changes with the checkbox above it.
+Keys are namespaced per chapter, `c4.inert`, except where one already carries meaning elsewhere: chapter 7's `dry_mass` is in every shared URL, and the sandbox's `sb_*` predate the convention. `reset_button` treats each key as a prefix too, which is what covers the sandbox's slider whose key changes with the checkbox above it. It has to be drawn *after* every control it names; see the Streamlit traps below for why.
 
 **The sidebar is drawn by hand**, in `shell._chapter_nav`, with `.streamlit/config.toml` turning Streamlit's own navigation off. Both halves are load-bearing: Streamlit's collapses past ten chapters behind a "View N more" toggle, and always renders above anything a page writes, so the mark ended up under its own table of contents. `deploy/build.py` ships the config, or the deployed site keeps the toggle.
 
@@ -172,15 +172,19 @@ The project's whole claim is that its numbers were checked, so what counts as a 
 
 One more, about direction. When the model disagrees with a source, **the implementation is the more likely culprit**. Here the library said reuse cost 7 % and the article said 25 %; the temptation was to doubt the article, and the article was right.
 
-### Two Streamlit traps that unit tests cannot see
+### Three Streamlit traps that unit tests cannot see
 
-Both of these produce a page that runs perfectly, passes every test, and is visibly wrong. Only `deploy/acceptance.py` catches them, which is why it exists.
+Each of these produces a page that runs perfectly, passes every test, and is visibly wrong. Only `deploy/acceptance.py` catches them, which is why it exists.
 
 **Multi-line HTML becomes a code block.** `st.markdown` parses markdown *before* it honours `unsafe_allow_html`, and markdown claims any line indented four spaces or more. Hand-formatted SVG therefore lands on the page as its own source code. Everything drawn goes through `labbook.visuals.inline()`, which flattens markup to one line and drops comments. Never pass multi-line markup to `st.markdown` directly. `st.html` is not an escape route: it renders nothing here.
 
 **A bare string expression is rendered to the reader.** Streamlit's magic writes any top-level expression to the page, and an attribute docstring is an expression statement. The `CONSTANT = value` followed by `"""docs"""` convention that the rest of the project uses will print that paragraph at the reader. Inside `app/`, document module-level constants with `#` comments. `tests/test_app.py` walks the AST of every page to enforce this.
 
+**Deleting a widget's key resets it in Python and nowhere else.** Streamlit pushes a value down to the browser only when session state was *assigned* to; it says so in `session_state.py`, where `widget_value_changed` turns on `is_new_state_value(user_key)`. Delete the key instead and the value Python sees really does return to its default, so the metrics beside the control jump back and every unit test agrees, while the slider stays exactly where the reader dragged it and hands that stale value back on the next rerun. The reset undoes itself, and the page contradicts itself in between. **So `reset_button` restores by assigning**, which means it needs a value: a sandbox slider starts at whatever the chosen vehicle weighs, so the starting value cannot be declared and is remembered on first sight instead. That is why **a reset button must be drawn after every control it names**, reserving its place with `st.container()` where it belongs higher up the page. `tests/test_app.py` moves each control on a freshly loaded page, which is the only ordering that catches this: move them in sequence and an earlier move warms the record up with the right values, and the broken page passes.
+
 **Drawn components take a `uid`.** Two drawings on one page otherwise share CSS class names and fight over each other's keyframes and dimensions.
+
+Two smaller things learnt alongside, both of which cost time. `streamlit run` does not reliably reload an edited module under `app/components/`, so a fix to the shared shell can appear not to work until the server is restarted. And the development server and the interpreter the built site downloads ship **different Streamlit frontends**: the dev server draws a slider as a range input, the built site as BaseWeb's `role="slider"`. Only the built one is what a reader meets, so that is what `deploy/acceptance.py` drives.
 
 ### Why it runs in a browser, and what that costs
 
