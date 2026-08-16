@@ -30,6 +30,10 @@ from pathlib import Path
 from playwright.sync_api import Page, sync_playwright
 from playwright.sync_api import TimeoutError as PlaywrightTimeout
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+
+from labbook.navigation import CHAPTERS as REGISTRY
+
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "deploy" / "site"
 LIVE_URL = "https://mbackschat.github.io/starship-physics-lab/"
@@ -45,19 +49,13 @@ BOOT_TIMEOUT_MS = 240_000
 
 SETTLE_MS = 5_000
 
-CHAPTERS = (
-    "Rocket equation",
-    "Anatomy",
-    "Launch",
-    "Stages",
-    "Reuse",
-    "Weighing Starship",
-    "The payload question",
-    "Bigger is better",
-    "Build your own",
-    "Fact check",
-    "Glossary",
-)
+CHAPTERS = tuple(entry.nav_label for entry in REGISTRY)
+"""Derived, never listed.
+
+A hand-kept copy here silently stopped checking chapter 12 the day it was added,
+which is the exact failure this whole script exists to catch. Streamlit names its
+own navigation links after the page files, so `nav_label` is what the browser
+will actually see."""
 
 SHARED_LINK = "The_payload_question?dry=165"
 """A chapter deep link carrying a setting, which is the whole point of sharing."""
