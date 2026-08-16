@@ -31,7 +31,7 @@ class TestEnergyBookkeeping:
     """Every metre per second is accounted for or the model is lying."""
 
     def test_losses_and_speed_add_up_to_the_ideal_delta_v(self, falcon9):
-        """v_final = Δv_ideal − gravity − drag − steering, exactly.
+        """v_final = ideal delta-v minus gravity, drag and steering, exactly.
 
         This is not an approximation. It falls out of integrating the equation
         of motion along the velocity vector, so any drift means the integrator
