@@ -65,8 +65,6 @@ ignore = [
 "studies/*/run.py" = ["D", "ANN", "E501", "F541", "N8"]
 # Streamlit pages run top-to-bottom as scripts and must extend sys.path before
 # importing local components, so module-level imports cannot all come first.
-# Streamlit pages run top-to-bottom as scripts and must extend sys.path before
-# importing local components, so module-level imports cannot all come first.
 # RUF001: the multiplication sign and Streamlit's icon glyphs are intentional.
 "app/*" = ["E402", "RUF001"]
 "deploy/*" = ["E501"]
