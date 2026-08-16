@@ -107,19 +107,28 @@ def test_rocket_equation_responds_to_its_sliders():
     assert app.metric[0].value != before, "more propellant must mean more speed"
 
 
-def test_launch_explains_a_vehicle_it_cannot_fly_rather_than_crashing():
-    """Design rule 5: no dead ends, never a stack trace.
+def test_launch_says_what_it_cannot_represent_about_a_vehicle():
+    """Design rule 5: no dead ends, and no unlabelled distortions either.
 
-    The picker offers every vehicle in the library, and `simulate()` raises for
-    one that cannot leave the pad. The Space Shuttle is such a vehicle here: its
-    boosters are modelled with a placeholder engine and burn in parallel, which
-    the ascent model cannot represent, so it computes a thrust-to-weight below 1
-    and refuses. A reader who picks it was getting the traceback.
+    The Space Shuttle used to hand the reader a traceback, because its boosters
+    named a placeholder engine and the resulting thrust-to-weight of 0.19 made
+    `simulate()` refuse. With a real solid motor in the library it flies, and the
+    remaining distortion is the one nothing can fix by better data: its boosters
+    and its main engines burn together, and this model walks a stack one stage at
+    a time. Flying it silently would be worse than refusing it.
     """
     app = run(APP / "pages" / "3_Launch.py")
     app.selectbox[0].set_value("space_shuttle").run()
     assert not app.exception, "picking a vehicle must never show a traceback"
-    assert app.error, "an unflyable vehicle must be explained, not silently blank"
+    said = " ".join(element.value for element in app.info)
+    assert "alongside" in said, "a vehicle the model misrepresents must say so"
+    assert "too high" in said, "and must say which way the error goes"
+
+
+def test_launch_stays_quiet_about_a_vehicle_it_models_honestly():
+    app = run(APP / "pages" / "3_Launch.py")
+    app.selectbox[0].set_value("falcon9_droneship").run()
+    assert not any("alongside" in element.value for element in app.info)
 
 
 @pytest.mark.parametrize(

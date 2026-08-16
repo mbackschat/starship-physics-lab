@@ -17,6 +17,7 @@ starship_v3:
   provenance: estimated
   in_article: true
   category: flown
+  modelling_limits: [mixed_engines]
   source: docs/physics-reference.md section 3.3
   note: >
     The 100 t payload claim requires a ship dry mass near 160 t. The article's
@@ -35,6 +36,7 @@ starship_v4:
   provenance: estimated
   in_article: true
   category: announced
+  modelling_limits: [mixed_engines]
   source: SpaceX V4 plans; analysis in docs/physics-reference.md section 3.8
   note: >
     42 engines, about 142 m stacked, 2027. Makes the stage propellant ratio
@@ -87,6 +89,7 @@ ariane_64:
   provenance: published
   in_article: true
   category: flown
+  modelling_limits: [parallel_burn]
   source: ESA, ArianeGroup
   note: >
     Included for one reason: its upper stage has a worse dry-mass fraction than
@@ -110,6 +113,7 @@ space_shuttle:
   provenance: published
   in_article: true
   category: historic
+  modelling_limits: [parallel_burn]
   source: NASA. Liftoff 2030 t, payload 27.5 t to 204 km, orbiter 78 t dry.
   note: >
     Put 105.5 t into orbit on a 2030 t stack, a 5.2 % mass fraction, almost

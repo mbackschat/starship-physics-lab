@@ -10,6 +10,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from rocketry.limits import ModellingLimit, limit_for
 from rocketry.reuse import Burn, recovery_propellant
 
 
@@ -223,6 +224,17 @@ class Vehicle(Sourced):
     launch_site: str = ""
     staging_speed_kmh: float = 0.0
     category: VehicleCategory = VehicleCategory.FLOWN
+    modelling_limits: tuple[ModellingLimit, ...] = ()
+
+    @property
+    def payload_is_evidence(self) -> bool:
+        """Whether reproducing this vehicle's published payload proves anything.
+
+        A vehicle the model cannot represent may still land on the right number,
+        and then agreement is a coincidence rather than a calibration. See
+        :mod:`rocketry.limits`.
+        """
+        return not any(limit_for(limit).affects_payload for limit in self.modelling_limits)
 
 
 class FlightEvents(BaseModel):

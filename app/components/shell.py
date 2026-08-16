@@ -15,7 +15,8 @@ from labbook.navigation import CHAPTERS, REPOSITORY_URL, Chapter, chapter, page_
 from labbook.palette import Mode
 from labbook.units import METRIC, US, Formatter, UnitSystem
 from rocketry.library import Library, load
-from rocketry.models import Provenance
+from rocketry.limits import limit_for
+from rocketry.models import Provenance, Vehicle
 
 TITLE = "Starship Physics Lab"
 SLOGAN = "Understand Starship. Then build a better one."
@@ -189,6 +190,28 @@ def provenance_badge(provenance: Provenance, *, inline: bool = False) -> None:
         st.warning(f"**{wording.badge}** · {wording.explanation}", icon="⚠️")
     else:
         st.info(f"**{wording.badge}** · {wording.explanation}", icon="ℹ️")
+
+
+def modelling_note(vehicle: Vehicle) -> None:
+    """Say what this model cannot represent about a vehicle, before it answers.
+
+    The counterpart to :func:`provenance_badge`. That one says how much weight a
+    *number* can bear; this says how much weight the *model that produced it* can
+    bear. A reader is owed both, and the direction of the error most of all: a
+    payload that comes out high for a vehicle whose boosters really burn
+    alongside its core is the expected result, not a discovery.
+
+    Silent for a vehicle the model represents as it flies, which is most of them.
+
+    Args:
+        vehicle: The vehicle about to be shown.
+    """
+    for limit in vehicle.modelling_limits:
+        described = limit_for(limit)
+        st.info(
+            f"**{described.label}.** {described.explanation}\n\n{described.direction}",
+            icon="🧮",
+        )
 
 
 def formula_block(formula: Formula, formatter: Formatter) -> None:

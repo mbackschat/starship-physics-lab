@@ -75,7 +75,7 @@ A serial model of a parallel burn always **flatters** the vehicle, because it le
 
 The library applies the standard correction: the core's propellant is split between the two phases in proportion to how long each lasts, and the boosters carry a blended specific impulse. That recovers most of it. The computed payload still runs about 50 % high.
 
-**So this entry is trustworthy for the upper-stage comparison and not for payload.** It sits on the excused list in `tests/test_library_calibration.py` with that reason attached, and a test fails if the excuse is ever quietly dropped or ever stops being needed.
+**So this entry is trustworthy for the upper-stage comparison and not for payload.** It declares `modelling_limits: [parallel_burn]` in `data/vehicles.yaml`, which is what makes `Vehicle.payload_is_evidence` false and takes it out of the vehicles the calibration test expects to reproduce. That is a different claim from an excuse, and `tests/test_library_calibration.py` fails if it ever carries both. The app says so too, through `shell.modelling_note()`.
 
 Recording a known limit where anyone can see it is worth more than a number that looks right.
 
@@ -91,4 +91,4 @@ Launching from Kourou at 5.2° latitude gives it more of Earth's rotation than a
 
 ## What would change this page
 
-A proper parallel-staging model, which would take Ariane 64 off the excused list and let the Space Shuttle be flown at all, and is the most valuable outstanding improvement to the physics core. Until then, the 50 % overshoot is the honest state of things.
+A proper parallel-staging model, which would let this vehicle's payload count as evidence again, and is the most valuable outstanding improvement to the physics core. Until then, the 50 % overshoot is the honest state of things, declared rather than remembered.

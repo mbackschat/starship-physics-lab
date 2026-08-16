@@ -4,13 +4,26 @@ This is the test that decides whether anything else in the project can be
 believed. A model that cannot recover Falcon 9's published payload has no
 business making claims about Starship's.
 
-Vehicles that do not reproduce are listed explicitly with a reason, because a
-silent exclusion is indistinguishable from a bug.
+**There are two axes here and they are not the same question.** A vehicle can
+land on its published payload while being modelled as something it is not, and
+then the agreement is a coincidence rather than a calibration. So the vehicles
+split three ways, and only the first way is evidence:
+
+- **Not honestly modelled.** It declares a `modelling_limits` entry that
+  distorts payload, so what it computes is not asked to mean anything. The
+  declaration lives in `data/vehicles.yaml`, not here, because it is a fact
+  about the vehicle rather than about this test file.
+- **Excused.** Honestly modelled, but its published figure is not one this model
+  should be expected to match, for a reason given by name.
+- **Everything else must reproduce.**
+
+Nothing may be silently absent from all three, and an excuse that has stopped
+being needed must be deleted rather than carried.
 """
 
 import pytest
 
-from rocketry.library import load
+from rocketry.library import Library, load
 from rocketry.vehicle import LEO_MISSION_DELTA_V, scenario
 
 TOLERANCE = 0.15
@@ -18,27 +31,12 @@ TOLERANCE = 0.15
 specific trajectories; a single mission budget cannot match all of them exactly.
 """
 
-MUST_REPRODUCE = [
-    "falcon9_droneship",
-    "falcon9_expendable",
-    "space_shuttle",
-    "saturn_v",
-    "new_glenn",
-    "long_march_10b",
-    "raptor33_raptor4",
-    "raptor33_expendable",
-]
-
 KNOWN_EXCEPTIONS = {
     "starship_v3": (
         "The claim IS the subject of the dispute. Reproducing it would mean "
         "assuming the answer to chapter 7."
     ),
     "starship_v4": "Announced, never flown, and rests on the same contested dry mass.",
-    "ariane_64": (
-        "Boosters and core burn together. Representing a parallel burn as a "
-        "sequence of stages always flatters the vehicle."
-    ),
     "raptor33_raptor3": (
         "The article's own bookkeeping for this concept differs from the "
         "library's; see docs/physics-reference.md section 3.6."
@@ -52,6 +50,46 @@ def lib():
     return load()
 
 
+def _claimants(library: Library) -> set[str]:
+    """Every vehicle that publishes a payload, and so owes this test an answer.
+
+    Args:
+        library: The rocket library.
+
+    Returns:
+        Vehicle keys.
+    """
+    return {key for key, v in library.vehicles.items() if v.payload_leo_t is not None}
+
+
+def _not_evidence(library: Library) -> set[str]:
+    """Vehicles the model cannot represent well enough for agreement to mean anything.
+
+    Args:
+        library: The rocket library.
+
+    Returns:
+        Vehicle keys.
+    """
+    return {key for key in _claimants(library) if not library.vehicle(key).payload_is_evidence}
+
+
+def _must_reproduce(library: Library) -> set[str]:
+    """Vehicles whose published payload this model is expected to recover.
+
+    Args:
+        library: The rocket library.
+
+    Returns:
+        Vehicle keys.
+    """
+    return _claimants(library) - _not_evidence(library) - set(KNOWN_EXCEPTIONS)
+
+
+MUST_REPRODUCE = sorted(_must_reproduce(load()))
+"""Resolved once at import so each vehicle gets its own named test."""
+
+
 @pytest.mark.parametrize("key", MUST_REPRODUCE)
 def test_vehicle_reproduces_its_published_payload(lib, key):
     claimed = lib.vehicle(key).payload_leo_t
@@ -62,10 +100,20 @@ def test_vehicle_reproduces_its_published_payload(lib, key):
 
 def test_every_vehicle_is_either_checked_or_excused(lib):
     """No vehicle may quietly avoid this test by not being mentioned."""
-    with_claims = {key for key, v in lib.vehicles.items() if v.payload_leo_t is not None}
-    accounted = set(MUST_REPRODUCE) | set(KNOWN_EXCEPTIONS)
-    assert with_claims - accounted == set(), "add these to MUST_REPRODUCE or KNOWN_EXCEPTIONS"
-    assert accounted - with_claims == set(), "these no longer exist or lost their payload figure"
+    accounted = _must_reproduce(lib) | _not_evidence(lib) | set(KNOWN_EXCEPTIONS)
+    assert _claimants(lib) - accounted == set(), "unaccounted for"
+    assert set(KNOWN_EXCEPTIONS) - _claimants(lib) == set(), (
+        "these no longer exist or lost their payload figure"
+    )
+
+
+def test_no_vehicle_is_both_excused_and_unmodelled(lib):
+    """An excuse and a modelling limit are different claims, not two words for one.
+
+    A vehicle the model cannot represent needs no excuse for missing, and giving
+    it one hides which of the two is actually true. Ariane 64 was carrying both.
+    """
+    assert set(KNOWN_EXCEPTIONS) & _not_evidence(lib) == set()
 
 
 def test_every_exception_gives_a_reason(lib):

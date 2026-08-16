@@ -11,6 +11,7 @@ from components.shell import chapter_footer, library, mode, page, sidebar, try_t
 from labbook.charts import staging_sweep
 from labbook.tables import Col, table
 from labbook.units import Quantity, from_kmh, to_kmh
+from rocketry.limits import limit_for
 from rocketry.staging import (
     REFERENCE_STAGING,
     SWEEP_CEILING,
@@ -134,12 +135,16 @@ st.divider()
 st.subheader("How real rockets divide the work")
 
 rows = []
+flagged = []
 for key in ("starship_v3", "falcon9_droneship", "ariane_64", "space_shuttle", "raptor33_raptor4"):
     vehicle = lib.vehicle(key)
     result = analyse(lib, key)
+    marker = "†" if any(limit_for(x).affects_payload for x in vehicle.modelling_limits) else ""
+    if marker:
+        flagged.append(vehicle.name)
     rows.append(
         {
-            "name": ("★ " if vehicle.in_article else "") + vehicle.name,
+            "name": ("★ " if vehicle.in_article else "") + vehicle.name + marker,
             "share": result.first_stage_share,
             "staging": vehicle.staging_speed_kmh or None,
             "payload": result.payload_t,
@@ -160,6 +165,14 @@ st.markdown(
         formatter=formatter,
     )
 )
+
+if flagged:
+    st.caption(
+        f"† {' and '.join(flagged)} fire their boosters alongside the core. This "
+        "model walks a stack one stage at a time, so it never sees them burning "
+        "together, and their split is flattered. Read those two rows as a shape, "
+        "not as a figure."
+    )
 
 split = optimal_delta_v_split(isp=350, structural_coefficient=0.08, total_delta_v=9404)
 st.caption(

@@ -11,6 +11,7 @@ from components.shell import (
     chapter_link,
     library,
     mode,
+    modelling_note,
     page,
     sidebar,
     try_this,
@@ -43,11 +44,11 @@ chapter_link(1)
 def fly(key: str, turn_shape: float, drag: float, payload: float | None) -> AscentResult | str:
     """Simulate a launch, cached so sliders stay responsive.
 
-    The picker offers every vehicle in the library, and not all of them can be
-    flown by this model. A vehicle whose boosters burn in parallel is walked as
-    a sequence of stages, which computes a thrust-to-weight below 1 and makes
-    `simulate` refuse. That refusal is correct; showing the reader its traceback
-    is not.
+    `simulate` refuses a rocket that cannot lift its own weight. Nothing in the
+    library does today, but the picker offers every vehicle in it and a refusal
+    must reach the reader as an explanation rather than as a traceback. What the
+    model cannot *represent*, as opposed to cannot fly, is a separate matter and
+    is said by `modelling_note`.
 
     Args:
         key: Vehicle key.
@@ -98,17 +99,14 @@ if isinstance(result, str):
     with readout:
         st.error(
             f"**{vehicle.name} cannot be flown by this model.** {result}\n\n"
-            "This is a limit of the simulation rather than of the rocket. Its "
-            "boosters and core burn at the same time, and this model walks a "
-            "stack one stage after another, so it never sees them firing "
-            "together. The analytic chapters still handle it; only the flight "
-            "does not.",
+            "The analytic chapters still handle it; only the flight does not.",
             icon="🧮",
         )
         chapter_link(4)
     st.stop()
 
 with readout:
+    modelling_note(vehicle)
     if result.crashed:
         st.error(
             "**It came back down.** The pitch program tipped it over before it had "

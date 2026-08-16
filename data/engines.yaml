@@ -182,6 +182,22 @@ p120c:
     A solid motor: it cannot be throttled or shut down, which is why the
     min_throttle is 1. Four strap on to an Ariane 64.
 
+rsrm:
+  name: Space Shuttle solid rocket motor (RSRM)
+  propellants: PBAN solid
+  thrust_sl_tf: 1269.0
+  thrust_vac_tf: 1407.0
+  isp_sl_s: 242.0
+  isp_vac_s: 268.0
+  mass_kg: null
+  min_throttle: 1.0
+  provenance: published
+  source: NASA. 12.45 MN at sea level, 13.8 MN in vacuum, 504 t of propellant.
+  note: >
+    A solid motor, so it cannot be throttled or shut down. Its casing is the
+    stage structure rather than a separate engine mass, which is why mass_kg is
+    null: counting it here would count it twice.
+
 vulcain_2_1:
   name: Vulcain 2.1
   propellants: LH2/LOX

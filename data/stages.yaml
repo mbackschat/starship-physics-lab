@@ -327,7 +327,7 @@ shuttle_srb_pair:
   name: Space Shuttle solid rocket boosters (pair)
   dry_mass_t: 182.0
   propellant_t: 1000.0
-  engine: rs_25
+  engine: rsrm
   engine_count: 2
   diameter_m: 3.71
   isp_ascent_s: 269.0
@@ -335,9 +335,9 @@ shuttle_srb_pair:
   provenance: published
   in_article: true
   source: >
-    NASA. Two SRBs, 91 t empty and 500 t of propellant each. The engine field
-    names the RS-25 only because the library keys stages to an engine; SRBs are
-    solid motors and their Isp is given directly by isp_ascent_s.
+    NASA. Two SRBs, 91 t empty and 500 t of propellant each, each burning an
+    RSRM solid motor. The velocity budget uses isp_ascent_s directly; the engine
+    supplies the thrust the flown simulation needs.
   note: Recovered by parachute and refurbished, which this model does not credit.
   recovery: null
 

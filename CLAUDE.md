@@ -119,9 +119,22 @@ Cross-references between chapters are links, not prose. A reference to a chapter
 
 That extends to observations. `data/flights.yaml` holds what was measured, the model holds what was predicted, and the app plots one against the other. A flight that has not happened yet sits there as a row of nulls so its absence is visible rather than silently omitted. When a new flight lands, recording it must mean editing one YAML row: **if it means editing Python, the abstraction is wrong and that is the thing to fix.**
 
-### Two modelling limits worth knowing
+### Modelling limits are declared, not remembered
 
-**Parallel burns are not modelled.** Representing strap-on boosters as a sequence of stages always *flatters* the vehicle, because it lets the core burn propellant at the low mass it only reaches once the boosters are gone. Splitting the core's propellant across both phases recovers most of it. This is why Ariane 64 and the Shuttle sit on the excused list in `tests/test_library_calibration.py`, which fails if a vehicle is quietly left out of both lists or if an excuse stops being needed.
+**Reproducing a published payload and being honestly modelled are two questions, and a vehicle can pass the first while failing the second.** The Space Shuttle did: it recovered its 27.5 t to within 6 %, which is the test that decides whether anything else here can be believed, while its boosters and its main engines were flown one after the other instead of together. A framework with one axis cannot say that, so a vehicle declares what the model cannot represent about it, in `data/vehicles.yaml`, next to its provenance:
+
+```yaml
+modelling_limits: [parallel_burn]
+```
+
+The vocabulary and what each entry costs are in `src/rocketry/limits.py`, including **which way the error goes**, so a payload that comes out high for a parallel-burn vehicle reads as the expected result rather than a discovery. `Vehicle.payload_is_evidence` derives from it, and `tests/test_library_calibration.py` splits the library three ways from the data: not-evidence, excused by name, and must-reproduce. A vehicle absent from all three fails, an excuse that stops being needed fails, and a vehicle carrying both an excuse and a limit fails, because those are different claims.
+
+Readers are told too, through `shell.modelling_note()`. Flying a misrepresented vehicle silently would be worse than refusing it.
+
+- **`parallel_burn`**: strap-on boosters fire alongside the core. Walking them as a sequence always *flatters* the vehicle, because it lets the core burn propellant at the low mass it only reaches once the boosters are gone. Splitting the core's propellant across both phases recovers most of it. Ariane 64 and the Shuttle.
+- **`mixed_engines`**: a stage carries two engine types and `Stage` names one. **Deliberately not representable.** Engine groups with their own throttle and thrust curves would make this a design tool, which is out of scope; the stage's blended `isp_ascent_s` is what the velocity budget needs and is correct. Only `ascent.simulate()` is affected, which is why this limit does not disqualify a payload. Starship, whose ship carries three sea-level and three vacuum Raptors.
+
+A limit is a claim about the model and is tested like any other: `tests/test_limits.py` asserts each declared direction against the observed one.
 
 **A smaller stage has to be allowed to be a lighter one.** Shrinking a stage while holding its dry mass fixed makes the rocket worse, so the obvious advice, "cut the upper stage in half", teaches the opposite of the truth. The sandbox scales dry mass with propellant by default and offers a checkbox to turn that off, which turns the trap into the lesson. Two tests hold both directions.
 

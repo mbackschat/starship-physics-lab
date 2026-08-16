@@ -140,3 +140,25 @@ class TestSettings:
 
     def test_samples_are_dense_enough_to_plot(self, falcon9):
         assert len(falcon9.samples) > 100
+
+
+class TestItRefusesWhatCannotLeaveThePad:
+    """The refusal used to be exercised by the Space Shuttle, and is not any more.
+
+    Its boosters named a placeholder engine, so the model computed a liftoff
+    thrust-to-weight of 0.19 and refused a vehicle that flew 135 times. Giving
+    the stage its real solid motor fixed the data and left this guard with no
+    caller, which is exactly when a guard quietly stops working.
+    """
+
+    def test_a_rocket_too_heavy_for_its_engines_is_refused(self, lib):
+        overloaded = analyse(lib, "falcon9_droneship", payload_t=5000.0)
+        with pytest.raises(ValueError, match="cannot leave the pad"):
+            simulate(overloaded)
+
+    def test_the_message_names_the_thrust_to_weight(self, lib):
+        with pytest.raises(ValueError, match=r"0\.\d\d"):
+            simulate(analyse(lib, "falcon9_droneship", payload_t=5000.0))
+
+    def test_the_real_thing_still_flies(self, falcon9):
+        assert not falcon9.crashed
