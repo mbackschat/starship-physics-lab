@@ -51,7 +51,7 @@ disagree in front of you.
 )
 
 
-@st.cache_data(show_spinner="Flying thirteen rockets…")
+@st.cache_data(show_spinner="Flying every rocket in the library…")
 def rows() -> list[FleetRow]:
     """Every vehicle, flown. Cached: this runs a full ascent simulation each.
 
