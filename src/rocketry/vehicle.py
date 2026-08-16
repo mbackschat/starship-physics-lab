@@ -91,26 +91,21 @@ class VehicleAnalysis:
     def mass_to_orbit_t(self) -> float:
         """Everything that arrives: payload, the last stage, and what it still holds.
 
-        The recovery reserve counts. A stage that comes home carries the
-        propellant for its deorbit and landing burns all the way to orbit and
-        arrives with it aboard, which is 38 t on Starship. Leaving it out
-        understated what arrives by that much, and this property is the one
-        place the claim "the mass reaching orbit barely moves" is expressed.
+        Four things arrive: the payload, the stage's own structure, the
+        propellant it could not use, and the propellant it is holding back to
+        come home. The last of those is 38 t on Starship and is unambiguously in
+        orbit. The fairing is not among them, because it was released on the way
+        up.
 
-        The fairing does not count, because it is released on the way up.
+        That is precisely what the last stage weighs when its engines stop, so
+        this reads that rather than adding the four up again. The two used to
+        differ by the fairing, and this is the one place the claim "the mass
+        reaching orbit barely moves" is expressed.
 
         Returns:
             Mass reaching orbit, tonnes.
         """
-        if not self.stages:
-            return 0.0
-        last = self.stages[-1]
-        return (
-            self.payload_t
-            + last.stage.dry_mass_t
-            + last.stage.residual_propellant_t
-            + last.recovery_reserve_t
-        )
+        return self.stages[-1].burnout_mass_t if self.stages else 0.0
 
 
 def analyse(library: Library, vehicle_key: str, payload_t: float | None = None) -> VehicleAnalysis:
@@ -142,6 +137,18 @@ def _analyse_stages(
 ) -> VehicleAnalysis:
     """Walk an already-resolved stack bottom-up.
 
+    **The fairing is released when the last stage ignites.** Every stage below it
+    lifts it; the stage that reaches orbit does not. Carrying it the whole way
+    used to cost Falcon 9 1.7 t of payload, which is out of all proportion to its
+    1.9 t because it is shed when the upper stage is nearly empty.
+
+    Real fairings go a little later than modelled here: Falcon 9 sheds its about
+    35 s into a 360 s second-stage burn. Charging the last stage for that 10 % of
+    its burn moves the solved payload by 0.03 t, or 0.16 %, so the extra
+    parameter it would take to say so per vehicle buys nothing at this project's
+    few-per-cent precision. The three-stage vehicles here shed theirs before
+    upper-stage ignition anyway, which is exactly what this models.
+
     Args:
         vehicle: The vehicle being analysed.
         stages: Its stages, in launch order, already resolved and possibly
@@ -152,8 +159,11 @@ def _analyse_stages(
         The stage-by-stage analysis.
     """
     results: list[StageAnalysis] = []
+    last_index = len(stages) - 1
     for index, stage in enumerate(stages):
-        above = payload + vehicle.fairing_t + sum(s.wet_mass_t for s in stages[index + 1 :])
+        above = payload + sum(s.wet_mass_t for s in stages[index + 1 :])
+        if index < last_index:
+            above += vehicle.fairing_t
         reserve = _recovery_reserve(stage)
         ignition = above + stage.wet_mass_t
         burnout = above + stage.dry_mass_t + stage.residual_propellant_t + reserve

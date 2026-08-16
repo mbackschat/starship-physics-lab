@@ -524,6 +524,7 @@ Walk stages bottom-up. For stage `i` with all stages above it plus payload as it
 
 ```
 m_top   = payload + Σ (dry_j + prop_j) for all j above i
+        + fairing, for every stage except the last
 m_0     = m_top + dry_i + prop_i
 m_f     = m_top + dry_i + prop_reserved_i
 Δv_i    = Isp_i · g0 · ln(m_0 / m_f)
@@ -531,6 +532,8 @@ m_f     = m_top + dry_i + prop_reserved_i
 ```
 
 `prop_reserved_i` is propellant held back for recovery. This one function reproduces every headline number in the article.
+
+**The fairing is released when the last stage ignites**, so the stage that reaches orbit does not carry it. Modelling it as orbit-bound is worth 1.7 t of Falcon 9's payload, far out of proportion to its 1.9 t, because it is shed when the upper stage is nearly empty and the logarithm is steepest. Real fairings go a little later — Falcon 9 sheds its about 35 s into a 360 s second-stage burn — and charging the last stage for that fraction moves the answer by 0.16 %, below this project's precision target and not worth a per-vehicle parameter. The three-stage vehicles here shed theirs before upper-stage ignition, which is what this models exactly.
 
 ### M2: Payload solver (inverse problem)
 

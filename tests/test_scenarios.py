@@ -126,6 +126,41 @@ class TestOverridesAreValidated:
             scenario(lib, "starship_v3", starship_v3={"propellant_t": 1.0})
 
 
+class TestTheFairingIsReleasedOnTheWayUp:
+    """A fairing is thrown away once the air is thin enough to do without it.
+
+    The model used to carry it all the way to orbit, which cost Falcon 9 1.7 t
+    of payload. It matters out of proportion to its mass because the fairing is
+    shed when the upper stage is nearly empty, so 1.9 t is a large fraction of
+    what is left.
+    """
+
+    def test_the_last_stage_does_not_carry_it(self, lib):
+        result = analyse(lib, "falcon9_droneship")
+        assert result.fairing_t > 0
+        assert result.stages[-1].mass_above_t == pytest.approx(result.payload_t)
+
+    def test_every_stage_below_it_does(self, lib):
+        result = analyse(lib, "falcon9_droneship")
+        assert result.stages[0].mass_above_t == pytest.approx(
+            result.payload_t + result.fairing_t + result.stages[-1].stage.wet_mass_t
+        )
+
+    def test_it_is_still_lifted_off_the_pad(self, lib):
+        # Releasing it must not make it vanish from the liftoff mass.
+        result = analyse(lib, "falcon9_droneship")
+        assert result.liftoff_mass_t == pytest.approx(
+            result.payload_t
+            + result.fairing_t
+            + sum(s.stage.wet_mass_t for s in result.stages)
+        )
+
+    def test_a_vehicle_without_one_is_unaffected(self, lib):
+        result = analyse(lib, "starship_v3", 100.0)
+        assert result.fairing_t == 0
+        assert result.stages[-1].mass_above_t == pytest.approx(result.payload_t)
+
+
 class TestWhatArrivesInOrbit:
     """One concept, one implementation.
 
@@ -155,21 +190,16 @@ class TestWhatArrivesInOrbit:
             result.payload_t + last.stage.dry_mass_t + last.stage.residual_propellant_t
         )
 
-    def test_the_fairing_is_not_counted_as_arriving(self, lib):
-        """Where this property and `burnout_mass_t` legitimately disagree.
+    def test_what_arrives_is_what_the_last_stage_weighs_at_burnout(self, lib):
+        """One concept, and now literally one expression.
 
-        `burnout_mass_t` is what the stage weighs when its engines stop, and the
-        model still has the fairing attached at that point because there is no
-        jettison event. A fairing does not reach orbit, so what arrives is the
-        burnout mass less the fairing. The gap is finding 1 in
-        docs/physics-review-plan.md; when that is fixed the two converge and
-        this test should be replaced by an equality.
+        The fairing used to be attached at engine cutoff, so these two disagreed
+        by exactly its mass and only one of them was right. With the jettison
+        event in place they are the same quantity.
         """
         result = analyse(lib, "falcon9_droneship")
         assert result.fairing_t > 0
-        assert result.stages[-1].burnout_mass_t - result.mass_to_orbit_t == pytest.approx(
-            result.fairing_t
-        )
+        assert result.mass_to_orbit_t == pytest.approx(result.stages[-1].burnout_mass_t)
 
     def test_the_case_study_and_the_core_agree(self, lib):
         # The payload chapter read burnout_mass_t directly to route around the

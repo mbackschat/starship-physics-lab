@@ -8,18 +8,6 @@ The headline calculations were not affected. Falcon 9 and Starship both still re
 
 ---
 
-## 1. The fairing is carried to orbit
-
-`_analyse_stages()` in `src/rocketry/vehicle.py` adds `vehicle.fairing_t` to the mass above **every** stage, including the last. There is no jettison event, so Falcon 9's 1.9 t fairing is modelled as reaching orbit.
-
-Falcon 9's upper stage gets 5,790 m/s where the documented calculation without an orbit-bound fairing gives 6,025 m/s. Solved payload is 16.96 t; dropping the fairing entirely gives 18.86 t. The truth is between them, because a real fairing is jettisoned partway through the second stage burn.
-
-This matters more than its size suggests, because Falcon 9 is the calibration reference that makes the whole method credible.
-
-- [ ] Add a mass-jettison event rather than tuning the data around it. `test_the_calibration_reference_is_the_tightest` should get tighter, not looser.
-
-`tests/test_scenarios.py::test_the_fairing_is_not_counted_as_arriving` pins the gap meanwhile: `burnout_mass_t` exceeds `mass_to_orbit_t` by exactly the fairing, because the model still has it attached at engine cutoff. When this finding is fixed the two converge and that test should become an equality.
-
 ## 2. Unsupported configurations are analysed anyway
 
 `Stage` can name only one engine type, `_analyse_stages()` assumes serial burns, and `ascent._plan()` builds one homogeneous burn per stage. Nothing refuses a vehicle that violates those assumptions.
@@ -47,6 +35,19 @@ The stated non-negotiable rule is SI throughout, conversion only at the presenta
 
 - [ ] Decide between converting these to SI at the boundary, or amending the rule in CLAUDE.md to say the core is SI except where a parameter name says otherwise. Either is defensible; the present state, where the rule and the code disagree, is not.
 
+## 7. Reuse costs the model almost nothing
+
+Not from the review. Found while fixing finding 1, which had been hiding it: the fairing error flattered Falcon 9 by 1.7 t of payload, and removing it left the calibration reference 1.2 t *over* its published figure instead of 0.5 t under.
+
+The model says a droneship recovery costs Falcon 9 **7.1 %** of its payload, 20.10 t against 18.68 t. The published payloads say **23.2 %**, 22.8 t against 17.5 t, and that figure is verified in [docs/physics-reference.md](physics-reference.md) section 3.4 as one the article got right.
+
+The mechanism is not the size of the reserve. `_analyse_stages()` burns every stage to depletion less its reserve, so holding propellant back is the *only* thing a recovery profile can cost. In reality most of what recovery costs is **staging early**: a Falcon 9 that means to land separates at 8,000 km/h where an expendable one goes to 10,800. Both numbers are already in `data/vehicles.yaml` as `staging_speed_kmh`, and the stage walk never reads them. It is chart annotation only.
+
+So the two vehicles differ in the model by 10.15 t of held-back propellant, 2.6 % of the first stage's load, and by nothing else.
+
+- [ ] Decide whether the analytic walk should honour `staging_speed_kmh`, or whether the two Falcon 9 entries should stop pretending to be the same stage flown differently. The first is a real modelling change; the second is a data change.
+- [ ] `tests/test_scenarios.py::test_droneship_recovery_costs_falcon9_about_a_fifth_of_its_orbital_mass` reads as the guard for exactly this and is not one. It compares `analyse()` results, whose `payload_t` is the *published claim* copied out of the YAML, so it asserts 22.8 / 17.5 ≈ 1.30 and would pass against any physics at all.
+
 ---
 
 ## Fixed already
@@ -57,3 +58,4 @@ Removed as they land. See git history.
 - **Scenario overrides bypassed validation.** `model_copy` wrote fields blind, so a negative dry mass gave a confident answer and a misspelled field was silently ignored. Stages are now rebuilt and revalidated. `20dc38d`.
 - **Recovery burns could create propellant.** `Burn` now rejects negative delta-v and non-positive Isp, with a property test that the reserve is never negative. `661a77c`.
 - **`mass_to_orbit_t` omitted the recovery reserve**, and the case study had routed around it, leaving one idea implemented twice with the wrong copy public. Fixed at that root: the property counts the reserve and `payload_curve` now reads it. `0aac35f`.
+- **The fairing was carried to orbit.** It is now released when the last stage ignites, which is where the three-stage vehicles here really shed theirs and 35 s early for Falcon 9, worth 0.16 % of payload. Falcon 9 moved from 16.96 t to 18.68 t and `falcon9_expendable` stopped needing an excuse, so it moved to `MUST_REPRODUCE`. What that exposed is finding 7.
