@@ -39,6 +39,7 @@ No install, no sign-up, no server. The whole thing runs in your browser.
 - **Where a launch's velocity goes.** Roughly a fifth never becomes speed at all.
 - **What reuse costs.** Super Heavy carries 330 tonnes of propellant to orbit purely so it can come home again.
 - **Whether Starship really carries 100 tonnes.** The rocket equation fixes about 300 t arriving in orbit no matter what. Whether 40 t or 100 t of that is cargo depends on one number SpaceX has not published since 2019. The app hands you that slider rather than the answer.
+- **How thirteen rockets compare side by side.** Every vehicle in the library, solved for payload and then flown from the pad, in one filterable table.
 
 Units switch between metric and US customary anywhere, in the app and in generated reports.
 
@@ -101,6 +102,8 @@ Two rules that do not bend:
 
 1. `src/rocketry/` never imports Streamlit, Plotly, pandas or `labbook`.
 2. `src/rocketry/` is SI throughout. Units convert once, at the edge. A unit bug can change a label but never a result.
+
+A vehicle also declares what the model *cannot* represent about it. Ariane 64 and the Space Shuttle fire their boosters alongside the core, and walking a stack one stage at a time always flatters such a vehicle, so their rows say so and their agreement with a published payload is not counted as evidence.
 
 ## Development
 

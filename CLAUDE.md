@@ -109,6 +109,8 @@ Use `scenario(lib, key, stage_key={...})` to alter stages without mutating the l
 
 **`src/labbook/`** is presentation, shared by two consumers that must never disagree: the Streamlit app and scripted analysis in `studies/`. Both import the same formatters and chart builders, so a figure in a script looks like the same figure in the app. This layer may depend on plotly and pandas.
 
+`fleet.py` is that rule at its most literal: one row per vehicle, analysed, solved and flown, with the column sets defined beside them. Chapter 12 and [studies/fleet-comparison](studies/fleet-comparison/finding.md) render the same rows, so the table on the page and the table in the report cannot drift. Building a row runs a full ascent simulation, so build them in bulk and cache, never per vehicle in a loop.
+
 **`app/`** is thin Streamlit glue. Anything with logic in it belongs in `labbook` so it can be tested without a browser. Every page opens the same way: `page()`, then `sidebar()` for the formatter, then `mode()` for the chart surface, then `library()`, and closes with `chapter_footer(n)`. Pages start with a `sys.path.insert` so `components.shell` resolves; this is why `app/*` has an `E402` ignore.
 
 **`labbook/navigation.py` is the single source of truth for the tour.** Chapter numbers, titles, questions and page files all come from `CHAPTERS`, and `Chapter.page_file` is derived rather than stored. Anything that needs to link to a chapter goes through `shell.chapter_link()` or `shell.chapter_card()`; `shell.chapter_pages()` delegates here too. Never hard-code a chapter list or glob `app/pages/` for one: globbing sorts 10 and 11 ahead of 2, and a second list drifts. `tests/test_navigation.py` holds the registry and the directory together in both directions.
@@ -178,6 +180,9 @@ URL input is treated as hostile: `labbook.sharing.read_number`/`read_choice` fal
 - `test_library_calibration.py` decides whether anything else can be believed: the model must recover each rocket's known published payload.
 - `test_properties.py` uses Hypothesis for invariants that hold everywhere, not just at the pinned points.
 - `test_app.py` executes every Streamlit page top to bottom through `streamlit.testing.v1.AppTest`.
+- `test_units.py` walks `src/rocketry/` and fails on any name in a unit the core does not compute in. The allowlist is the only way in, and it is short.
+- `test_limits.py` holds each declared modelling limit against the behaviour it claims, including the direction of the error.
+- `test_fleet.py` covers the one-row-per-vehicle reduction and its filters.
 - `test_charts.py` and `test_teaching_charts.py` lock the visual language in both light and dark, and pin the *shapes* of chapter 1's paired curves: the burn steepens, the loading sweep flattens. They are a pair, and if one stops bending the right way the pair starts actively misleading.
 - `test_navigation.py` holds the chapter registry against the files on disk.
 - `test_visuals.py` covers the drawn components, including that nothing reaches the page on more than one line.
