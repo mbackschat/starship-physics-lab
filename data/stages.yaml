@@ -73,11 +73,16 @@ falcon9_stage1:
   note: >
     Already so slender that it cannot be stretched further without bending
     loads becoming the limit.
+
+    The recovery burns are the top of the ranges in docs/physics-reference.md
+    section 2.7, which is where they have to sit for the reserve to come out at
+    the roughly 25 t that section concludes. They were at the bottom of both
+    ranges, giving 10 t, which made recovery look half as expensive as it is.
   recovery:
     mode: droneship
     burns:
-      - {delta_v: 500.0, isp: 300.0, label: landing burn}
-      - {delta_v: 500.0, isp: 311.0, label: entry burn}
+      - {delta_v: 600.0, isp: 300.0, label: landing burn}
+      - {delta_v: 1300.0, isp: 311.0, label: entry burn}
 
 falcon9_stage2:
   name: Falcon 9 second stage (Block 5)

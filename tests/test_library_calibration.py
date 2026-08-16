@@ -137,22 +137,24 @@ def test_excused_vehicles_really_do_miss(lib):
 def test_the_calibration_reference_is_the_tightest(lib):
     """Falcon 9 has the best public data, so it should fit tighter than the rest.
 
-    The bound was 0.5 t of headroom on 1.0 t while the model flew the fairing all
-    the way to orbit. That error was worth 1.7 t of payload in the direction that
-    happened to flatter the fit, so removing it moved the model from 0.5 t under
-    the published figure to 1.2 t over it.
+    A short history, because the number moved twice and only one of those was an
+    improvement at the time. It sat at 0.54 t while the model flew the fairing to
+    orbit, which was worth 1.7 t of payload in the flattering direction; removing
+    that error pushed it to 1.18 t and this bound had to be widened to 1.25 t to
+    say so honestly.
 
-    Widened deliberately, and to the truth rather than to comfort: 1.25 t leaves
-    six per cent of headroom on what a correct model actually achieves, so any
-    further drift still trips this. Getting back under a tonne means finding the
-    error that the fairing was hiding, not loosening this again. The leading
-    suspect is written up as finding 7 in docs/physics-review-plan.md.
+    What the fairing had been hiding was the recovery reserve, set at the bottom
+    of every range in docs/physics-reference.md section 2.7 instead of at the
+    ~1.0 t/t the same section concludes. Correcting it brings the error to
+    0.35 t, tighter than it has ever been, so the bound comes back to 0.5 t.
+
+    **Tighten this when the model earns it, never widen it to make it pass.**
     """
     error = abs(
         scenario(lib, "falcon9_droneship").solve_payload(LEO_MISSION_DELTA_V)
         - (lib.vehicle("falcon9_droneship").payload_leo_t or 0)
     )
-    assert error < 1.25
+    assert error < 0.5
 
 
 def test_multi_stage_vehicles_are_supported(lib):

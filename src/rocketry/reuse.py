@@ -1,6 +1,15 @@
 """What bringing a stage home costs, in propellant carried uphill.
 
-See docs/physics-reference.md section 2.7.
+See docs/physics-reference.md section 2.7, which is the source of every budget
+below and is checked against them by
+`tests/test_scenarios.py::TestRecoveryProfilesMatchTheReference`.
+
+Super Heavy's tower catch was calibrated against the article from the start and
+reproduces its 1.10 t of propellant per tonne of dry mass. Falcon 9's profiles
+were not: they were filled in at the bottom of every documented range, which
+made a droneship recovery cost 0.40 t/t where the same section of the reference
+concludes roughly 1.0 t/t. Nothing held the two together, so the library quietly
+said reuse was half as expensive as the project's own verification did.
 """
 
 from collections.abc import Sequence
@@ -179,8 +188,8 @@ RECOVERY_PROFILES: dict[RecoveryProfile, ProfileDescription] = {
             "sea. It only has to survive reentry and stop, not turn around."
         ),
         burns=(
-            Burn(delta_v=500.0, isp=300.0, label="landing burn"),
-            Burn(delta_v=500.0, isp=311.0, label="entry burn"),
+            Burn(delta_v=600.0, isp=300.0, label="landing burn"),
+            Burn(delta_v=1300.0, isp=311.0, label="entry burn"),
         ),
     ),
     RecoveryProfile.RTLS: ProfileDescription(
@@ -191,9 +200,9 @@ RECOVERY_PROFILES: dict[RecoveryProfile, ProfileDescription] = {
             "the way back. That propellant is carried uphill first."
         ),
         burns=(
-            Burn(delta_v=500.0, isp=300.0, label="landing burn"),
+            Burn(delta_v=600.0, isp=300.0, label="landing burn"),
             Burn(delta_v=500.0, isp=311.0, label="entry burn"),
-            Burn(delta_v=1200.0, isp=311.0, label="boostback burn"),
+            Burn(delta_v=1500.0, isp=311.0, label="boostback burn"),
         ),
     ),
     RecoveryProfile.TOWER_CATCH: ProfileDescription(

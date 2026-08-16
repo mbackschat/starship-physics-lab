@@ -9,6 +9,10 @@ sources:
     resource: ../../physics-reference.md
     title: Rocket Physics Reference, section 2.7
     last_modified: 2026-08-16
+  - id: reserve
+    resource: ../../../raw/2026-08-16-falcon9-recovery-reserve.md
+    title: What a Falcon 9 booster holds back to come home
+    last_modified: 2026-08-16
 
 generated: { by: claude-opus-5, at: 2026-08-16T00:00:00Z }
 
@@ -33,7 +37,9 @@ A stage that comes home must hold propellant back. That propellant is carried th
 | **Return to launch site** | Cancels downrange velocity and flies back. | highest |
 | **Tower catch** | As RTLS, but caught by the launch tower instead of landing on legs. | highest, minus the legs |
 
-Falcon 9 carries 17.5 t with droneship recovery against 22.8 t expendable. **Same rocket, same stages; recovery costs about a quarter of the payload.**
+Falcon 9 carries 17.5 t with droneship recovery against 22.8 t expendable, **both quoted for the same 28.5° reference orbit**. Same rocket, same stages, same destination; recovery costs about a quarter of the payload.
+
+That the two figures share a reference orbit is worth stating rather than assuming. Had one been a 53° Starlink orbit, part of the apparent difference would have been an inclination penalty rather than recovery propellant, and any model tuned to close the gap would have been fitted to the wrong thing.
 
 The [Super Heavy booster](../vehicles/super-heavy-v3.md) returns to the launch site, which is the expensive choice: 1,800 m/s of boostback against 600 m/s of landing burn. Cancelling downrange velocity and flying home dominates everything else.
 
@@ -60,3 +66,14 @@ A vehicle optimised for payload fraction and one optimised for cost per tonne ar
 ## Where this is modelled
 
 `src/rocketry/reuse.py`, surfaced in the reuse chapter and reused by the sandbox.
+
+## Checking a reserve without trusting a velocity
+
+A recovery budget quoted in m/s is only as good as the frame it was quoted in. "An entry burn of 1,300 m/s" is ambiguous between the velocity the *engines* removed, which is what propellant is charged for, and the velocity the *stage* lost, which includes drag. Most of a Falcon 9's entry deceleration is the atmosphere. Charging propellant for the second double-counts the air.
+
+So a reserve is worth checking by routes that mention no velocity at all:
+
+- **As a share of the propellant load.** All three return-to-launch-site burns run 6 to 10 % of a Falcon 9 first stage's propellant. A droneship recovery skips the boostback and should sit below that.
+- **As engine flow times burn duration.** A Merlin 1D flows about 305 kg/s at sea level and cannot throttle below 57 %. Falcon 9 flies an entry burn of roughly 20 to 30 s on three engines and a landing burn of roughly 30 s on one. At 70 % throttle that is 21 to 24 t.
+
+Both agree with the delta-v route, which is what makes the delta-v route usable. The library's earlier 10.1 t failed all three: 2.6 % of the load, and an entry burn of about six seconds. `tests/test_scenarios.py::TestRecoveryProfilesMatchTheReference` now holds the reserve against all of them.

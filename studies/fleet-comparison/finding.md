@@ -19,7 +19,7 @@ The rows come from [`labbook.fleet`](../../src/labbook/fleet.py), which is also 
 | | |
 |---|---|
 | Vehicles modelled as they fly | 5 of 13 |
-| Closest to its published claim | New Glenn, +5.9 % |
+| Closest to its published claim | Falcon 9 droneship, −2.0 % |
 | Furthest | Falcon 9 expendable, −11.8 % |
 | Still descending at cutoff | Saturn V |
 
@@ -40,6 +40,7 @@ Full tables in `out/fleet.md` and `out/fleet-full.md`.
 - **A parallel burn is flown as a sequence**, which always flatters the vehicle. Ariane 64 and the Space Shuttle declare this in `data/vehicles.yaml` and are excluded from the "modelled as they fly" count for exactly that reason.
 - **Drag comes out low**, around 25 m/s where published figures run nearer 100. A single drag coefficient applied to one stage's frontal area understates a real stack. Max-Q lands at 20 to 37 kPa, which is right, so the aerodynamic environment is closer than the integrated loss.
 - **Payload claims are claims.** `payload_leo_t` is what the operator published, and this study exists to test it rather than to assume it.
+- **They are also quoted for a reference orbit, and the two must match before a comparison means anything.** Falcon 9's 22.8 t and 17.5 t are both for 28.5°, so the difference between them really is the cost of recovery. Where a claim's reference orbit is unknown, the row is a comparison between vehicles rather than a verdict on one.
 
 ## Reproducing
 

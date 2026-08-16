@@ -79,32 +79,36 @@ class TestWhatReuseCosts:
             payloads.append(vehicle.total_delta_v)
         assert payloads == sorted(payloads, reverse=True)
 
-    def test_the_model_charges_far_less_for_recovery_than_falcon9_really_pays(self, lib):
-        """A characterisation test, pinning a gap rather than endorsing it.
+    def test_the_model_still_charges_less_for_recovery_than_falcon9_really_pays(self, lib):
+        """What is left of the gap, and where it now sits.
 
         This assertion used to compare `analyse()` results, whose `payload_t` is
         the published claim copied straight out of the YAML. It therefore
         asserted 22.8 / 17.5 and would have passed against any physics at all.
 
-        Solving for payload instead asks the model the question, and the model
-        says a droneship recovery costs 7 % where the published pair says 23 %.
-        The reason is that the stage walk burns every stage to depletion less its
-        reserve, so holding propellant back is the only thing recovery can cost;
-        the larger real cost is separating at 8,000 km/h instead of 10,800, which
-        `staging_speed_kmh` records and the walk never reads. Finding 7 in
-        docs/physics-review-plan.md. When it is fixed this test goes red, which
-        is the point of it.
+        Asking the model instead gave 7 % against a published 23 %. Most of that
+        was the recovery reserve being set at the bottom of every range in
+        docs/physics-reference.md section 2.7 rather than at the ~1.0 t/t the
+        same section concludes; correcting it takes the model to 15 %.
+
+        The rest is not about recovery at all. It sits on the *expendable* side,
+        which the model puts 12 % under its published 22.8 t, because a single
+        9,404 m/s mission budget cannot serve both a recovery profile and the
+        flatter trajectory an expendable Falcon 9 flies. Narrowing this further
+        means giving vehicles their own budgets, which is a larger change than
+        one number.
         """
-        modelled = 1 - (
-            scenario(lib, "falcon9_droneship").solve_payload()
-            / scenario(lib, "falcon9_expendable").solve_payload()
-        )
+        droneship = scenario(lib, "falcon9_droneship").solve_payload()
+        expendable = scenario(lib, "falcon9_expendable").solve_payload()
         published = 1 - (
             (lib.vehicle("falcon9_droneship").payload_leo_t or 0)
             / (lib.vehicle("falcon9_expendable").payload_leo_t or 1)
         )
-        assert modelled == pytest.approx(0.07, abs=0.01)
         assert published == pytest.approx(0.23, abs=0.01)
+        assert 1 - droneship / expendable == pytest.approx(0.15, abs=0.02)
+        # The remaining gap is the expendable figure, not the recovered one.
+        assert droneship == pytest.approx(17.5, abs=1.0)
+        assert expendable < 22.8
 
 
 class TestOverridesAreValidated:
@@ -236,3 +240,93 @@ class TestWhatArrivesInOrbit:
 
         arriving = [p.mass_in_orbit_t for p in payload_curve(lib, "starship_v3", [85.0, 220.0])]
         assert max(arriving) - min(arriving) < 5.0
+
+
+class TestRecoveryProfilesMatchTheReference:
+    """The budgets in docs/physics-reference.md section 2.7, not round numbers.
+
+    The Super Heavy profile was calibrated against the article and reproduces its
+    1.10 t of propellant per tonne of dry mass exactly. Falcon 9's droneship
+    profile was filled in with 500 plus 500, the bottom of both documented
+    ranges, giving 0.40 t/t where the same section concludes "Falcon 9 on a
+    droneship keeps only ~25 t back on a 25.6 t stage, roughly 1.0 t/t".
+
+    That understated what recovery costs by a factor of two and was invisible,
+    because nothing held the library against the document it came from.
+    """
+
+    ENTRY = (500.0, 1300.0)
+    LANDING = (500.0, 600.0)
+    BOOSTBACK = (1500.0, 1800.0)
+
+    def _burn(self, profile: RecoveryProfile, label: str) -> float:
+        for burn in profile_for(profile).burns:
+            if label in burn.label:
+                return burn.delta_v
+        raise AssertionError(f"{profile} has no {label}")
+
+    def test_every_burn_is_labelled_so_it_can_be_checked(self):
+        for profile in RecoveryProfile:
+            for burn in profile_for(profile).burns:
+                assert burn.label, f"{profile} has an unlabelled burn"
+
+    def test_droneship_entry_is_inside_the_documented_range(self):
+        low, high = self.ENTRY
+        assert low <= self._burn(RecoveryProfile.DRONESHIP, "entry") <= high
+
+    def test_every_landing_burn_is_inside_the_documented_range(self):
+        low, high = self.LANDING
+        for profile in (RecoveryProfile.DRONESHIP, RecoveryProfile.RTLS,
+                        RecoveryProfile.TOWER_CATCH):
+            assert low <= self._burn(profile, "landing") <= high, profile
+
+    def test_every_boostback_is_inside_the_documented_range(self):
+        low, high = self.BOOSTBACK
+        for profile in (RecoveryProfile.RTLS, RecoveryProfile.TOWER_CATCH):
+            assert low <= self._burn(profile, "boostback") <= high, profile
+
+    def test_super_heavy_still_reproduces_the_articles_figure(self):
+        # 1.10 t/t. This one was right; the guard must not let it drift either.
+        assert profile_for(RecoveryProfile.TOWER_CATCH).propellant_per_tonne() == pytest.approx(
+            1.10, rel=0.05
+        )
+
+    def test_falcon9_on_a_droneship_holds_back_about_its_own_dry_mass(self, lib):
+        """The reference's conclusion, stated as the number it implies."""
+        reserve = lib.stage("falcon9_stage1").recovery_reserve_t
+        assert reserve == pytest.approx(25.0, rel=0.15)
+
+    def test_the_reserve_survives_a_check_that_uses_no_velocities_at_all(self, lib):
+        """The same number reached without a single delta-v, and so without a frame.
+
+        A budget in m/s is only as good as the frame it was quoted in. An entry
+        burn "of 1,300 m/s" could mean the velocity the engines removed or the
+        velocity the stage lost, and most of a Falcon 9's entry deceleration is
+        the atmosphere rather than the engines. Charging propellant for the
+        second would double-count the air.
+
+        So the reserve is checked a second way, against quantities nobody has to
+        agree on a frame for: engine mass flow, engine count, and how long the
+        burns last. Falcon 9 flies an entry burn of roughly 20 to 30 s on three
+        Merlins and a landing burn of roughly 30 s on one, throttled. The reserve
+        has to fall out of that.
+
+        This is what the old 10.1 t failed. It implied an entry burn of about six
+        seconds.
+        """
+        stage = lib.stage("falcon9_stage1")
+        merlin = lib.engines[stage.engine]
+        flow = merlin.mass_flow_t_per_s()
+        throttle = 0.7
+
+        landing = 1 * flow * throttle * 30.0
+        entry_seconds = (stage.recovery_reserve_t - landing) / (3 * flow * throttle)
+        assert 20.0 <= entry_seconds <= 30.0, (
+            f"the reserve implies a {entry_seconds:.0f} s entry burn on three engines"
+        )
+
+    def test_the_reserve_is_the_published_share_of_the_propellant_load(self, lib):
+        """All three recovery burns run 6 to 10 % of the load; two burns run less."""
+        stage = lib.stage("falcon9_stage1")
+        share = stage.recovery_reserve_t / stage.propellant_t
+        assert 0.04 <= share <= 0.07

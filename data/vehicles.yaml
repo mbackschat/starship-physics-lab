@@ -74,7 +74,16 @@ falcon9_expendable:
   in_article: true
   category: flown
   source: Wikipedia Falcon 9
-  note: Reuse costs 23 % of payload and 20 % of total mass delivered to orbit.
+  note: >
+    22.8 t and the droneship entry's 17.5 t are both quoted for the same 28.5
+    degree reference orbit, so the 23 % they differ by really is the cost of
+    recovery and not an inclination penalty.
+
+    The model puts this entry about 12 % under its 22.8 t, and that is a known
+    limitation rather than a bug: one 9,404 m/s mission budget cannot serve both
+    a recovery profile and the flatter trajectory an expendable flight actually
+    flies. It reproduces inside the 15 % calibration tolerance, and the recovered
+    variant is the one to trust for calibration.
 
 ariane_64:
   name: Ariane 64

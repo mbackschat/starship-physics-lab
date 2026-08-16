@@ -165,7 +165,16 @@ Super Heavy's return-to-launch-site profile is the expensive one. The article's 
 
 Falcon 9 on a droneship keeps only ~25 t back on a 25.6 t stage, roughly 1.0 t/t, but it stages 550 m/s faster and does not fly back. That is the whole trade.
 
-Measured cost of reuse on Falcon 9: payload 22.8 t expendable → 17.5 t with droneship recovery, a 23 % payload loss and a 20 % loss of total mass delivered to orbit. Both verified.
+**The library sits at the top of both Falcon 9 ranges**, 1300 m/s of entry burn and 600 m/s of landing, because that is where they have to sit for the reserve to come out at the ~25 t this section concludes. It spent some time at the bottom of both instead, giving 10.1 t and 0.40 t/t, which made recovery look half as expensive as it is and flattered Falcon 9's modelled payload by 1.5 t. `tests/test_scenarios.py::TestRecoveryProfilesMatchTheReference` now holds the library against this table.
+
+**A budget in m/s is only as good as the frame it was quoted in**, so the reserve is worth checking by routes that mention no velocity at all. "An entry burn of 1300 m/s" is ambiguous between the velocity the *engines* removed and the velocity the *stage* lost, and most of a Falcon 9's entry deceleration is the atmosphere; charging propellant for the second would double-count the air. Two frame-free checks agree with the m/s route and are what make it usable:
+
+- **As a share of the load.** All three RTLS burns run 6 to 10 % of a Falcon 9 first stage's propellant. A droneship recovery skips the boostback, and 22.5 t is 5.7 %.
+- **As engine flow times burn duration.** A Merlin 1D flows 305 kg/s at sea level and will not throttle below 57 %. Falcon 9 flies an entry burn of roughly 20 to 30 s on three engines and a landing burn of roughly 30 s on one. At 70 % throttle that is 21 to 24 t. The old 10.1 t implied a six-second entry burn.
+
+Sources in [raw/2026-08-16-falcon9-recovery-reserve.md](../raw/2026-08-16-falcon9-recovery-reserve.md).
+
+Measured cost of reuse on Falcon 9: payload 22.8 t expendable → 17.5 t with droneship recovery, a 23 % payload loss and a 20 % loss of total mass delivered to orbit. Both verified. **Both figures are quoted for the same 28.5° reference orbit**, which is what makes the comparison mean anything: had one been a 53° Starlink orbit, part of the difference would have been an inclination penalty rather than recovery propellant, and a model tuned to close the gap would have been fitted to the wrong thing.
 
 ### 2.8 Reentry: the square-cube law
 
@@ -229,7 +238,9 @@ Inputs: Starship 300 t in orbit including payload and landing propellant, 1600 t
 | Raptor uses 14 % less propellant than Merlin | 13.8 % | OK |
 | F9 at T+40 s reaches 0.875 g, Starship 0.69 g | 0.766 g and 0.704 g | **Wrong, see C4** |
 | Gravity eats 53 % (F9) vs 59 % (Starship) | 56.6 % and 58.7 % | **Wrong, see C4** |
-| Reuse costs 25 % of payload, 20 % of orbital mass | 23.2 % and 19.8 % | OK |
+| Reuse costs 25 % of payload, 20 % of orbital mass | 23.2 % and 19.8 %, and see below | OK |
+
+**The reuse row was verified twice, and only the second time counts.** `23.2 %` is arithmetic on the two published payloads, `1 − 17.5 / 22.8`. That checks that the article divided correctly; it does not check the physics, and it would have passed against any model at all. The library later reproduced 17.15 t from the mass budget alone against the published 17.5 t, which is the same claim reached independently. See section 2.7 for the reserve that took, and for why the two published figures may be compared in the first place.
 
 ### 3.5 Mass fractions
 
@@ -441,6 +452,7 @@ The article says Flight 13 would have needed 28 500 km/h instead of the 26 500 k
 - The Ariane 6 comparison is not a gotcha, it is the key insight. Ariane 6's upper stage has a **worse** dry-mass fraction than Starship (15.8 % vs 12.1 %) and still delivers 22 t, because it starts from a much higher staging velocity. Structural quality is not the problem; the staging split is.
 - Starship's 12 % dry-mass fraction really is good engineering for a vehicle carrying a heat shield, fins, a nose and header tanks. The article says so explicitly, and it is right to.
 - The square-cube reentry argument is correct and is a real, underappreciated scaling limit.
+- **The cost of reuse, 25 % of payload, is right, and this project got it wrong before it got it right.** The library had Falcon 9 holding back 10 t where the article implies ~25 t, which made recovery look like a 7 % penalty. The article's figure survived the correction; the implementation did not. Worth remembering the direction that error ran in: the temptation was to doubt the source, and the source was fine.
 
 ---
 
