@@ -149,6 +149,14 @@ The palette in `labbook/palette.py` is validated, not chosen by taste: propellan
 
 One folder per question under `studies/<name>/`: `run.py`, `finding.md`, and a gitignored `out/`. See [studies/README.md](studies/README.md). If a finding cannot be reproduced by running one command, it is not a finding yet. Never hard-code a rocket in a study; load it from `data/` and add missing numbers to the library with their provenance. Write output with `beside(__file__)`. Every `finding.md` needs its assumptions section, which is the section that matters most.
 
+## Knowledge base
+
+Reference material the project has *looked up*, as opposed to `studies/` which holds what it has *worked out*. Follows the LLM-wiki pattern with pages in [Open Knowledge Format v0.2](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md), and one rule that matters more than the rest: a page's `feeds:` names the library entries it is evidence for, and its numbers must still agree with them.
+
+The design and its reasoning are in [docs/knowledge-base.md](docs/knowledge-base.md). Open work is in [docs/knowledge-base-plan.md](docs/knowledge-base-plan.md), which holds only what is unfinished.
+
+Not yet built. Until Phase 1 of that plan lands there is no `raw/` or `docs/knowledge/` to read.
+
 ## Reference
 
 [docs/physics-reference.md](docs/physics-reference.md) is the source of truth for the physics: section 2 derives it, section 3 is the claim-by-claim verification log, section 4 records corrections, section 6 specifies the models the app implements, section 7 holds the golden numbers. Module docstrings cite it by section; keep those citations accurate when changing a model.
