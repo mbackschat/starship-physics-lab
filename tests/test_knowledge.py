@@ -42,6 +42,14 @@ def page(front: str, body: str = "Body.") -> Page:
 
 
 class TestParsing:
+    def test_a_broken_page_says_which_file_it_is(self, tmp_path):
+        # An unquoted colon in a description is the easy mistake to make, and
+        # YAML's own error quotes the line without saying where it lives.
+        broken = tmp_path / "ariane-6.md"
+        broken.write_text("---\ntype: Vehicle\ndescription: A problem: right here\n---\n\nBody.\n")
+        with pytest.raises(ValueError, match=r"ariane-6\.md"):
+            Page.read(broken)
+
     def test_front_matter_and_body_are_separated(self):
         front, body = split_front_matter("---\ntype: Reference\n---\n\nThe body.\n")
         assert front == {"type": "Reference"}

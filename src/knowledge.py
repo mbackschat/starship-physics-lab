@@ -160,8 +160,16 @@ class Page:
 
         Returns:
             The page.
+
+        Raises:
+            ValueError: If the page will not parse, naming the file. YAML's own
+                errors quote the offending line but not where it lives, which
+                is unhelpful when a whole corpus is being loaded at once.
         """
-        return cls.parse(path, path.read_text())
+        try:
+            return cls.parse(path, path.read_text())
+        except (ValueError, yaml.YAMLError) as error:
+            raise ValueError(f"{path}: {error}") from error
 
     @property
     def type(self) -> str:

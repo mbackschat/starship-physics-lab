@@ -11,12 +11,15 @@ A page here is something the project **looked up**. Something it **worked out** 
 | [vehicles/starship-v3.md](vehicles/starship-v3.md) | Starship Block 3, and the contested dry mass everything turns on | `vehicles.yaml#starship_v3`, `stages.yaml#starship_v3` |
 | [vehicles/super-heavy-v3.md](vehicles/super-heavy-v3.md) | The booster, its recovery budget, and why the staging split sits where it does | `stages.yaml#super_heavy_v3` |
 | [vehicles/falcon-9.md](vehicles/falcon-9.md) | The calibration reference. Published numbers the model has to reproduce | `stages.yaml#falcon9_stage1`, `stages.yaml#falcon9_stage2`, `vehicles.yaml#falcon9_droneship` |
+| [vehicles/ariane-6.md](vehicles/ariane-6.md) | The counter-example, and the vehicle the model admits it cannot represent honestly | `stages.yaml#ariane6_ulpm`, `stages.yaml#ariane6_core`, `stages.yaml#ariane6_boosters`, `vehicles.yaml#ariane_64` |
+| [vehicles/saturn-v.md](vehicles/saturn-v.md) | Best payload fraction ever flown, and what reuse costs against it | `vehicles.yaml#saturn_v` |
 
 ## Engines
 
 | Page | What it covers | Feeds |
 |---|---|---|
 | [engines/raptor-3.md](engines/raptor-3.md) | Raptor 3, sea level and vacuum, and the 327 vs 330 s disagreement | `engines.yaml#raptor_3`, `engines.yaml#raptor_3_vacuum` |
+| [engines/merlin-1d.md](engines/merlin-1d.md) | Falcon 9's engine, and why a 16 % efficiency deficit did not decide anything | `engines.yaml#merlin_1d`, `engines.yaml#merlin_1d_vacuum` |
 
 ## Flights
 
@@ -35,7 +38,7 @@ A page here is something the project **looked up**. Something it **worked out** 
 
 Gaps worth filling, in rough order of value to the app:
 
-- **Flight 14**, once it flies. This is the one that matters, and the [prediction is already pre-registered](../../studies/flight-14-prediction/finding.md).
-- **Ariane 6**, whose upper stage is the instructive counter-example: a worse mass fraction that still delivers more payload. It is also the vehicle whose parallel boosters the model cannot represent honestly.
-- **Merlin 1D**, to pair with the Falcon 9 page the way Raptor pairs with Starship.
-- **Saturn V**, the only flown vehicle that beats everything modern on payload fraction, and a useful antidote to assuming newer means better.
+- **Flight 14**, once it flies. The [prediction is already pre-registered](../../studies/flight-14-prediction/finding.md) and the page is ready to be written the day it happens.
+- **The Space Shuttle**, the other vehicle on the calibration excused list, for the same parallel-burn reason as Ariane 64.
+- **New Glenn and Long March 10B**, both discussed in the source article, neither yet given a page.
+- **Starship V4**, currently reasoned about only in [studies/v4-scaling](../../studies/v4-scaling/finding.md).
