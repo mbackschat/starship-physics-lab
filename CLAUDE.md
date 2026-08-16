@@ -95,6 +95,11 @@ Each chapter answers one question, has one primary interaction, and ends with on
 5. **No dead ends.** An impossible configuration explains *why* and points at the fix. Never a stack trace, never a silent zero.
 6. **Presets before parameters.** Every page opens on a real vehicle with sensible values, via `vehicle_picker()`.
 7. **Nudges, not instructions.** `try_this()` beats a paragraph explaining what would have happened.
+8. **Every control carries a `help=` tooltip and a `key=`.** The tooltip is the only place a control can say what moving it will do; "Propellant" tells a beginner nothing. The key is what makes it resettable, and `reset_button(*keys)` puts a page back to where it started so nobody is afraid to drag anything. `tests/test_app.py` enforces both, and names the pages exempt from the reset with the reason.
+
+Keys are namespaced per chapter, `c4.inert`, except where one already carries meaning elsewhere: chapter 7's `dry_mass` is in every shared URL, and the sandbox's `sb_*` predate the convention. `reset_button` treats each key as a prefix too, which is what clears the sandbox's slider whose key changes with the checkbox above it.
+
+**The sidebar is drawn by hand**, in `shell._chapter_nav`, with `.streamlit/config.toml` turning Streamlit's own navigation off. Both halves are load-bearing: Streamlit's collapses past ten chapters behind a "View N more" toggle, and always renders above anything a page writes, so the mark ended up under its own table of contents. `deploy/build.py` ships the config, or the deployed site keeps the toggle.
 
 ## Architecture
 
