@@ -23,6 +23,7 @@ from labbook.navigation import (
 )
 from labbook.palette import Mode
 from labbook.units import METRIC, US, Formatter, UnitSystem
+from labbook.visuals import table_style
 from rocketry.library import Library, load
 from rocketry.limits import limit_for
 from rocketry.models import Provenance, Vehicle
@@ -42,6 +43,7 @@ def page(title: str, teaser: str, *, icon: str = "🚀") -> None:
         icon: Browser tab icon.
     """
     st.set_page_config(page_title=f"{title} · {TITLE}", page_icon=icon, layout="wide")
+    st.markdown(table_style(), unsafe_allow_html=True)
     st.title(title)
     st.markdown(f"##### {teaser}")
 

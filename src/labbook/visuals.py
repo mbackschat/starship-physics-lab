@@ -56,6 +56,31 @@ _AFT_FLAP_RIGHT = f"M {_RIGHT} 196 L 100 {_BASE_Y} L {_RIGHT} {_BASE_Y} Z"
 _FLAME = f"M {_LEFT + 6} {_BASE_Y - 1} Q {_CENTRE} 296 {_RIGHT - 6} {_BASE_Y - 1} Z"
 
 
+def table_style() -> str:
+    """Alternating row shading for the markdown tables the app renders.
+
+    Streamlit turns a markdown table into a plain ``<table>`` with no banding,
+    and nine chapters render one. The fleet table is thirteen rows by up to
+    twenty-one columns, which is not readable across without it.
+
+    The shade is a translucent grey rather than a palette colour, so it darkens
+    a light row and lightens a dark one without anybody having to pass the theme
+    in. Selectors are scoped to ``table`` because this is injected on every page
+    and a loose one would restyle a widget three chapters away.
+
+    Returns:
+        A ``<style>`` element, flattened to one line for
+        :func:`streamlit.markdown`.
+    """
+    return inline(
+        "<style>"
+        "table tbody tr:nth-child(even){background:rgba(128,128,128,0.09)}"
+        "table tbody tr:hover{background:rgba(128,128,128,0.18)}"
+        "table th{border-bottom:2px solid rgba(128,128,128,0.35)}"
+        "</style>"
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class MassSplit:
     """How a vehicle's mass divides between what it burns and what it carries.

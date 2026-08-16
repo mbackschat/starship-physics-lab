@@ -13,7 +13,7 @@ import pytest
 
 from labbook.logo import ASSET_NAME, mark, source
 from labbook.palette import INK_PRIMARY, SURFACE, Mode, Series, colour
-from labbook.visuals import MassSplit, inline, rocket_cutaway
+from labbook.visuals import MassSplit, inline, rocket_cutaway, table_style
 
 
 def test_mass_split_reports_the_shares():
@@ -169,3 +169,47 @@ class TestSurvivesTheMarkdownRenderer:
     )
     def test_no_run_of_spaces_could_be_read_as_an_indent(self, markup: str):
         assert "    " not in markup
+
+
+class TestTableStriping:
+    """Markdown tables get alternating row shading, applied once per page.
+
+    Nine chapters render a table through `labbook.tables`, and Streamlit turns
+    each into a plain HTML `<table>` with no banding at all. Long rows are hard
+    to read across without it, and the fleet table is thirteen rows by up to
+    twenty-one columns.
+    """
+
+    def test_it_is_a_single_line(self):
+        # st.markdown parses markdown before it honours unsafe_allow_html, and
+        # four spaces of indentation would turn the whole thing into a code block.
+        style = table_style()
+        assert "\n" not in style
+        assert "    " not in style
+
+    def test_it_shades_alternate_rows(self):
+        assert "nth-child(even)" in table_style()
+
+    def test_it_works_in_both_themes_without_being_told_which(self):
+        """A translucent grey darkens a light row and lightens a dark one.
+
+        The alternative is passing the mode in, which would make every caller
+        responsible for something the browser already knows.
+        """
+        style = table_style()
+        assert "rgba(" in style
+        assert "#" not in style, "a fixed colour would be wrong in one theme"
+
+    def test_it_only_touches_tables(self):
+        assert style_targets_only_tables(table_style())
+
+
+def style_targets_only_tables(style: str) -> bool:
+    """Every selector in the block must be scoped to a table element.
+
+    A stray global selector in a style injected on every page is the kind of
+    thing that quietly restyles a widget three chapters away.
+    """
+    body = style[style.index(">") + 1 : style.rindex("</style>")]
+    selectors = [rule.split("{")[0].strip() for rule in body.split("}") if "{" in rule]
+    return all("table" in selector for selector in selectors)
