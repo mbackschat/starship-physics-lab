@@ -217,6 +217,18 @@ Follow red/green TDD for new physics or fixes. A new documented number gets a go
 
 The palette in `labbook/palette.py` is validated, not chosen by taste: propellant, structure and payload wear the same colour in every chart on every page. Light mode fails contrast on two slots, which obligates direct labels or a table view. Every chart carries direct labels and every study emits a markdown table beside its figure. Keep that.
 
+## The README is part of the change, not a chore afterwards
+
+[README.md](README.md) is the only file most people will ever read, and it is the one file nothing forces you to touch. It has gone stale twice, both times silently: the knowledge base was built and the README went on describing a repository without one, and the browser checks grew from four to six while the README kept listing four. Prose does not fail, so it drifted until a human noticed.
+
+**Update the README in the same commit as the work, whenever the change alters what the repository is or what a reader can do with it.** Concretely: a new top-level directory, a new capability worth a section, a new chapter or a renamed one, a new runtime dependency, a renamed command or script, a changed URL, or anything that dates the screenshots. Not for an internal refactor, a new test, or a bug fix nobody outside can see.
+
+**The rule that actually keeps it true: do not restate in the README anything code or data already decides.** Every enumeration copied out of a module is a second source of truth that no one will remember to update, and it rots pointing at the thing it was copied from. Describe what a component *is* and what it is *for*; do not list what it contains. The acceptance checks are the worked example: naming all six meant the sentence was wrong twice, and saying that the run drives the built site in a real browser is both shorter and permanently true. The same goes for counting rockets, chapters or studies in prose.
+
+Where the README genuinely has to carry a fact from elsewhere, **pin it with a test** rather than trusting anybody to remember. `tests/test_agent_config.py` holds the ones that exist: the layout block against the directories on disk in both directions, every link and image against the files they name, every command in the development block, and the count of runtime dependencies against `deploy/build.py`. A restated fact with no test behind it is a defect waiting for its turn.
+
+Screenshots are the exception that no test can reach, since nothing can tell a current picture from a convincing old one. `uv run python deploy/screenshot.py` refreshes them, and any change a reader would see in the app means running it.
+
 ## Studies
 
 One folder per question under `studies/<name>/`: `run.py`, `finding.md`, and a gitignored `out/`. See [studies/README.md](studies/README.md). If a finding cannot be reproduced by running one command, it is not a finding yet. Never hard-code a rocket in a study; load it from `data/` and add missing numbers to the library with their provenance. Write output with `beside(__file__)`. Every `finding.md` needs its assumptions section, which is the section that matters most.
