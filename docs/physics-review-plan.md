@@ -18,6 +18,8 @@ This matters more than its size suggests, because Falcon 9 is the calibration re
 
 - [ ] Add a mass-jettison event rather than tuning the data around it. `test_the_calibration_reference_is_the_tightest` should get tighter, not looser.
 
+`tests/test_scenarios.py::test_the_fairing_is_not_counted_as_arriving` pins the gap meanwhile: `burnout_mass_t` exceeds `mass_to_orbit_t` by exactly the fairing, because the model still has it attached at engine cutoff. When this finding is fixed the two converge and that test should become an equality.
+
 ## 2. Unsupported configurations are analysed anyway
 
 `Stage` can name only one engine type, `_analyse_stages()` assumes serial burns, and `ascent._plan()` builds one homogeneous burn per stage. Nothing refuses a vehicle that violates those assumptions.
@@ -33,32 +35,6 @@ The reviewer recommended moving the Shuttle to the excused list. **That would fa
 - [ ] Separate *reproduces its published payload* from *is honestly modelled*. A vehicle can do the first without the second, and today nothing records that.
 - [ ] Replace the Shuttle's RS-25 placeholder, or mark the stage as not simulatable.
 - [ ] Decide whether mixed engine types within a stage should be representable, or rejected at load time.
-
-## 3. `mass_to_orbit_t` omits the recovery reserve
-
-`VehicleAnalysis.mass_to_orbit_t` promises "everything that arrives" and adds only payload, dry mass and residual. For a solved Starship V3 it returns 257.7 t where the last stage's burnout mass is 295.8 t, missing the 38.1 t held back for deorbit and landing. That propellant is in orbit.
-
-The payload chapter is unaffected: it reads `burnout_mass_t` directly. The public accessor is what lies, which makes it a trap for the next caller rather than a visible error.
-
-- [ ] Include the recovery reserve, or rename the property to say what it really counts.
-
-## 4. Scenario overrides bypass validation
-
-`scenario()` and `with_stage()` use `model_copy(update=...)`, which does not validate. This is the project's primary "what if" seam.
-
-- `dry_mass_t=-100` returns a confident 419.0 t payload.
-- Misspelling `dry_mass_t` as `dry_mass` is **silently ignored** and returns the baseline unchanged, which is worse than the negative case because nothing looks wrong.
-- `isp_ascent_s=0` returns a negative payload rather than rejecting an impossible engine.
-
-- [ ] Rebuild and validate a complete `Stage` rather than copying one, so unknown fields are rejected the way `extra="forbid"` already intends.
-
-## 5. Recovery burns can create propellant
-
-`Burn` is a plain dataclass with no validation, and `Recovery` accepts it from YAML. `recovery_propellant(100, [Burn(-100, 300)])` returns **−3.3 t**, so a stage carrying 10 t reports 13.3 t available for ascent.
-
-Inconsistent with `Stage`, which already validates that a stage has not promised away more propellant than it carries.
-
-- [ ] Reject non-positive `isp` and negative `delta_v`, with a property test that recovery propellant is never negative.
 
 ## 6. The core is not uniform in its units
 
@@ -77,4 +53,7 @@ The stated non-negotiable rule is SI throughout, conversion only at the presenta
 
 Removed as they land. See git history.
 
-The review also surfaced, indirectly, a user-facing crash it did not name: picking the Space Shuttle in the Launch chapter raised a `ValueError` and showed the reader a traceback, breaking the project's own rule that an impossible configuration is explained. Fixed in `5087496`, with a test that every vehicle on offer can be selected without raising.
+- **A user-facing crash the review did not name.** Picking the Space Shuttle in the Launch chapter raised a `ValueError` and showed the reader a traceback, breaking the rule that an impossible configuration is explained. `5087496`, with a test that every vehicle on offer can be selected without raising.
+- **Scenario overrides bypassed validation.** `model_copy` wrote fields blind, so a negative dry mass gave a confident answer and a misspelled field was silently ignored. Stages are now rebuilt and revalidated. `20dc38d`.
+- **Recovery burns could create propellant.** `Burn` now rejects negative delta-v and non-positive Isp, with a property test that the reserve is never negative. `661a77c`.
+- **`mass_to_orbit_t` omitted the recovery reserve**, and the case study had routed around it, leaving one idea implemented twice with the wrong copy public. Fixed at that root: the property counts the reserve and `payload_curve` now reads it. `0aac35f`.
