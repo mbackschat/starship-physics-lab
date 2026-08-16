@@ -107,3 +107,23 @@ class TestLossWaterfall:
         flight = simulate(analyse(load(), "falcon9_droneship"))
         figure = loss_waterfall(flight.breakdown)
         assert len(figure.data) == len(flight.breakdown)
+
+
+class TestTheStackReadsLikeAStack:
+    """The rows are top-down; the chart was drawing them bottom-up.
+
+    `mass_components` promises "the last stage to fire at the top, the one that
+    leaves the pad at the bottom", and a rocket diagram is read that way by
+    everybody. Plotly puts the first category on a horizontal bar chart at the
+    *bottom*, so the booster was on top and the orbital stage underneath it,
+    upside down, with nothing asserting otherwise.
+    """
+
+    def test_the_first_row_is_drawn_at_the_top(self, rows):
+        figure = mass_breakdown([r.label for r in rows], as_series(rows))
+        assert figure.layout.yaxis.autorange == "reversed"
+
+    def test_the_labels_keep_the_order_they_were_given(self, rows):
+        figure = mass_breakdown([r.label for r in rows], as_series(rows))
+        for trace in figure.data:
+            assert list(trace.y) == [r.label for r in rows]

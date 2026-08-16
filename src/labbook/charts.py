@@ -217,7 +217,10 @@ def mass_breakdown(
                 hovertemplate=f"{series.label}: %{{x:,.0f}}<extra></extra>",
             )
         )
-    figure.update_layout(barmode="stack", bargap=0.35)
+    # Plotly puts the first category at the bottom of a horizontal bar chart,
+    # which drew the stack upside down: the booster above the stage it lifts.
+    # The rows arrive top-down, and a rocket is read top-down.
+    figure.update_layout(barmode="stack", bargap=0.35, yaxis={"autorange": "reversed"})
     return base_layout(
         figure,
         title=title,
