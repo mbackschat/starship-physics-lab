@@ -21,7 +21,7 @@ from components.shell import (
 )
 
 from labbook.logo import mark
-from labbook.navigation import ARTICLE_URL, REPOSITORY_URL, applications, foundations
+from labbook.navigation import ARTICLE_URL, REPOSITORY_URL, sections
 from labbook.sharing import CHAPTER_PARAM, carry, route_for
 from labbook.units import Quantity
 
@@ -82,17 +82,13 @@ st.caption(
 
 # The chapters themselves live in labbook.navigation, so this list cannot drift
 # away from the pages on disk. A test holds the two together.
-first, second = st.columns(2, gap="large")
-
-with first:
-    st.caption("**The physics.** Start here and read in order.")
-    for entry in foundations():
-        chapter_card(entry)
-
-with second:
-    st.caption("**Applied to Starship.** The case study, and your turn.")
-    for entry in applications():
-        chapter_card(entry)
+for column, (section, chapters) in zip(
+    st.columns(len(sections()), gap="large"), sections(), strict=True
+):
+    with column:
+        st.caption(f"**{section.label}.** {section.blurb}")
+        for entry in chapters:
+            chapter_card(entry)
 
 st.divider()
 st.subheader("A worked example runs through all of it")

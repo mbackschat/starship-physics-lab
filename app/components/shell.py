@@ -13,13 +13,11 @@ from labbook.formula import Formula
 from labbook.logo import mark
 from labbook.navigation import (
     CHAPTERS,
-    FOUNDATIONS,
     REPOSITORY_URL,
     Chapter,
-    applications,
     chapter,
-    foundations,
     page_files,
+    sections,
 )
 from labbook.palette import Mode
 from labbook.units import METRIC, US, Formatter, UnitSystem
@@ -147,12 +145,10 @@ def _chapter_nav() -> None:
     without the config there would be two navigations, without this there would
     be none.
     """
-    st.caption(f"**The physics.** Chapters 1 to {FOUNDATIONS}, in order.")
-    for entry in foundations():
-        st.page_link(entry.page_file, label=entry.label)
-    st.caption("**Applied to Starship**, and reference.")
-    for entry in applications():
-        st.page_link(entry.page_file, label=entry.label)
+    for section, chapters in sections():
+        st.caption(f"**{section.label}**")
+        for entry in chapters:
+            st.page_link(entry.page_file, label=entry.label)
 
 
 def chapter_pages() -> list[str]:

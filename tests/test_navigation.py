@@ -13,12 +13,11 @@ import pytest
 from labbook.navigation import (
     ARTICLE_URL,
     CHAPTERS,
-    FOUNDATIONS,
     REPOSITORY_URL,
-    applications,
+    Section,
     chapter,
-    foundations,
     page_files,
+    sections,
 )
 from labbook.sharing import page_slug, route_for
 
@@ -76,9 +75,35 @@ def test_label_is_the_numbered_title():
     assert chapter(1).label == "1 · The rocket equation"
 
 
-def test_foundations_and_applications_partition_the_tour():
-    assert foundations() + applications() == CHAPTERS
-    assert len(foundations()) == FOUNDATIONS
+def test_the_sections_partition_the_tour_in_order():
+    """Every chapter in exactly one section, and the tour order preserved."""
+    listed = [entry for _, chapters in sections() for entry in chapters]
+    assert listed == list(CHAPTERS)
+
+
+def test_a_chapter_cannot_be_swept_into_the_wrong_section():
+    """The bug the enum removes.
+
+    There were two sections and the split was by index, so anything appended to
+    the tour landed in whichever one ran to the end. A glossary and a data table
+    arrived that way and the sidebar had to be captioned "Applied to Starship,
+    and reference", which describes neither.
+    """
+    assert chapter(11).section is Section.REFERENCE
+    assert chapter(12).section is Section.REFERENCE
+    assert chapter(5).section is Section.PHYSICS
+    assert chapter(10).section is Section.STARSHIP
+
+
+def test_every_section_says_how_to_read_it():
+    for section in Section:
+        assert section.label
+        assert section.blurb
+        assert section.label != section.blurb
+
+
+def test_an_empty_section_takes_its_heading_with_it():
+    assert all(chapters for _, chapters in sections())
 
 
 def test_every_chapter_is_reachable_by_its_own_slug():
@@ -121,7 +146,7 @@ def test_every_chapter_is_listed_in_the_sidebar_with_no_collapse():
 
     shell = (root / "app" / "components" / "shell.py").read_text()
     assert "def _chapter_nav" in shell
-    assert "foundations()" in shell and "applications()" in shell
+    assert "sections()" in shell
 
     # And the build has to ship the config, or the deployed site keeps the toggle.
     build = (root / "deploy" / "build.py").read_text()

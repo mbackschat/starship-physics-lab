@@ -12,6 +12,48 @@ file is not renamed with it.
 """
 
 from dataclasses import dataclass
+from enum import StrEnum
+
+
+class Section(StrEnum):
+    """Which part of the tour a chapter belongs to.
+
+    There were two parts until a glossary and a data table joined the end, and
+    the sidebar ended up captioned "Applied to Starship, and reference", which
+    told a reader nothing about either. A chapter declares its own part now, so
+    a new one cannot be swept into whichever group happens to run to the end.
+    """
+
+    PHYSICS = "physics"
+    """Chapters 1 to 5. The mechanics, with no agenda, read in order."""
+
+    STARSHIP = "starship"
+    """The case study: applying the mechanics to the argument being checked."""
+
+    REFERENCE = "reference"
+    """Look-up material. No order, no argument, read whenever."""
+
+    @property
+    def label(self) -> str:
+        """Short heading, for the sidebar."""
+        match self:
+            case Section.PHYSICS:
+                return "The physics"
+            case Section.STARSHIP:
+                return "Applied to Starship"
+            case Section.REFERENCE:
+                return "Reference"
+
+    @property
+    def blurb(self) -> str:
+        """One line saying how to read this part, for the landing page."""
+        match self:
+            case Section.PHYSICS:
+                return "Start here and read in order."
+            case Section.STARSHIP:
+                return "The case study, and your turn."
+            case Section.REFERENCE:
+                return "Look things up, in any order."
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,6 +65,7 @@ class Chapter:
         slug: The rest of the file name, and the last segment of its URL.
         title: Chapter title, without its number.
         question: The one question it answers, for the landing page.
+        section: Which part of the tour it belongs to.
         tag: Optional short label marking a chapter out as special.
     """
 
@@ -30,6 +73,7 @@ class Chapter:
     slug: str
     title: str
     question: str
+    section: Section
     tag: str = ""
 
     @property
@@ -59,41 +103,47 @@ class Chapter:
 CHAPTERS: tuple[Chapter, ...] = (
     Chapter(
         1, "Rocket_equation", "The rocket equation",
-        "Why is going fast so expensive?", "Start here",
+        "Why is going fast so expensive?", Section.PHYSICS, "Start here",
     ),
     Chapter(
         2, "Anatomy", "Anatomy",
-        "What is a rocket made of, and how little of it is cargo?",
+        "What is a rocket made of, and how little of it is cargo?", Section.PHYSICS,
     ),
-    Chapter(3, "Launch", "Launch", "Where does all the velocity actually go?"),
+    Chapter(
+        3, "Launch", "Launch",
+        "Where does all the velocity actually go?", Section.PHYSICS,
+    ),
     Chapter(
         4, "Stages", "Stages",
-        "Why throw half the rocket away, and where?", "The big one",
+        "Why throw half the rocket away, and where?", Section.PHYSICS, "The big one",
     ),
-    Chapter(5, "Reuse", "Reuse", "What does it cost to get the booster back?"),
+    Chapter(
+        5, "Reuse", "Reuse",
+        "What does it cost to get the booster back?", Section.PHYSICS,
+    ),
     Chapter(
         6, "Weighing_Starship", "Weighing Starship",
-        "How do you weigh a rocket you have never touched?",
+        "How do you weigh a rocket you have never touched?", Section.STARSHIP,
     ),
     Chapter(
         7, "The_payload_question", "The payload question",
-        "100 tonnes, or 38?", "The point of it all",
+        "100 tonnes, or 38?", Section.STARSHIP, "The point of it all",
     ),
     Chapter(
         8, "Bigger_is_better", "Bigger is better?",
-        "Starship V4 grows the ship. Does that help?",
+        "Starship V4 grows the ship. Does that help?", Section.STARSHIP,
     ),
-    Chapter(9, "Build_your_own", "Build your own", "Now you try."),
-    Chapter(10, "Fact_check", "Fact check", "Was the article this came from right?"),
-    Chapter(11, "Glossary", "Glossary", "What did that word mean?"),
-    Chapter(12, "Fleet", "Fleet data", "How does every rocket here actually compare?"),
+    Chapter(9, "Build_your_own", "Build your own", "Now you try.", Section.STARSHIP),
+    Chapter(
+        10, "Fact_check", "Fact check",
+        "Was the article this came from right?", Section.STARSHIP,
+    ),
+    Chapter(11, "Glossary", "Glossary", "What did that word mean?", Section.REFERENCE),
+    Chapter(
+        12, "Fleet", "Fleet data",
+        "How does every rocket here actually compare?", Section.REFERENCE,
+    ),
 )
-
-FOUNDATIONS = 5
-"""Chapters 1 to 5 are the physics. Everything after them applies it.
-
-The only thing a newcomer needs to know about the ordering.
-"""
 
 REPOSITORY_URL = "https://github.com/mbackschat/starship-physics-lab"
 """Where the source lives. Shown on every page, because the working is the point."""
@@ -148,19 +198,27 @@ def page_files() -> list[str]:
     return [entry.page_file for entry in CHAPTERS]
 
 
-def foundations() -> tuple[Chapter, ...]:
-    """The chapters that teach the mechanics.
+def in_section(section: Section) -> tuple[Chapter, ...]:
+    """Every chapter in one part of the tour, in order.
+
+    Args:
+        section: Which part.
 
     Returns:
-        Chapters 1 to 5.
+        Its chapters.
     """
-    return CHAPTERS[:FOUNDATIONS]
+    return tuple(entry for entry in CHAPTERS if entry.section is section)
 
 
-def applications() -> tuple[Chapter, ...]:
-    """The chapters that apply the mechanics to Starship.
+def sections() -> list[tuple[Section, tuple[Chapter, ...]]]:
+    """The tour, grouped, in reading order.
+
+    Both the sidebar and the landing page render from this, so a chapter cannot
+    appear under one heading in one place and another elsewhere.
 
     Returns:
-        Chapter 6 onwards.
+        Each section with its chapters. Empty sections are dropped, so removing
+        the last reference chapter removes the heading with it.
     """
-    return CHAPTERS[FOUNDATIONS:]
+    grouped = [(section, in_section(section)) for section in Section]
+    return [(section, chapters) for section, chapters in grouped if chapters]
