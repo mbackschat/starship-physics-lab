@@ -10,21 +10,6 @@ Phase numbers are stable identifiers, not positions. A completed phase is remove
 
 ---
 
-## Phase 2: the guarantee
-
-The reason for building this rather than bookmarking things.
-
-- [ ] **Numeric consistency lint.** Every numeric claim on a page whose `feeds:` names a library entry must still agree with that entry. Decide how claims are marked so they can be extracted: most likely a small table per page rather than free prose, since parsing prose for numbers is a bad idea.
-- [ ] **Wire it into CI**, alongside `ruff`, `mypy` and `pytest`.
-
-## Phase 3: the operations
-
-Only worth building once there is a corpus to operate on.
-
-- [ ] **`ingest`** as a skill: capture a source, write or revise pages, update `index.md`, append to `log.md`.
-- [ ] **`query`** as a skill: answer from compiled pages, and file good answers back as pages.
-- [ ] **`lint`** as a skill: wrap the tests above and report what needs human judgement rather than auto-fixing it.
-
 ## Corpus backlog
 
 Pages worth writing, kept in [docs/knowledge/index.md](knowledge/index.md) under "Not yet covered" so the gap list sits beside the pages themselves rather than here. Super Heavy V3 and Falcon 9 are the two that would most improve the app, the first to pair with the ship page and the second because it is the calibration reference the whole model is checked against.
@@ -52,3 +37,4 @@ Recorded so they are not re-litigated, and so it is clear what would change the 
 | OKF `Attested Computation` for golden numbers | OKF reaches 1.0. |
 | Separate repository plus git submodule | A second project genuinely needs this knowledge base, or `raw/` exceeds a few hundred megabytes despite the text-only rule. |
 | Installing a packaged LLM-wiki plugin | Never, while this project's schema is stricter than the packaged ones. |
+| Separate `ingest`, `query` and `lint` skills | Never. They shared one schema, so three skills meant three copies of it. Lint became a single `pytest` invocation and needed no skill at all. One `knowledge-base` skill covers both real operations. |
