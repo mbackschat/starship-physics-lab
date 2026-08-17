@@ -6,19 +6,15 @@
     A stylised launch vehicle: slender body, fore and aft flaps, lit engine.
     Deliberately generic, and carrying no operator's name, wordmark or livery.
 
-    The body takes `currentColor`, so where this file is inlined into a page it
-    inherits that page's text colour and follows the reader's theme with nothing
-    having to recolour it. The nose is payload blue and the flame is propellant
-    orange: the same assignments every chart in the project uses, chosen to sit
-    on both the light and the dark surface.
+    The cool grey gradient follows the bright and dark vertical reflections on
+    Starship's stainless-steel cylinder. Charcoal marks the heat-shielded face
+    and flap surfaces. The flame keeps the project's propellant orange.
 
-    Loaded as an image rather than inlined, though, there is no page to inherit
-    from: `currentColor` would fall back to black and vanish against a dark
-    README. So the rules below name a colour for that case, per colour scheme.
-    They are deliberately weak, one class deep, so anything that does have a
-    theme to offer can say so and win:
+    Loaded as an image, there is no page theme to inherit, so the rules below
+    name a complete palette for each colour scheme. They are deliberately weak,
+    one class deep, so anything that knows the active app theme can override it:
 
-      .ship-mark-<uid> svg   the app, from labbook.palette
+      .ship-mark-<uid> svg   the app, from labbook.logo
       #boot svg              the boot screen, from its own surface
 
     Self-contained on purpose. It is inlined into the app, it is the favicon and
@@ -27,9 +23,21 @@
   -->
 
   <style>
-    .ship-mark { color: #0b0b0b; --ship-gap: #fcfcfb; }
+    .ship-mark {
+      --ship-steel-shadow: #4d555a;
+      --ship-steel-midtone: #9da5aa;
+      --ship-steel-highlight: #f2f5f5;
+      --ship-tile: #22272b;
+      --ship-gap: #fcfcfb;
+    }
     @media (prefers-color-scheme: dark) {
-      .ship-mark { color: #ffffff; --ship-gap: #1a1a19; }
+      .ship-mark {
+        --ship-steel-shadow: #697176;
+        --ship-steel-midtone: #b2b9bd;
+        --ship-steel-highlight: #f7f9f9;
+        --ship-tile: #111416;
+        --ship-gap: #1a1a19;
+      }
     }
     @keyframes ship-burn {
       0%, 100% { transform: scaleY(0.86); opacity: 0.85; }
@@ -48,6 +56,16 @@
     }
   </style>
 
+  <defs>
+    <linearGradient id="ship-steel" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="var(--ship-steel-shadow)"/>
+      <stop offset="24%" stop-color="var(--ship-steel-midtone)"/>
+      <stop offset="43%" stop-color="var(--ship-steel-highlight)"/>
+      <stop offset="62%" stop-color="var(--ship-steel-midtone)"/>
+      <stop offset="100%" stop-color="var(--ship-steel-shadow)"/>
+    </linearGradient>
+  </defs>
+
   <g class="ship-mark__flame">
     <path d="M 21 87 Q 28 119 35 87 Z" fill="#e5622d" opacity="0.9"/>
     <path class="ship-mark__core" d="M 24.5 87 Q 28 107 31.5 87 Z" fill="#d99400"/>
@@ -59,16 +77,23 @@
     readable. `paint-order` draws that stroke behind the fill so it thins the
     silhouette instead of fattening it.
   -->
-  <g fill="currentColor" stroke="var(--ship-gap)" stroke-width="1.5"
+  <g fill="var(--ship-tile)" stroke="var(--ship-gap)" stroke-width="1.5"
      stroke-linejoin="round" paint-order="stroke">
     <path d="M 20 34 L 12 50 L 20 52 Z"/>
     <path d="M 36 34 L 44 50 L 36 52 Z"/>
     <path d="M 20 66 L 7 88 L 20 88 Z"/>
     <path d="M 36 66 L 49 88 L 36 88 Z"/>
-    <path d="M 20 88 L 20 30 Q 20 12 28 4 Q 36 12 36 30 L 36 88 Z"/>
   </g>
 
-  <path d="M 20 31 L 20 30 Q 20 12 28 4 Q 36 12 36 30 L 36 31 Z" fill="#3080dd"
+  <path d="M 20 88 L 20 30 Q 20 12 28 4 Q 36 12 36 30 L 36 88 Z"
+        fill="url(#ship-steel)"
         stroke="var(--ship-gap)" stroke-width="1.5" stroke-linejoin="round"
         paint-order="stroke"/>
+
+  <!-- The windward tiles read as one dark face at favicon size. -->
+  <path d="M 29.5 7 Q 35.2 15 35.2 30 L 35.2 87.2 L 32 87.2 L 32 30 Q 32 16 29.5 7 Z"
+        fill="var(--ship-tile)"/>
+
+  <path d="M 23 31 L 23 85" fill="none" stroke="#ffffff" stroke-width="0.7"
+        stroke-linecap="round" opacity="0.38"/>
 </svg>

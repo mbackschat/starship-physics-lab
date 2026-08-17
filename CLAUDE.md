@@ -221,7 +221,7 @@ URL input is treated as hostile: `labbook.sharing.read_number`/`read_choice` fal
 
 `deploy/site/` is generated and gitignored. Never edit it; rebuild it.
 
-**`assets/logo.svg` is the project mark**, and a plain hand-editable file rather than markup generated in Python. It is inlined three ways: into the app by `labbook.logo.mark()`, and into the built page twice by `deploy/build.py`, as the favicon data URI and as the boot screen's artwork. It paints its body in `currentColor` so it follows the reader's theme with no Python deciding anything, and takes the surrounding paper colour through a `--ship-gap` custom property. The app cannot fetch it by URL, because stlite serves from a virtual filesystem with no HTTP origin, which is the only reason the loader exists.
+**`assets/logo.svg` is the project mark**, and a plain hand-editable file rather than markup generated in Python. It is inlined three ways: into the app by `labbook.logo.mark()`, and into the built page twice by `deploy/build.py`, as the favicon data URI and as the boot screen's artwork. Its steel gradient and heat-shield colours have light and dark variants, while the surrounding paper colour comes through a `--ship-gap` custom property. The app cannot fetch it by URL, because stlite serves from a virtual filesystem with no HTTP origin, which is the only reason the loader exists.
 
 ## Tests
 

@@ -1,4 +1,4 @@
-<img src="assets/logo.svg" alt="" align="right" height="150">
+<img src="assets/logo.svg?v=steel" alt="" align="right" height="150">
 
 # Starship Physics Lab
 

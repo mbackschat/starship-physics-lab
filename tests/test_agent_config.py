@@ -10,6 +10,7 @@ import re
 import sys
 from pathlib import Path
 from typing import ClassVar
+from urllib.parse import urlsplit
 
 import pytest
 import yaml
@@ -146,7 +147,7 @@ class TestTheReadmeDescribesTheRepositoryThatExists:
             target
             for target in targets
             if not target.startswith(("http", "#", "mailto:"))
-            and not (self.ROOT / target.split("#")[0]).exists()
+            and not (self.ROOT / urlsplit(target).path).exists()
         ]
         assert broken == [], f"README points at {broken}, which is not here"
 

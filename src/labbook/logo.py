@@ -13,10 +13,27 @@ read and inlined into the page instead.
 from functools import lru_cache
 from pathlib import Path
 
-from labbook.palette import INK_PRIMARY, SURFACE, Mode
+from labbook.palette import SURFACE, Mode
 from labbook.visuals import inline
 
 ASSET_NAME = "logo.svg"
+
+_STEEL_SHADOW: dict[Mode, str] = {
+    Mode.LIGHT: "#4d555a",
+    Mode.DARK: "#697176",
+}
+_STEEL_MIDTONE: dict[Mode, str] = {
+    Mode.LIGHT: "#9da5aa",
+    Mode.DARK: "#b2b9bd",
+}
+_STEEL_HIGHLIGHT: dict[Mode, str] = {
+    Mode.LIGHT: "#f2f5f5",
+    Mode.DARK: "#f7f9f9",
+}
+_HEAT_SHIELD: dict[Mode, str] = {
+    Mode.LIGHT: "#22272b",
+    Mode.DARK: "#111416",
+}
 
 
 @lru_cache(maxsize=1)
@@ -59,27 +76,33 @@ def source() -> str:
 def mark(*, mode: Mode = Mode.LIGHT, height: int = 96, uid: str = "mark") -> str:
     """The mark, sized and ready for ``st.markdown(..., unsafe_allow_html=True)``.
 
-    Colour is stated here rather than left to inheritance. The file carries a
-    default for each colour scheme so that it stands up as a plain image, and a
-    declared value blocks inheritance, so the app has to say what it wants. It
-    knows better anyway: Streamlit's theme is the reader's actual choice, and it
-    need not agree with what the operating system reports.
+    The file carries a default steel palette for each colour scheme so that it
+    stands up as a plain image. The app states the palette again because
+    Streamlit's active theme need not agree with the operating system setting.
 
     Args:
-        mode: Light or dark surface. Decides the body's ink and the hairline gap
-            between the mark's parts, which has to match the paper it sits on.
+        mode: Light or dark surface. Decides the steel reflections, heat shield
+            and the hairline gap between parts.
         height: Rendered height in pixels.
-        uid: Class suffix, so two marks at different sizes on one page do not
-            take each other's dimensions.
+        uid: Class and gradient suffix, so two marks on one page do not share
+            dimensions or paint definitions.
 
     Returns:
         A sized ``<span>`` wrapping the inlined SVG.
     """
     # One class deeper than the file's own rules, which is what makes this win.
+    gradient_id = f"ship-steel-{uid}"
+    svg = source().replace('id="ship-steel"', f'id="{gradient_id}"').replace(
+        "url(#ship-steel)", f"url(#{gradient_id})"
+    )
     return inline(
         f"<style>.ship-mark-{uid} svg{{"
         f"height:{height}px;width:auto;display:block;"
-        f"color:{INK_PRIMARY[mode]};--ship-gap:{SURFACE[mode]}"
+        f"--ship-steel-shadow:{_STEEL_SHADOW[mode]};"
+        f"--ship-steel-midtone:{_STEEL_MIDTONE[mode]};"
+        f"--ship-steel-highlight:{_STEEL_HIGHLIGHT[mode]};"
+        f"--ship-tile:{_HEAT_SHIELD[mode]};"
+        f"--ship-gap:{SURFACE[mode]}"
         f"}}</style>"
-        f'<span class="ship-mark-{uid}">{source()}</span>'
+        f'<span class="ship-mark-{uid}">{svg}</span>'
     )

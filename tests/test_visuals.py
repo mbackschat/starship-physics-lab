@@ -12,7 +12,7 @@ import xml.etree.ElementTree as ET
 import pytest
 
 from labbook.logo import ASSET_NAME, mark, source
-from labbook.palette import INK_PRIMARY, SURFACE, Mode, Series, colour
+from labbook.palette import SURFACE, Mode, Series, colour
 from labbook.visuals import MassSplit, inline, rocket_cutaway, table_style
 
 
@@ -95,28 +95,40 @@ def test_the_mark_is_well_formed_xml():
     assert root.get("viewBox")
 
 
-def test_the_mark_takes_its_body_colour_from_whatever_holds_it():
-    # The body inherits rather than hard-coding a colour. That is the whole
-    # reason this can be one file rather than a light copy and a dark copy.
-    assert "currentColor" in source()
+def test_the_mark_uses_reflective_steel_and_heat_shield_colours():
+    svg = source()
+    assert 'linearGradient id="ship-steel"' in svg
+    assert 'fill="url(#ship-steel)"' in svg
+    assert 'fill="var(--ship-tile)"' in svg
+    assert "#3080dd" not in svg
 
 
 def test_the_mark_still_reads_as_a_plain_image():
-    # In the README it is an <img>, so there is no page to inherit from and
-    # currentColor would come out black against a dark theme. The file has to
-    # name a colour for that case, in both schemes.
+    # In the README it is an <img>, so there is no page to provide the app's
+    # palette. The file has to name its steel and tile colours in both schemes.
     assert "prefers-color-scheme: dark" in source()
-    assert "#0b0b0b" in source() and "#ffffff" in source()
+    for property_name in (
+        "--ship-steel-shadow",
+        "--ship-steel-midtone",
+        "--ship-steel-highlight",
+        "--ship-tile",
+    ):
+        assert source().count(property_name) >= 2
 
 
 @pytest.mark.parametrize("mode", list(Mode))
 def test_the_app_overrides_that_default_rather_than_inheriting(mode: Mode):
-    # A declared value blocks inheritance, so the app has to state both. It
-    # knows better than the file does: Streamlit's theme is the reader's own
-    # choice and need not agree with what the operating system reports.
+    # Streamlit's theme is the reader's actual choice and need not agree with
+    # the operating system, so the app has to override every surface colour.
     styled = mark(mode=mode)
-    assert f"color:{INK_PRIMARY[mode]}" in styled
     assert f"--ship-gap:{SURFACE[mode]}" in styled
+    for property_name in (
+        "--ship-steel-shadow",
+        "--ship-steel-midtone",
+        "--ship-steel-highlight",
+        "--ship-tile",
+    ):
+        assert f"{property_name}:" in styled
 
 
 @pytest.mark.parametrize("mode", list(Mode))
@@ -132,6 +144,10 @@ def test_two_marks_at_different_sizes_keep_their_own_dimensions():
     large = mark(height=140, uid="large")
     assert ".ship-mark-small svg{height:28px" in small
     assert ".ship-mark-large svg{height:140px" in large
+    assert 'id="ship-steel-small"' in small
+    assert 'fill="url(#ship-steel-small)"' in small
+    assert 'id="ship-steel-large"' in large
+    assert 'fill="url(#ship-steel-large)"' in large
 
 
 def test_the_mark_is_named_for_the_project():
