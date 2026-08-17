@@ -14,6 +14,14 @@ Doing that needs a model. And once the model existed, leaving it as a pile of on
 
 This is not a lecture with sliders bolted on. Every number on every page runs through a real, tested physics engine. Move one and watch it propagate.
 
+This infographic condenses the article's argument and the independent review into one path, from the rocket equation to the unresolved payload question.
+
+[![Why Starship's payload hinges on staging](docs/images/starship-staging-infographic-640w.png)](docs/images/starship-staging-infographic.png)
+
+[How to reproduce this infographic](docs/reproducing-starship-infographic.md)
+
+*Click the infographic for the full-resolution version.*
+
 ## → [**Open the app**](https://mbackschat.github.io/starship-physics-lab/) ←
 
 ### [mbackschat.github.io/starship-physics-lab](https://mbackschat.github.io/starship-physics-lab/)
@@ -56,10 +64,6 @@ Its central claim is rebuilt from scratch rather than taken on trust. Sweeping t
 The full verification log, the corrections and the sources are in [docs/physics-reference.md](docs/physics-reference.md).
 
 Nothing here asserts a verdict. Chapters 1 to 5 teach the mechanics with no agenda; the Starship case study shows its uncertainty and lets you reach your own conclusion. Every number in the library is labelled **published**, **estimated** or **contested**, and the contested one is the one the whole argument turns on.
-
-[![Why Starship's payload hinges on staging](docs/images/starship-staging-infographic-640w.png)](docs/images/starship-staging-infographic.png)
-
-*The article's argument and the independent review at a glance. Click the infographic for the full-resolution version.*
 
 ## Also a workbench
 
