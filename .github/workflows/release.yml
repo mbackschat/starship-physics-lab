@@ -1,0 +1,90 @@
+# Publishing the packages. GitHub has no Python registry, so a release is the
+# wheel and the sdist attached to a tag, and the install lines in the README
+# point at those assets.
+#
+# The artifact is built from the same commit the tests ran on, and the wheel is
+# then installed into a throwaway environment and used, because the one failure
+# this cannot afford is the one that only appears after installation: both
+# packages find their data by searching upward from their own module, and in a
+# wheel there is no parent directory to find it in.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch: # builds and checks the artifacts without publishing them
+
+permissions:
+  contents: write # to create the release
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+
+      - name: Lint
+        run: uv run ruff check .
+      - name: Types
+        run: uv run mypy
+      - name: Tests
+        run: uv run pytest
+
+      - name: The tag has to name the version being built
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          version=$(uv run python -c "import pathlib, tomllib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])")
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$version" != "$tag" ]; then
+            echo "tag $GITHUB_REF_NAME does not match the version in pyproject.toml ($version)"
+            exit 1
+          fi
+
+      - name: Build the wheel and the sdist
+        run: uv build
+
+      - name: Use the wheel the way a reader will
+        # Deliberately outside the workspace. A virtual environment created
+        # inside the checkout would let the upward search escape site-packages
+        # and find the repository's own data/, which is exactly the mistake
+        # this step exists to catch.
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          uv venv reader
+          VIRTUAL_ENV="$RUNNER_TEMP/reader" uv pip install "$GITHUB_WORKSPACE"/dist/*.whl
+          ./reader/bin/python - <<'PY'
+          from labbook import Col, Quantity, table
+          from labbook.logo import mark
+          from labbook.units import US
+          from rocketry.library import load
+          from rocketry.vehicle import analyse
+
+          lib = load()
+          assert lib.vehicles, "the wheel shipped without the rocket library"
+          rows = [analyse(lib, key) for key in ("starship_v3", "falcon9_droneship")]
+          print(table(rows, [
+              Col("name", "Vehicle"),
+              Col("total_delta_v", "Ideal delta-v", Quantity.VELOCITY),
+              Col("payload_t", "Payload", Quantity.MASS, digits=1),
+          ], formatter=US))
+          assert "svg" in mark(height=32), "the wheel shipped without the mark"
+          PY
+
+      - name: Publish
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes \
+            --verify-tag

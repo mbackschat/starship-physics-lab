@@ -4,6 +4,9 @@ version = "0.1.0"
 description = "Understand Starship. Then build a better one. An interactive rocket physics explorer."
 readme = "README.md"
 requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Martin Backschat" }]
 # Runtime dependencies are deliberately minimal: this app is served as a static
 # page and every one of these has to be downloaded into the reader's browser as
 # a WebAssembly wheel. scipy and ambiance were dropped in favour of a 40-line
@@ -14,6 +17,11 @@ dependencies = [
     "streamlit>=1.40",
     "plotly>=5.24",
 ]
+
+[project.urls]
+Homepage = "https://mbackschat.github.io/starship-physics-lab/"
+Repository = "https://github.com/mbackschat/starship-physics-lab"
+Issues = "https://github.com/mbackschat/starship-physics-lab/issues"
 
 [dependency-groups]
 dev = [
@@ -32,6 +40,14 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/rocketry", "src/labbook"]
+
+# Both packages locate their data by searching upward from their own module,
+# which finds the repository root in a checkout and the mount point in the
+# browser build. An installed wheel has no such parent, so the trees travel
+# inside the packages and the search finds them on its first hop.
+[tool.hatch.build.targets.wheel.force-include]
+"data" = "rocketry/data"
+"assets" = "labbook/assets"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
