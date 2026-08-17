@@ -16,6 +16,8 @@ This is not a lecture with sliders bolted on. Every number on every page runs th
 
 This infographic condenses the article's argument and the independent review into one path, from the rocket equation to the unresolved payload question.
 
+For the full background and analysis, read the [physics reference](docs/physics-reference.md); for interactive exploration, [open the lab](https://mbackschat.github.io/starship-physics-lab/).
+
 [![Why Starship's payload hinges on staging](docs/images/starship-staging-infographic-640w.png)](docs/images/starship-staging-infographic.png)
 
 [How to reproduce this infographic](docs/reproducing-starship-infographic.md)
