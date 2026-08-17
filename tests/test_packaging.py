@@ -12,13 +12,17 @@ Nothing about that fails at build time. It fails on the reader's first
 distribution are asserted here rather than trusted.
 """
 
+import re
 import subprocess
+import tomllib
 import zipfile
 from pathlib import Path
 
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
+VERSION = re.compile(r"starship_physics_lab-([\d.]+)-py3|/download/v([\d.]+)/|@v([\d.]+)")
+"""Every shape a version takes in an install command: the asset, its URL, the tag."""
 
 
 @pytest.fixture(scope="session")
@@ -76,3 +80,17 @@ def test_the_authoring_tooling_stays_out_of_the_reader_s_download(shipped: set[s
 def test_the_distribution_carries_its_licence(shipped: set[str]):
     """An artifact published without one is all-rights-reserved by default."""
     assert [name for name in shipped if name.endswith((".dist-info/licenses/LICENSE", "/LICENSE"))]
+
+
+def test_the_readme_installs_the_version_this_repository_builds():
+    """An install command carries a version number, and a version number rots.
+
+    It rots into the worst kind of stale instruction: the URL still resolves,
+    to an older release, and whoever followed it gets a working install of the
+    wrong thing. So the bump is one edit held in two places by this test.
+    """
+    version = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["version"]
+    matches = VERSION.findall((ROOT / "README.md").read_text())
+    quoted = {found for match in matches for found in match if found}
+    assert quoted, "the README no longer says how to install a published version"
+    assert quoted == {version}, f"the README installs {sorted(quoted)}, this builds {version}"

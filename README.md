@@ -78,6 +78,27 @@ print(table(rows, [
 
 Each investigation lives in [`studies/`](studies/), one folder holding the script, the written finding and its figures, so understanding accumulates in the repository instead of evaporating in a chat log.
 
+### Installing it
+
+Both packages ship in one distribution, `starship-physics-lab`, built and attached to every tag on the [releases page](https://github.com/mbackschat/starship-physics-lab/releases). GitHub is not a Python registry, so an install points at the release asset or at the repository itself rather than at a package name. The rocket library and the mark travel inside the wheel, so `load()` works with nothing else on disk.
+
+```sh
+# uv, into a project you are building
+uv add "starship-physics-lab @ https://github.com/mbackschat/starship-physics-lab/releases/download/v0.1.0/starship_physics_lab-0.1.0-py3-none-any.whl"
+
+# pip, into the environment that is active
+pip install https://github.com/mbackschat/starship-physics-lab/releases/download/v0.1.0/starship_physics_lab-0.1.0-py3-none-any.whl
+
+# or from the repository, at a tag or at main, which needs git and builds the wheel locally
+uv add "starship-physics-lab @ git+https://github.com/mbackschat/starship-physics-lab@v0.1.0"
+pip install "starship-physics-lab @ git+https://github.com/mbackschat/starship-physics-lab@v0.1.0"
+
+# one question, nothing installed permanently
+uv run --with "starship-physics-lab @ git+https://github.com/mbackschat/starship-physics-lab" python question.py
+```
+
+It needs Python 3.12 or newer, and brings `pydantic`, `pyyaml`, `plotly` and `streamlit` with it. Importing `rocketry` touches none of those last two: the physics core depends only on `pydantic` and `pyyaml`, which is the same rule the app is built on, stated in packaging terms.
+
 ## The sources are kept, and they are held to
 
 `studies/` is what the project **worked out**. [`docs/knowledge/`](docs/knowledge/) is what it **looked up**: compiled pages on the vehicles, engines, flights and concepts, each citing dated captures in [`raw/`](raw/) that are never edited, so recapturing a source later shows exactly which numbers moved.
@@ -128,9 +149,14 @@ uv run python deploy/build.py                    # build the static site
 uv run playwright install chromium               # once, for the browser checks
 uv run python deploy/acceptance.py --local       # drive the built site in a browser
 uv run python deploy/screenshot.py               # refresh the README images
+uv build                                         # the wheel and sdist a release attaches to its tag
 ```
 
 `deploy/acceptance.py --local` serves the built site the way GitHub Pages does and drives it in a real browser. Drop `--local` to run the same checks against the deployed site. It is the only check that sees what a reader sees, so run it before trusting a green test suite about anything user-facing.
+
+## License
+
+MIT, in [LICENSE](LICENSE). The article this project checks is not covered by it and is not redistributed here.
 
 ## Provenance
 

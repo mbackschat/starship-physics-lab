@@ -66,6 +66,20 @@ CI ([.github/workflows/pages.yml](.github/workflows/pages.yml)) runs `ruff`, `my
 
 `deploy/acceptance.py` is the only check that sees what a reader sees. Unit tests know what the build *writes*; they cannot know whether the browser boots Python, whether a shared link still resolves, or whether an SVG arrived as a drawing rather than as its own source code. A routing bug once lived in exactly that gap with the whole suite green, and so did both traps below. Run it before trusting a green suite about anything user-facing.
 
+## Releasing
+
+GitHub has no Python registry, so a release *is* the wheel and the sdist attached to a tag, and the README's install lines point at those assets. One distribution, `starship-physics-lab`, provides both `rocketry` and `labbook`, because they are versioned and tested together and the layering rule between them is held by tests rather than by packaging.
+
+Cutting one is a version bump in `pyproject.toml` and in the README's install commands, which `tests/test_packaging.py` holds equal, then a commit and:
+
+```sh
+git tag -a v0.2.0 -m "..." && git push origin v0.2.0
+```
+
+[.github/workflows/release.yml](.github/workflows/release.yml) runs the suite, refuses a tag that disagrees with the version, builds, installs the wheel and uses it, then publishes. It never publishes from a branch; `workflow_dispatch` builds and checks the artifacts without releasing them.
+
+**An installed wheel has no repository around it, and that is the failure mode to keep in mind.** `rocketry.library` and `labbook.logo` both locate their trees by searching upward from their own module, which finds `<root>/data` in a checkout and the mount point in the browser build. From `site-packages` the search finds nothing at all, and the packages shipped that way: importable, and dead on the first `load()`. So the wheel force-includes `data/` as `rocketry/data` and `assets/` as `labbook/assets`, exactly where the first hop of the search looks. **Anything else the packages read off disk has to join that block**, which is why the test inspects the built wheel rather than trusting the configuration, and why the workflow's smoke test installs outside the workspace: a virtual environment created inside the checkout lets the upward search escape into the repository's own `data/` and pass no matter what the wheel contains.
+
 ## The two rules that do not bend
 
 1. **`src/rocketry/` never imports Streamlit, Plotly, pandas or `labbook`.** The dependency arrow points one way only: `app/` → `labbook/` → `rocketry/`. Breaking this makes the physics untestable without a browser and breaks the scripted-analysis consumer.
