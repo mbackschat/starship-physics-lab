@@ -64,6 +64,21 @@ def test_every_link_in_a_skill_resolves(skill: Path):
     assert not broken, f"{skill} links to files that do not exist: {broken}"
 
 
+def test_the_infographic_skill_does_not_bundle_its_reference_images():
+    """The written visual system must travel without one developer's Desktop."""
+    skill = ROOT / ".claude" / "skills" / "bytebytego-infographic"
+    text = "\n".join(path.read_text() for path in skill.rglob("*.md"))
+    bundled_images = [
+        path
+        for path in skill.rglob("*")
+        if path.suffix.lower() in {".gif", ".jpeg", ".jpg", ".png", ".webp"}
+    ]
+
+    assert "/Users/" not in text
+    assert "Desktop/ByteByteGo" not in text
+    assert bundled_images == []
+
+
 def test_the_agent_aliases_are_symlinks_rather_than_copies():
     # Copies drift. Both of these exist so other agents read the same file, and
     # a copy would quietly become a second, wrong source of truth.

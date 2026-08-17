@@ -1,0 +1,4 @@
+interface:
+  display_name: "ByteByteGo Infographic"
+  short_description: "Create crisp panel-based technical infographics"
+  default_prompt: "Use $bytebytego-infographic to turn this technical topic into a verified panel-based infographic."
