@@ -57,6 +57,10 @@ The full verification log, the corrections and the sources are in [docs/physics-
 
 Nothing here asserts a verdict. Chapters 1 to 5 teach the mechanics with no agenda; the Starship case study shows its uncertainty and lets you reach your own conclusion. Every number in the library is labelled **published**, **estimated** or **contested**, and the contested one is the one the whole argument turns on.
 
+[![Why Starship's payload hinges on staging](docs/images/starship-staging-infographic-640w.png)](docs/images/starship-staging-infographic.png)
+
+*The article's argument and the independent review at a glance. Click the infographic for the full-resolution version.*
+
 ## Also a workbench
 
 The app is one consumer of the physics core. A person, or a coding agent, is the other. Ask a question, get a table, a chart and a CSV:
