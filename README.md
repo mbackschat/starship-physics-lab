@@ -1,4 +1,4 @@
-<img src="assets/logo.svg?v=steel" alt="" align="right" height="150">
+<img src="assets/logo.svg" alt="" align="right" height="150">
 
 # Starship Physics Lab
 
@@ -22,9 +22,9 @@ This infographic condenses the article's argument and the independent review int
 
 *Click the infographic for the full-resolution version.*
 
-## → [**Open the app**](https://mbackschat.github.io/starship-physics-lab/) ←
+## Put the rocket equation in your hands
 
-### [mbackschat.github.io/starship-physics-lab](https://mbackschat.github.io/starship-physics-lab/)
+[![Open Starship Physics Lab and explore the model](docs/images/open-starship-physics-lab.svg)](https://mbackschat.github.io/starship-physics-lab/)
 
 No install, no sign-up, no server. The whole thing runs in your browser.
 
@@ -88,24 +88,13 @@ Each investigation lives in [`studies/`](studies/), one folder holding the scrip
 
 ### Installing it
 
-Both packages ship in one distribution, `starship-physics-lab`, built and attached to every tag on the [releases page](https://github.com/mbackschat/starship-physics-lab/releases). GitHub is not a Python registry, so an install points at the release asset or at the repository itself rather than at a package name. The rocket library and the mark travel inside the wheel, so `load()` works with nothing else on disk.
+Install the current release into a `uv` project:
 
 ```sh
-# uv, into a project you are building
 uv add "starship-physics-lab @ https://github.com/mbackschat/starship-physics-lab/releases/download/v0.1.0/starship_physics_lab-0.1.0-py3-none-any.whl"
-
-# pip, into the environment that is active
-pip install https://github.com/mbackschat/starship-physics-lab/releases/download/v0.1.0/starship_physics_lab-0.1.0-py3-none-any.whl
-
-# or from the repository, at a tag or at main, which needs git and builds the wheel locally
-uv add "starship-physics-lab @ git+https://github.com/mbackschat/starship-physics-lab@v0.1.0"
-pip install "starship-physics-lab @ git+https://github.com/mbackschat/starship-physics-lab@v0.1.0"
-
-# one question, nothing installed permanently
-uv run --with "starship-physics-lab @ git+https://github.com/mbackschat/starship-physics-lab" python question.py
 ```
 
-It needs Python 3.12 or newer, and brings `pydantic`, `pyyaml`, `plotly` and `streamlit` with it. Importing `rocketry` touches none of those last two: the physics core depends only on `pydantic` and `pyyaml`, which is the same rule the app is built on, stated in packaging terms.
+The distribution provides both `rocketry` and `labbook`, including the rocket data needed by `load()`. It needs Python 3.12 or newer, and brings `pydantic`, `pyyaml`, `plotly` and `streamlit` with it. Importing `rocketry` touches none of those last two: the physics core depends only on `pydantic` and `pyyaml`, which is the same rule the app is built on, stated in packaging terms.
 
 ## The sources are kept, and they are held to
 

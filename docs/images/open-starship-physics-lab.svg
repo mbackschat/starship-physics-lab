@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 240" role="img" aria-labelledby="title description">
+  <title id="title">Open Starship Physics Lab</title>
+  <desc id="description">Launch the interactive lab to change rocket assumptions and watch every result move.</desc>
+
+  <defs>
+    <linearGradient id="space" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#111d31"/>
+      <stop offset="0.58" stop-color="#0d131f"/>
+      <stop offset="1" stop-color="#0b0b0b"/>
+    </linearGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#596168"/>
+      <stop offset="0.26" stop-color="#aab2b7"/>
+      <stop offset="0.46" stop-color="#f5f7f7"/>
+      <stop offset="0.68" stop-color="#aab2b7"/>
+      <stop offset="1" stop-color="#596168"/>
+    </linearGradient>
+    <linearGradient id="button" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3987e5"/>
+      <stop offset="1" stop-color="#2467bd"/>
+    </linearGradient>
+    <filter id="button-shadow" x="-20%" y="-30%" width="140%" height="170%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity="0.32"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="240" rx="22" fill="url(#space)"/>
+  <path d="M 735 216 C 865 101 1011 45 1180 50" fill="none" stroke="#3987e5" stroke-width="2" opacity="0.22"/>
+  <path d="M 706 234 C 865 114 1018 78 1192 92" fill="none" stroke="#1baf7a" stroke-width="1.5" opacity="0.2"/>
+
+  <g fill="#ffffff">
+    <circle cx="738" cy="45" r="1.8" opacity="0.7"/>
+    <circle cx="791" cy="202" r="1.2" opacity="0.45"/>
+    <circle cx="879" cy="36" r="1.4" opacity="0.62"/>
+    <circle cx="1027" cy="204" r="1.8" opacity="0.5"/>
+    <circle cx="1146" cy="27" r="1.2" opacity="0.58"/>
+  </g>
+
+  <g font-family="Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    <text x="64" y="62" fill="#72aef2" font-size="17" font-weight="700" letter-spacing="2.4">INTERACTIVE ROCKET PHYSICS</text>
+    <text x="60" y="125" fill="#ffffff" font-size="48" font-weight="800" letter-spacing="-1.2">FLY THE MODEL</text>
+    <text x="64" y="166" fill="#c3c2b7" font-size="21">Change the assumptions. Watch every number move.</text>
+
+    <g>
+      <rect x="756" y="82" width="260" height="76" rx="38" fill="url(#button)" filter="url(#button-shadow)"/>
+      <text x="797" y="130" fill="#ffffff" font-size="21" font-weight="750" letter-spacing="0.5">OPEN THE LAB</text>
+      <path d="M 972 109 L 990 120 L 972 131" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+
+  <g transform="translate(1080 20) scale(1.48)">
+    <path d="M 21 87 Q 28 119 35 87 Z" fill="#e5622d" opacity="0.95"/>
+    <path d="M 24.5 87 Q 28 107 31.5 87 Z" fill="#d99400"/>
+    <g fill="#171b1e" stroke="#0d131f" stroke-width="1.5" stroke-linejoin="round" paint-order="stroke">
+      <path d="M 20 34 L 12 50 L 20 52 Z"/>
+      <path d="M 36 34 L 44 50 L 36 52 Z"/>
+      <path d="M 20 66 L 7 88 L 20 88 Z"/>
+      <path d="M 36 66 L 49 88 L 36 88 Z"/>
+    </g>
+    <path d="M 20 88 L 20 30 Q 20 12 28 4 Q 36 12 36 30 L 36 88 Z" fill="url(#steel)" stroke="#0d131f" stroke-width="1.5" stroke-linejoin="round" paint-order="stroke"/>
+    <path d="M 29.5 7 Q 35.2 15 35.2 30 L 35.2 87.2 L 32 87.2 L 32 30 Q 32 16 29.5 7 Z" fill="#171b1e"/>
+    <path d="M 23 31 L 23 85" fill="none" stroke="#ffffff" stroke-width="0.7" stroke-linecap="round" opacity="0.38"/>
+  </g>
+</svg>

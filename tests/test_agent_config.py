@@ -8,6 +8,7 @@ a skill put it one directory deeper and every relative link broke silently.
 
 import re
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import ClassVar
 from urllib.parse import urlsplit
@@ -78,6 +79,15 @@ def test_the_infographic_skill_does_not_bundle_its_reference_images():
     assert "/Users/" not in text
     assert "Desktop/ByteByteGo" not in text
     assert bundled_images == []
+
+
+def test_the_readme_call_to_action_keeps_text_outside_raster_filters():
+    """Filtered groups make vector labels blurry in Retina Markdown viewers."""
+    root = ET.parse(ROOT / "docs" / "images" / "open-starship-physics-lab.svg").getroot()
+    filtered = [element for element in root.iter() if element.get("filter")]
+
+    assert len(filtered) == 1
+    assert filtered[0].tag.endswith("rect")
 
 
 def test_the_agent_aliases_are_symlinks_rather_than_copies():
